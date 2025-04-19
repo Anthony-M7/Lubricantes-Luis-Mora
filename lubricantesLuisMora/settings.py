@@ -30,13 +30,13 @@ SECRET_KEY = 'django-insecure-4a%m1#zx1y@d9d7rsj8g2n9w)!iq2$k*_035kvyl3c8#+0e@kl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ["192.168.0.105", "localhost", ".onrender.com"]
+ALLOWED_HOSTS = ["192.168.0.105", "localhost", ".onrender.com", "127.0.0.1"]
 
 CSRF_USE_SESSIONS = False  # Para usar cookies en lugar de sesiones
 CSRF_COOKIE_HTTPONLY = False  # Para que JavaScript pueda acceder al token
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-SECURE_SSL_REDIRECT = True
+SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 
@@ -53,7 +53,8 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     "aplicacion",
     "barcode",
-    "mathfilters"
+    "mathfilters",
+    'sslserver'
 ]
 
 # Agrega esta línea justo después de INSTALLED_APPS

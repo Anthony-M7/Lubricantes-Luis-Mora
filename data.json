@@ -1,0 +1,2442 @@
+[
+{
+  "model": "sessions.session",
+  "pk": "capne87jxj021lkmoafmsg2jgw2uj65a",
+  "fields": {
+    "session_data": ".eJxVjMEOwiAQRP-FsyHQLVg8evcbyLK7SNXQpLQn47_bJj1o5jbvzbxVxHUpcW0yx5HVRVl1-u0S0lPqDviB9T5pmuoyj0nvij5o07eJ5XU93L-Dgq1sa58zbHGduLO1WSxDNmgxYKAevDMeh4TBDIR9sgYcG3LggycWoNCpzxftYTf2:1u4Mmp:SNOb4ZvXI0GspIf0dBoToaOb5m_qEnesd-h7aY_FNsk",
+    "expire_date": "2025-04-28T16:35:55.075"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "g6ramsp98md3f7u3tglx6dl7hzjp78s4",
+  "fields": {
+    "session_data": ".eJxVjMEOwiAQRP-FsyHQLVg8evcbyLK7SNXQpLQn47_bJj1o5jbvzbxVxHUpcW0yx5HVRVl1-u0S0lPqDviB9T5pmuoyj0nvij5o07eJ5XU93L-Dgq1sa58zbHGduLO1WSxDNmgxYKAevDMeh4TBDIR9sgYcG3LggycWoNCpzxftYTf2:1u5lxu:mq5gcoYztEyKjP_RJoFetYLSS7GYgABzPoX_2PifY20",
+    "expire_date": "2025-05-02T09:41:10.112"
+  }
+},
+{
+  "model": "sessions.session",
+  "pk": "p7gwlxszsedvth7wfj1ea62jp34v3a7d",
+  "fields": {
+    "session_data": ".eJxVjMEOwiAQRP-FsyHQLVg8evcbyLK7SNXQpLQn47_bJj1o5jbvzbxVxHUpcW0yx5HVRVl1-u0S0lPqDviB9T5pmuoyj0nvij5o07eJ5XU93L-Dgq1sa58zbHGduLO1WSxDNmgxYKAevDMeh4TBDIR9sgYcG3LggycWoNCpzxftYTf2:1u3oj8:EQ-N8GSTlcUH0I6oDaVhmfEmOfaaTuyt7SY_krWjUHs",
+    "expire_date": "2025-04-27T04:13:50.996"
+  }
+},
+{
+  "model": "aplicacion.customuser",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$YsjNzoPzefp3kr7CqNRkRx$ilGaa+wYechp2O+RJEb6cGV3J6ISUOx5eL4Uq8GXpow=",
+    "last_login": "2025-04-18T09:41:10.101",
+    "is_superuser": true,
+    "username": "Admin",
+    "first_name": "Anthony",
+    "last_name": "Mora",
+    "email": "anthonymorag10@gmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-04-12T15:42:49",
+    "rol": "cliente",
+    "telefono": "04161719586",
+    "direccion": "La Castra Parte Alta",
+    "foto_perfil": "perfiles/Imagen_de_WhatsApp_2025-01-11_a_las_16.36.08_b3c6ae01.jpg",
+    "admin": true,
+    "groups": [],
+    "user_permissions": []
+  }
+},
+{
+  "model": "aplicacion.customuser",
+  "fields": {
+    "password": "pbkdf2_sha256$870000$jBPzoihyBUjtwJUXMvREzs$/5b0yVU9zixtIjOUYK1LazwQIQmU6V9iVt2WNlWBXaE=",
+    "last_login": "2025-04-14T02:04:09.082",
+    "is_superuser": true,
+    "username": "BrigithK",
+    "first_name": "Brigith",
+    "last_name": "Katherine",
+    "email": "kate.2021@hotmail.com",
+    "is_staff": true,
+    "is_active": true,
+    "date_joined": "2025-04-12T16:58:59",
+    "rol": "personal",
+    "telefono": "04262298057",
+    "direccion": "El milagro",
+    "foto_perfil": "",
+    "admin": false,
+    "groups": [],
+    "user_permissions": [
+      [
+        "view_logentry",
+        "admin",
+        "logentry"
+      ],
+      [
+        "add_customuser",
+        "aplicacion",
+        "customuser"
+      ],
+      [
+        "change_customuser",
+        "aplicacion",
+        "customuser"
+      ],
+      [
+        "delete_customuser",
+        "aplicacion",
+        "customuser"
+      ],
+      [
+        "view_customuser",
+        "aplicacion",
+        "customuser"
+      ],
+      [
+        "add_group",
+        "auth",
+        "group"
+      ],
+      [
+        "change_group",
+        "auth",
+        "group"
+      ],
+      [
+        "delete_group",
+        "auth",
+        "group"
+      ],
+      [
+        "view_group",
+        "auth",
+        "group"
+      ],
+      [
+        "add_permission",
+        "auth",
+        "permission"
+      ],
+      [
+        "change_permission",
+        "auth",
+        "permission"
+      ],
+      [
+        "delete_permission",
+        "auth",
+        "permission"
+      ],
+      [
+        "view_permission",
+        "auth",
+        "permission"
+      ],
+      [
+        "add_contenttype",
+        "contenttypes",
+        "contenttype"
+      ],
+      [
+        "change_contenttype",
+        "contenttypes",
+        "contenttype"
+      ],
+      [
+        "delete_contenttype",
+        "contenttypes",
+        "contenttype"
+      ],
+      [
+        "view_contenttype",
+        "contenttypes",
+        "contenttype"
+      ],
+      [
+        "add_session",
+        "sessions",
+        "session"
+      ],
+      [
+        "change_session",
+        "sessions",
+        "session"
+      ],
+      [
+        "delete_session",
+        "sessions",
+        "session"
+      ],
+      [
+        "view_session",
+        "sessions",
+        "session"
+      ]
+    ]
+  }
+},
+{
+  "model": "aplicacion.categoria",
+  "pk": 1,
+  "fields": {
+    "nombre": "Lubricantes",
+    "padre": null,
+    "descripcion": "---",
+    "creado_en": "2025-04-14T14:47:13.258",
+    "actualizado_en": "2025-04-14T14:47:13.258"
+  }
+},
+{
+  "model": "aplicacion.categoria",
+  "pk": 3,
+  "fields": {
+    "nombre": "Semisintetico",
+    "padre": 1,
+    "descripcion": "----------",
+    "creado_en": "2025-04-14T14:48:00.284",
+    "actualizado_en": "2025-04-14T14:48:00.284"
+  }
+},
+{
+  "model": "aplicacion.proveedor",
+  "pk": 1,
+  "fields": {
+    "nombre": "Inca - Luis Inca",
+    "rfc": "----------",
+    "contacto": "---------",
+    "telefono": "04121110202",
+    "email": "inca@gmail.com",
+    "direccion": "avenida siempre viva",
+    "activo": true,
+    "creado_en": "2025-04-14T14:49:51.079"
+  }
+},
+{
+  "model": "aplicacion.articulo",
+  "pk": 1,
+  "fields": {
+    "codigo": "LLM-0000001",
+    "codigo_barras": "07545784598945421",
+    "nombre": "Aceite Inca 20w50",
+    "descripcion": "------------------",
+    "categoria": 3,
+    "marca": "Inca",
+    "modelo": "Semi-Sintetico 20w50",
+    "imagen": "articulos/D_NQ_NP_927854-MLV70841904041_082023-O.webp",
+    "stock_actual": "3.00",
+    "stock_minimo": "5.00",
+    "stock_maximo": null,
+    "unidad_medida": "LT",
+    "costo_promedio": "29800.00",
+    "precio_venta": "33000.00",
+    "tasa_impuesto": "0.16",
+    "proveedor_principal": 1,
+    "lead_time": 21,
+    "activo": true,
+    "fecha_creacion": "2025-04-14T14:54:30.399",
+    "fecha_actualizacion": "2025-04-17T21:10:30.969",
+    "creado_por": [
+      "Admin"
+    ],
+    "palabras_clave": "toyota, carro, motor, aceite, aceite motor, gasolina, carro sincronico"
+  }
+},
+{
+  "model": "aplicacion.articulo",
+  "pk": 4,
+  "fields": {
+    "codigo": "LLM-0000003",
+    "codigo_barras": "154657612487543",
+    "nombre": "Filtro de Aceite PH8A Marca RedFil",
+    "descripcion": "Filtor de Aceite PH8 - Editado",
+    "categoria": 3,
+    "marca": "RedFill",
+    "modelo": "PH8",
+    "imagen": "articulos/PH8A_750x_0R8blvO.png",
+    "stock_actual": "1.00",
+    "stock_minimo": "2.00",
+    "stock_maximo": null,
+    "unidad_medida": "UN",
+    "costo_promedio": "21000.00",
+    "precio_venta": "26000.00",
+    "tasa_impuesto": "0.08",
+    "proveedor_principal": 1,
+    "lead_time": 27,
+    "activo": true,
+    "fecha_creacion": "2025-04-16T11:17:57.843",
+    "fecha_actualizacion": "2025-04-17T20:44:36.698",
+    "creado_por": [
+      "Admin"
+    ],
+    "palabras_clave": "Filtro, Filtro Aceite, Filtro PH8, Tractor, Camion, Gasoil, Toyota"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 20,
+  "fields": {
+    "articulo": 1,
+    "tipo": "ENTRADA",
+    "cantidad": "20.000",
+    "fecha": "2025-04-15T22:33:10.614",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "COMPRA-250415-001",
+    "proveedor": null,
+    "observaciones": "Sin Detalles xd",
+    "costo_unitario": "29000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 24,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "2.000",
+    "fecha": "2025-04-16T23:31:08.095",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0001",
+    "proveedor": null,
+    "observaciones": "Venta a Cristopher Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 25,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "3.000",
+    "fecha": "2025-04-16T23:33:06.335",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0002",
+    "proveedor": null,
+    "observaciones": "Venta a Anthony Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 27,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T00:02:20.994",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0003",
+    "proveedor": null,
+    "observaciones": "Venta a Cristopher Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 28,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T00:14:01.224",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0004",
+    "proveedor": null,
+    "observaciones": "Venta a Cristopher Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 29,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "2.000",
+    "fecha": "2025-04-17T02:29:58.935",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0005",
+    "proveedor": null,
+    "observaciones": "Venta a Anthony Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 30,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "2.000",
+    "fecha": "2025-04-17T02:29:58.964",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0005",
+    "proveedor": null,
+    "observaciones": "Venta a Anthony Mora",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 31,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T14:43:06.181",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0009",
+    "proveedor": null,
+    "observaciones": "Venta a Pedro Pablo",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 32,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "5.000",
+    "fecha": "2025-04-17T14:43:06.226",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0009",
+    "proveedor": null,
+    "observaciones": "Venta a Pedro Pablo",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 33,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "2.000",
+    "fecha": "2025-04-17T14:46:45.763",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0006",
+    "proveedor": null,
+    "observaciones": "Venta a Brigith Gonzalez",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 34,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T14:46:45.824",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0006",
+    "proveedor": null,
+    "observaciones": "Venta a Brigith Gonzalez",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 35,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T15:18:52.696",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0010",
+    "proveedor": null,
+    "observaciones": "Venta a Brigith Gonzalez",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 36,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T20:27:05.109",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0012",
+    "proveedor": null,
+    "observaciones": "Venta a Pedro Pablo",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 37,
+  "fields": {
+    "articulo": 4,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T20:44:36.679",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0013",
+    "proveedor": null,
+    "observaciones": "Venta a Fernando Mora",
+    "costo_unitario": "26000.00"
+  }
+},
+{
+  "model": "aplicacion.movimientoinventario",
+  "pk": 38,
+  "fields": {
+    "articulo": 1,
+    "tipo": "SALIDA",
+    "cantidad": "1.000",
+    "fecha": "2025-04-17T21:10:30.951",
+    "usuario": [
+      "Admin"
+    ],
+    "referencia": "Venta VENT-0014",
+    "proveedor": null,
+    "observaciones": "Venta a Cristopher Mora",
+    "costo_unitario": "33000.00"
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 9,
+  "fields": {
+    "movimiento": 20,
+    "fecha": "2025-04-15T22:33:10.627",
+    "stock_antes": "20.00",
+    "stock_despues": "22.00",
+    "costo_promedio_antes": "30720.00",
+    "costo_promedio_despues": "29745.45",
+    "costo_unitario_compra": "29000.00",
+    "costo_unitario_anterior": "30000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 13,
+  "fields": {
+    "movimiento": 24,
+    "fecha": "2025-04-16T23:31:08.096",
+    "stock_antes": "20.00",
+    "stock_despues": "18.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 14,
+  "fields": {
+    "movimiento": 25,
+    "fecha": "2025-04-16T23:33:06.336",
+    "stock_antes": "18.00",
+    "stock_despues": "15.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 16,
+  "fields": {
+    "movimiento": 27,
+    "fecha": "2025-04-17T00:02:20.995",
+    "stock_antes": "15.00",
+    "stock_despues": "14.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 17,
+  "fields": {
+    "movimiento": 28,
+    "fecha": "2025-04-17T00:14:01.233",
+    "stock_antes": "14.00",
+    "stock_despues": "13.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 18,
+  "fields": {
+    "movimiento": 29,
+    "fecha": "2025-04-17T02:29:58.944",
+    "stock_antes": "13.00",
+    "stock_despues": "11.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 19,
+  "fields": {
+    "movimiento": 30,
+    "fecha": "2025-04-17T02:29:58.972",
+    "stock_antes": "8.00",
+    "stock_despues": "6.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 20,
+  "fields": {
+    "movimiento": 31,
+    "fecha": "2025-04-17T14:43:06.192",
+    "stock_antes": "6.00",
+    "stock_despues": "5.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 21,
+  "fields": {
+    "movimiento": 32,
+    "fecha": "2025-04-17T14:43:06.243",
+    "stock_antes": "11.00",
+    "stock_despues": "6.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 22,
+  "fields": {
+    "movimiento": 33,
+    "fecha": "2025-04-17T14:46:45.780",
+    "stock_antes": "6.00",
+    "stock_despues": "4.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 23,
+  "fields": {
+    "movimiento": 34,
+    "fecha": "2025-04-17T14:46:45.841",
+    "stock_antes": "5.00",
+    "stock_despues": "4.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 24,
+  "fields": {
+    "movimiento": 35,
+    "fecha": "2025-04-17T15:18:52.706",
+    "stock_antes": "4.00",
+    "stock_despues": "3.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 25,
+  "fields": {
+    "movimiento": 36,
+    "fecha": "2025-04-17T20:27:05.111",
+    "stock_antes": "3.00",
+    "stock_despues": "2.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 26,
+  "fields": {
+    "movimiento": 37,
+    "fecha": "2025-04-17T20:44:36.689",
+    "stock_antes": "2.00",
+    "stock_despues": "1.00",
+    "costo_promedio_antes": "21000.00",
+    "costo_promedio_despues": "21000.00",
+    "costo_unitario_compra": "26000.00",
+    "costo_unitario_anterior": "26000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.historialstock",
+  "pk": 27,
+  "fields": {
+    "movimiento": 38,
+    "fecha": "2025-04-17T21:10:30.960",
+    "stock_antes": "4.00",
+    "stock_despues": "3.00",
+    "costo_promedio_antes": "29800.00",
+    "costo_promedio_despues": "29800.00",
+    "costo_unitario_compra": "33000.00",
+    "costo_unitario_anterior": "33000.00",
+    "usuario": [
+      "Admin"
+    ]
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 7,
+  "fields": {
+    "codigo": "VENT-0001",
+    "cliente": 4,
+    "fecha": "2025-04-16T23:31:08.067",
+    "subtotal": "65975.00",
+    "impuesto": "105.56",
+    "total": "66080.56",
+    "estado": "COMPLETADA",
+    "metodo_pago": "EFECTIVO",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-16T23:31:08.074",
+    "fecha_actualizacion": "2025-04-16T23:31:08.091"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 8,
+  "fields": {
+    "codigo": "VENT-0002",
+    "cliente": 1,
+    "fecha": "2025-04-16T23:33:06.314",
+    "subtotal": "99000.00",
+    "impuesto": "158.40",
+    "total": "99158.40",
+    "estado": "COMPLETADA",
+    "metodo_pago": "TARJETA",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-16T23:33:06.321",
+    "fecha_actualizacion": "2025-04-16T23:33:06.333"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 11,
+  "fields": {
+    "codigo": "VENT-0003",
+    "cliente": 4,
+    "fecha": "2025-04-17T00:02:20.973",
+    "subtotal": "33000.00",
+    "impuesto": "52.80",
+    "total": "33052.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "EFECTIVO",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T00:02:20.981",
+    "fecha_actualizacion": "2025-04-17T00:02:20.989"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 12,
+  "fields": {
+    "codigo": "VENT-0004",
+    "cliente": 4,
+    "fecha": "2025-04-17T00:03:24.568",
+    "subtotal": "33000.00",
+    "impuesto": "52.80",
+    "total": "33052.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "TARJETA",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T00:03:24.577",
+    "fecha_actualizacion": "2025-04-17T00:14:01.205"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 13,
+  "fields": {
+    "codigo": "VENT-0005",
+    "cliente": 1,
+    "fecha": "2025-04-17T02:29:58.923",
+    "subtotal": "118000.00",
+    "impuesto": "147.20",
+    "total": "118147.20",
+    "estado": "COMPLETADA",
+    "metodo_pago": "EFECTIVO",
+    "observaciones": "SIn Observaciones, Pendiente Por Finiquitar Pedido",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T00:15:24.188",
+    "fecha_actualizacion": "2025-04-17T02:30:48.258"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 15,
+  "fields": {
+    "codigo": "VENT-0006",
+    "cliente": 14,
+    "fecha": "2025-04-17T14:46:45.739",
+    "subtotal": "92000.00",
+    "impuesto": "126.40",
+    "total": "92126.40",
+    "estado": "COMPLETADA",
+    "metodo_pago": "TRANSFERENCIA",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T12:18:01.426",
+    "fecha_actualizacion": "2025-04-17T14:46:45.740"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 23,
+  "fields": {
+    "codigo": "VENT-0009",
+    "cliente": 19,
+    "fecha": "2025-04-17T14:43:06.167",
+    "subtotal": "191000.00",
+    "impuesto": "284.80",
+    "total": "191284.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "EFECTIVO",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T14:42:47.946",
+    "fecha_actualizacion": "2025-04-17T14:43:06.168"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 24,
+  "fields": {
+    "codigo": "VENT-0010",
+    "cliente": 14,
+    "fecha": "2025-04-17T15:18:52.681",
+    "subtotal": "26000.00",
+    "impuesto": "20.80",
+    "total": "26020.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "EFECTIVO",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T15:18:28.973",
+    "fecha_actualizacion": "2025-04-17T15:18:52.681"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 27,
+  "fields": {
+    "codigo": "VENT-0012",
+    "cliente": 19,
+    "fecha": "2025-04-17T20:27:05.091",
+    "subtotal": "26000.00",
+    "impuesto": "20.80",
+    "total": "26020.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": null,
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T20:27:05.099",
+    "fecha_actualizacion": "2025-04-17T20:27:05.105"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 28,
+  "fields": {
+    "codigo": "VENT-0013",
+    "cliente": 5,
+    "fecha": "2025-04-17T20:44:36.666",
+    "subtotal": "26000.00",
+    "impuesto": "20.80",
+    "total": "26020.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "TARJETA",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T20:31:54.744",
+    "fecha_actualizacion": "2025-04-17T20:44:36.666"
+  }
+},
+{
+  "model": "aplicacion.venta",
+  "pk": 29,
+  "fields": {
+    "codigo": "VENT-0014",
+    "cliente": 4,
+    "fecha": "2025-04-17T21:10:30.940",
+    "subtotal": "33000.00",
+    "impuesto": "52.80",
+    "total": "33052.80",
+    "estado": "COMPLETADA",
+    "metodo_pago": "TARJETA",
+    "observaciones": "",
+    "creado_por": [
+      "Admin"
+    ],
+    "fecha_creacion": "2025-04-17T20:56:48.773",
+    "fecha_actualizacion": "2025-04-17T21:10:30.940"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 2,
+  "fields": {
+    "venta": 7,
+    "articulo": 1,
+    "cantidad": "2.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "105.56",
+    "subtotal": "65975.00",
+    "descuento": "25.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 3,
+  "fields": {
+    "venta": 8,
+    "articulo": 1,
+    "cantidad": "3.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "158.40",
+    "subtotal": "99000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 6,
+  "fields": {
+    "venta": 11,
+    "articulo": 1,
+    "cantidad": "1.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "52.80",
+    "subtotal": "33000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 7,
+  "fields": {
+    "venta": 12,
+    "articulo": 1,
+    "cantidad": "1.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "52.80",
+    "subtotal": "33000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 22,
+  "fields": {
+    "venta": 13,
+    "articulo": 1,
+    "cantidad": "2.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "105.60",
+    "subtotal": "66000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 23,
+  "fields": {
+    "venta": 13,
+    "articulo": 4,
+    "cantidad": "2.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "41.60",
+    "subtotal": "52000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 31,
+  "fields": {
+    "venta": 23,
+    "articulo": 4,
+    "cantidad": "1.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "20.80",
+    "subtotal": "26000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 32,
+  "fields": {
+    "venta": 23,
+    "articulo": 1,
+    "cantidad": "5.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "264.00",
+    "subtotal": "165000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 33,
+  "fields": {
+    "venta": 15,
+    "articulo": 1,
+    "cantidad": "2.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "105.60",
+    "subtotal": "66000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 34,
+  "fields": {
+    "venta": 15,
+    "articulo": 4,
+    "cantidad": "1.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "20.80",
+    "subtotal": "26000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 36,
+  "fields": {
+    "venta": 24,
+    "articulo": 4,
+    "cantidad": "1.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "20.80",
+    "subtotal": "26000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 39,
+  "fields": {
+    "venta": 27,
+    "articulo": 4,
+    "cantidad": "1.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "20.80",
+    "subtotal": "26000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 41,
+  "fields": {
+    "venta": 28,
+    "articulo": 4,
+    "cantidad": "1.000",
+    "precio_unitario": "26000.00",
+    "impuesto": "20.80",
+    "subtotal": "26000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.detalleventa",
+  "pk": 48,
+  "fields": {
+    "venta": 29,
+    "articulo": 1,
+    "cantidad": "1.000",
+    "precio_unitario": "33000.00",
+    "impuesto": "52.80",
+    "subtotal": "33000.00",
+    "descuento": "0.00"
+  }
+},
+{
+  "model": "aplicacion.cliente",
+  "pk": 1,
+  "fields": {
+    "tipo": "NATURAL",
+    "identificacion": "30920964",
+    "nombre": "Anthony Mora",
+    "direccion": "",
+    "telefono": "04161719586",
+    "email": "",
+    "activo": true,
+    "fecha_creacion": "2025-04-16T17:31:48.461"
+  }
+},
+{
+  "model": "aplicacion.cliente",
+  "pk": 4,
+  "fields": {
+    "tipo": "NATURAL",
+    "identificacion": "32286689",
+    "nombre": "Cristopher Mora",
+    "direccion": "",
+    "telefono": "04262298057",
+    "email": "",
+    "activo": true,
+    "fecha_creacion": "2025-04-16T17:37:46.021"
+  }
+},
+{
+  "model": "aplicacion.cliente",
+  "pk": 5,
+  "fields": {
+    "tipo": "NATURAL",
+    "identificacion": "12464349",
+    "nombre": "Fernando Mora",
+    "direccion": "",
+    "telefono": "04261719586",
+    "email": "",
+    "activo": true,
+    "fecha_creacion": "2025-04-17T12:18:49.738"
+  }
+},
+{
+  "model": "aplicacion.cliente",
+  "pk": 14,
+  "fields": {
+    "tipo": "NATURAL",
+    "identificacion": "15653377",
+    "nombre": "Brigith Gonzalez",
+    "direccion": "",
+    "telefono": "04262298057",
+    "email": "",
+    "activo": true,
+    "fecha_creacion": "2025-04-17T12:36:39.568"
+  }
+},
+{
+  "model": "aplicacion.cliente",
+  "pk": 19,
+  "fields": {
+    "tipo": "NATURAL",
+    "identificacion": "13245678",
+    "nombre": "Pedro Pablo",
+    "direccion": "",
+    "telefono": "135498795",
+    "email": "",
+    "activo": true,
+    "fecha_creacion": "2025-04-17T14:41:37.986"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 1,
+  "fields": {
+    "action_time": "2025-04-12T15:44:33.669",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "1",
+    "object_repr": "Admin",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Nombres\", \"Apellidos\", \"Tel\\u00e9fono\", \"Direcci\\u00f3n\", \"Foto de perfil\", \"\\u00bfAdministrador?\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 2,
+  "fields": {
+    "action_time": "2025-04-12T16:59:01.134",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 3,
+  "fields": {
+    "action_time": "2025-04-12T17:00:58.105",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "1",
+    "object_repr": "Anthony Mora",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"First name\", \"Last name\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 4,
+  "fields": {
+    "action_time": "2025-04-12T17:01:24.897",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Direcci\\u00f3n\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 5,
+  "fields": {
+    "action_time": "2025-04-12T17:01:38.563",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 6,
+  "fields": {
+    "action_time": "2025-04-12T17:12:07.084",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 7,
+  "fields": {
+    "action_time": "2025-04-12T17:27:35.962",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"password\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 8,
+  "fields": {
+    "action_time": "2025-04-12T17:29:30.610",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Staff status\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 9,
+  "fields": {
+    "action_time": "2025-04-12T17:30:58.713",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Superuser status\", \"User permissions\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 10,
+  "fields": {
+    "action_time": "2025-04-12T17:35:50.930",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"User permissions\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 11,
+  "fields": {
+    "action_time": "2025-04-12T17:59:26.030",
+    "user": [
+      "BrigithK"
+    ],
+    "content_type": [
+      "aplicacion",
+      "customuser"
+    ],
+    "object_id": "2",
+    "object_repr": "Brigith Katherine",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"User permissions\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 12,
+  "fields": {
+    "action_time": "2025-04-14T14:47:13.262",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "categoria"
+    ],
+    "object_id": "1",
+    "object_repr": "Lubricantes",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 13,
+  "fields": {
+    "action_time": "2025-04-14T14:47:26.949",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "categoria"
+    ],
+    "object_id": "2",
+    "object_repr": "Semisinteticos",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 14,
+  "fields": {
+    "action_time": "2025-04-14T14:48:00.287",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "categoria"
+    ],
+    "object_id": "3",
+    "object_repr": "Semisintetico",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 15,
+  "fields": {
+    "action_time": "2025-04-14T14:49:51.083",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "proveedor"
+    ],
+    "object_id": "1",
+    "object_repr": "Inca - Luis Inca",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 16,
+  "fields": {
+    "action_time": "2025-04-14T14:54:30.404",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 17,
+  "fields": {
+    "action_time": "2025-04-14T15:05:49.653",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Creado por\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 18,
+  "fields": {
+    "action_time": "2025-04-14T15:06:05.327",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "categoria"
+    ],
+    "object_id": "2",
+    "object_repr": "Semisinteticos",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 19,
+  "fields": {
+    "action_time": "2025-04-14T15:22:47.780",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Imagen\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 20,
+  "fields": {
+    "action_time": "2025-04-14T16:57:19.185",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "2",
+    "object_repr": "LLM-0000002 - Aceite 4T Motul 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Codigo barras\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 21,
+  "fields": {
+    "action_time": "2025-04-14T17:29:00.867",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "1",
+    "object_repr": "Salida de Aceite Inca 20w50",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 22,
+  "fields": {
+    "action_time": "2025-04-14T19:13:30.456",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "2",
+    "object_repr": "Entrada de Aceite 4T Motul 20w50",
+    "action_flag": 1,
+    "change_message": "[{\"added\": {}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 23,
+  "fields": {
+    "action_time": "2025-04-14T19:14:16.401",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "2",
+    "object_repr": "Entrada de Aceite 4T Motul 20w50",
+    "action_flag": 2,
+    "change_message": "[]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 24,
+  "fields": {
+    "action_time": "2025-04-14T19:57:14.669",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "2",
+    "object_repr": "Entrada de Aceite 4T Motul 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Proveedor\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 25,
+  "fields": {
+    "action_time": "2025-04-14T20:18:16.769",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Margen ganancias\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 26,
+  "fields": {
+    "action_time": "2025-04-14T20:19:30.855",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 27,
+  "fields": {
+    "action_time": "2025-04-14T20:19:43.984",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 28,
+  "fields": {
+    "action_time": "2025-04-14T20:20:02.908",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 29,
+  "fields": {
+    "action_time": "2025-04-14T20:20:16.559",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 30,
+  "fields": {
+    "action_time": "2025-04-14T20:20:41.397",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 31,
+  "fields": {
+    "action_time": "2025-04-14T20:23:29.652",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Precio venta\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 32,
+  "fields": {
+    "action_time": "2025-04-14T18:46:16.400",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "2",
+    "object_repr": "Entrada de Aceite 4T Motul 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 33,
+  "fields": {
+    "action_time": "2025-04-14T18:46:16.400",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "3",
+    "object_repr": "Entrada de Aceite 4T Motul 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 34,
+  "fields": {
+    "action_time": "2025-04-14T18:55:10.603",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "4",
+    "object_repr": "Entrada de Aceite Inca 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 35,
+  "fields": {
+    "action_time": "2025-04-14T19:00:19.216",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "5",
+    "object_repr": "Entrada de Aceite Inca 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 36,
+  "fields": {
+    "action_time": "2025-04-15T07:34:20.967",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Stock actual\", \"Costo promedio\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 37,
+  "fields": {
+    "action_time": "2025-04-15T13:36:48.511",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "1",
+    "object_repr": "LLM-0000001 - Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Stock actual\", \"Costo promedio\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 38,
+  "fields": {
+    "action_time": "2025-04-15T22:51:32.181",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "historialstock"
+    ],
+    "object_id": "10",
+    "object_repr": "HistorialStock object (10)",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Costo unitario anterior\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 39,
+  "fields": {
+    "action_time": "2025-04-15T22:52:07.195",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "historialstock"
+    ],
+    "object_id": "10",
+    "object_repr": "HistorialStock object (10)",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Costo unitario anterior\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 40,
+  "fields": {
+    "action_time": "2025-04-16T11:17:40.846",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "articulo"
+    ],
+    "object_id": "3",
+    "object_repr": "LLM-0000003 - Filtro de Aceite PH8A Marca RedFil",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 41,
+  "fields": {
+    "action_time": "2025-04-16T14:55:06.597",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "3",
+    "object_repr": "Venta #VENT-0003 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 42,
+  "fields": {
+    "action_time": "2025-04-16T14:55:06.597",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "2",
+    "object_repr": "Venta #VENT-0002 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 43,
+  "fields": {
+    "action_time": "2025-04-16T14:55:06.597",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "1",
+    "object_repr": "Venta #VENT-0001 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 44,
+  "fields": {
+    "action_time": "2025-04-16T17:37:15.835",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "2",
+    "object_repr": "Cristopher Mora (32286689)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 45,
+  "fields": {
+    "action_time": "2025-04-16T17:37:42.869",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "3",
+    "object_repr": "Cristopher Mora (32286689)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 46,
+  "fields": {
+    "action_time": "2025-04-16T17:56:01.608",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "4",
+    "object_repr": "Venta #VENT-0001 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 47,
+  "fields": {
+    "action_time": "2025-04-16T18:08:31.292",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "5",
+    "object_repr": "Venta #VENT-0001 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 48,
+  "fields": {
+    "action_time": "2025-04-16T20:53:54.042",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "23",
+    "object_repr": "Salida de Aceite Inca 20w50",
+    "action_flag": 2,
+    "change_message": "[{\"changed\": {\"fields\": [\"Costo unitario\"]}}]"
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 49,
+  "fields": {
+    "action_time": "2025-04-16T21:26:02.554",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "6",
+    "object_repr": "Venta #VENT-0001 - 66105.60",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 50,
+  "fields": {
+    "action_time": "2025-04-16T21:26:21.426",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "23",
+    "object_repr": "Salida de Aceite Inca 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 51,
+  "fields": {
+    "action_time": "2025-04-16T23:53:29.519",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "1",
+    "object_repr": "Salida de Aceite Inca 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 52,
+  "fields": {
+    "action_time": "2025-04-16T23:59:29.009",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "9",
+    "object_repr": "Venta #VENT-0003 - 33052.80",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 53,
+  "fields": {
+    "action_time": "2025-04-16T23:59:51.389",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "movimientoinventario"
+    ],
+    "object_id": "26",
+    "object_repr": "Salida de Aceite Inca 20w50",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 54,
+  "fields": {
+    "action_time": "2025-04-17T12:21:24.379",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "6",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 55,
+  "fields": {
+    "action_time": "2025-04-17T12:23:24.403",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "7",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 56,
+  "fields": {
+    "action_time": "2025-04-17T12:23:58.237",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "8",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 57,
+  "fields": {
+    "action_time": "2025-04-17T12:24:53.002",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "9",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 58,
+  "fields": {
+    "action_time": "2025-04-17T12:28:47.981",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "10",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 59,
+  "fields": {
+    "action_time": "2025-04-17T12:29:11.119",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "11",
+    "object_repr": "Brigith (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 60,
+  "fields": {
+    "action_time": "2025-04-17T12:31:12.677",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "12",
+    "object_repr": "Brigith Gonzalez (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 61,
+  "fields": {
+    "action_time": "2025-04-17T12:36:26.365",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "13",
+    "object_repr": "Brigith Gonzalez (15653377)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 62,
+  "fields": {
+    "action_time": "2025-04-17T14:05:14.082",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "venta"
+    ],
+    "object_id": "17",
+    "object_repr": "Venta #VENT-0007 - 0.00",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 63,
+  "fields": {
+    "action_time": "2025-04-17T14:30:43.928",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "15",
+    "object_repr": "Pedro Pablo (123456789)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 64,
+  "fields": {
+    "action_time": "2025-04-17T14:32:55.827",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "16",
+    "object_repr": "Pedro Pablo (123456789)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 65,
+  "fields": {
+    "action_time": "2025-04-17T14:36:51.904",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "17",
+    "object_repr": "Pedro Pablo (123456789)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+},
+{
+  "model": "admin.logentry",
+  "pk": 66,
+  "fields": {
+    "action_time": "2025-04-17T14:41:18.030",
+    "user": [
+      "Admin"
+    ],
+    "content_type": [
+      "aplicacion",
+      "cliente"
+    ],
+    "object_id": "18",
+    "object_repr": "Pedro Pablo (123456789)",
+    "action_flag": 3,
+    "change_message": ""
+  }
+}
+]

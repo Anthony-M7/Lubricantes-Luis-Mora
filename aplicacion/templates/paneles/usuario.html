@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Mi Panel{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <img src="{% if user.foto_perfil %}{{ user.foto_perfil.url }}{% else %}{% static 'img/user-default.png' %}{% endif %}" 
+                         class="rounded-circle mb-3" width="150" height="150" alt="Foto de perfil">
+                    <h3>{{ user.get_full_name }}</h3>
+                    <p class="text-muted">{{ user.get_rol_display }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2>Mis Datos</h2>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">Email</dt>
+                        <dd class="col-sm-9">{{ user.email }}</dd>
+                        
+                        <dt class="col-sm-3">Teléfono</dt>
+                        <dd class="col-sm-9">{{ user.telefono|default:"No especificado" }}</dd>
+                        
+                        <dt class="col-sm-3">Dirección</dt>
+                        <dd class="col-sm-9">{{ user.direccion|default:"No especificada" }}</dd>
+                    </dl>
+                    
+                    <a href="#" class="btn btn-outline-primary">Editar Perfil</a>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h2>Mis Compras Recientes</h2>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>2023-07-10</td>
+                                    <td>Aceite Motor 20W-50</td>
+                                    <td>2</td>
+                                    <td>$85,000</td>
+                                </tr>
+                                <!-- Más filas... -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

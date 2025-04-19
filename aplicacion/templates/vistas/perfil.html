@@ -1,0 +1,151 @@
+{% extends 'paneles/admin.html' %}
+{% load static i18n %}
+
+{% block dashboard %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">Perfil de Usuario</h3>
+                </div>
+                <div class="card-body">
+
+                    <form id="profile-form" method="POST" action="{% url 'actualizar_perfil' %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="text-center mb-4">
+                            <img src="{% if user.foto_perfil %}{{ user.foto_perfil.url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}" 
+                                 class="rounded-circle profile-image" 
+                                 alt="Foto de perfil" 
+                                 width="150" 
+                                 height="150"
+                                 id="profile-picture">
+                            <div class="mt-2">
+                                <input type="file" id="id_foto_perfil" name="foto_perfil" accept="image/*" style="display: none;">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="change-photo-btn" style="display: none;">
+                                    Cambiar foto
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="view-mode">
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre de usuario</label>
+                                    <p id="username-view">{{ form.instance.username }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Correo electrónico</label>
+                                    <p id="email-view">{{ form.instance.email }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Nombre</label>
+                                    <p id="first-name-view">{{ form.instance.first_name }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Apellido</label>
+                                    <p id="last-name-view">{{ form.instance.last_name }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Teléfono</label>
+                                    <p id="telefono-view">{{ form.instance.telefono }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Dirección</label>
+                                    <p id="direccion-view">{{ form.instance.direccion }}</p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Rol</label>
+                                    <p id="rol-view">{{ form.instance.get_rol_display }}</p>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label class="form-label">Estado Administrador</label>
+                                    <p id="admin-view">
+                                        {% if user.admin %}Sí{% else %}No{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Estado Activo</label>
+                                    <p id="is-active-view">
+                                        {% if user.is_active %}Activo{% else %}Inactivo{% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Staff</label>
+                                    <p id="is-staff-view">
+                                        {% if user.is_staff %}Sí{% else %}No{% endif %}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Superusuario</label>
+                                    <p id="is-superuser-view">
+                                        {% if user.is_superuser %}Sí{% else %}No{% endif %}
+                                    </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Último login</label>
+                                    <p id="last-login-view">
+                                        {{ user.last_login|default:"Nunca" }}
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Fecha de registro</label>
+                                    <p class="view-mode" id="date-joined-view">
+                                        {{ user.date_joined }}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Modo Edición (formulario Django) -->
+                        <div class="edit-mode row mb-3" style="display: none;">
+                            {% for field in form %}
+                                {% if field.name != 'foto_perfil' %}
+                                <div class=" col-md-6 mb-3">
+                                        <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+                                        {{ field }}
+                                        {% if field.errors %}
+                                            <div class="text-danger">{{ field.errors }}</div>
+                                        {% endif %}
+                                </div>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-primary" id="edit-btn">Editar Perfil</button>
+                            <div id="edit-buttons" style="display: none;">
+                                <button type="button" class="btn btn-secondary me-2" id="cancel-btn">Cancelar</button>
+                                <button type="submit" class="btn btn-success" id="save-btn">Guardar Cambios</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<br><br>
+
+<script src="{% static 'js/perfil/perfil.js' %}"></script>
+{% endblock %}

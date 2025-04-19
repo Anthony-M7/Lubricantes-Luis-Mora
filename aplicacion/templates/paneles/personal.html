@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Panel de Personal{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Panel de Personal</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h2>Acciones Rápidas</h2>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2 d-md-flex">
+                        <a href="#" class="btn btn-primary me-md-2">Registrar Venta</a>
+                        <a href="#" class="btn btn-secondary">Consultar Inventario</a>
+                        <a href="#" class="btn btn-success">Agendar Servicio</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Ventas del Día</h3>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="ventasChart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3>Tareas Pendientes</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-group">
+                                <li class="list-group-item">Revisar inventario lubricantes</li>
+                                <li class="list-group-item">Contactar cliente: Juan Pérez</li>
+                                <li class="list-group-item">Actualizar precios promocionales</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

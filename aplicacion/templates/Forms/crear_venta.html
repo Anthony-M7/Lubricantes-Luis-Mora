@@ -1,0 +1,407 @@
+{% extends 'base_ventas.html' %} {% load static %} 
+{% block venta_title %}Registrar Nueva Venta{% endblock %} {% block venta_content %}
+<div class="card shadow-sm">
+  <div class="card-body">
+    <form id="crearVentaForm" method="post">
+      {% csrf_token %}
+
+      <!-- Sección Cliente -->
+      <div class="row mb-4">
+        <div class="col-md-8">
+          <h5 class="mb-3">Datos del Cliente</h5>
+          <div class="row">
+            <div class="col-md-6">
+              {{ venta_form.cliente.label_tag }}
+              <div class="input-group mb-3">
+                {{ venta_form.cliente }}
+                <button
+                  class="btn btn-outline-secondary"
+                  type="button"
+                  id="buscarClienteBtn"
+                >
+                  <i class="bi bi-search"></i>
+                </button>
+              </div>
+            </div>
+            <div class="col-md-6 text-end">
+              <button
+                type="button"
+                class="btn btn-outline-primary mt-4"
+                data-bs-toggle="modal"
+                data-bs-target="#modalCliente"
+              >
+                <i class="bi bi-plus-circle"></i> Cliente Nuevo
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <br />
+          <h5 class="mb-3">Método de Pago</h5>
+          {{ venta_form.metodo_pago }}
+        </div>
+      </div>
+
+      <!-- Sección Artículos -->
+      <h5 class="mb-3">Artículos a Vender</h5>
+      <div class="table-responsive mb-3">
+        <table class="table" id="articulosTable">
+          <thead class="table-light">
+            <tr>
+              <th>Código</th>
+              <th>Descripción</th>
+              <th>Stock En Inventario</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Descuento</th>
+              <th>Subtotal</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="detallesBody">
+            <tr id="emptyRow" class="text-center">
+              <td colspan="7" class="py-4 text-muted">
+                No hay artículos agregados. Busque y agregue artículos.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="row mb-3">
+        <div class="col-md-6">
+          <button
+            type="button"
+            class="btn btn-primary RealizarBusqueda"
+            id="buscarArticuloBtn"
+          >
+            <i class="bi bi-search"></i> Buscar Artículo
+          </button>
+        </div>
+        <div class="col-md-6">
+          <div class="input-group">
+            <input
+              type="text"
+              class="form-control"
+              id="codigoBarrasInput"
+              placeholder="Escanear código de barras"
+            />
+            <button
+              class="btn btn-outline-secondary RealizarBusqueda"
+              type="button"
+              id="escanearBtn"
+            >
+              <i class="bi bi-upc-scan"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Totales -->
+      <div class="row justify-content-end">
+        <div class="col-md-4">
+          <div class="card border-0 bg-light">
+            <div class="card-body">
+              <div class="d-flex justify-content-between mb-2">
+                <span>Subtotal:</span>
+                <strong id="subtotal">COP 0</strong>
+              </div>
+              <div class="d-flex justify-content-between mb-2">
+                <span>Impuestos:</span>
+                <strong id="impuestos">COP 0</strong>
+              </div>
+              <hr />
+              <div class="d-flex justify-content-between">
+                <span class="h5">Total:</span>
+                <strong class="h5" id="total">COP 0</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div class="mb-4">
+        {{ venta_form.observaciones.label_tag }} {{ venta_form.observaciones }}
+      </div>
+
+      <!-- Botones -->
+      <div class="d-flex justify-content-between">
+        <a href="{% url 'lista_ventas' %}" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Cancelar
+        </a>
+        <div>
+          <button
+            type="submit"
+            name="guardar_borrador"
+            class="btn btn-primary me-2"
+          >
+            <i class="bi bi-save"></i> Guardar Borrador
+          </button>
+          <button type="submit" name="finalizar_venta" value="1" class="btn btn-success" id="finalizarBtn">
+            <i class="bi bi-check-circle"></i> Finalizar Venta
+        </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal para nuevo cliente -->
+<div
+  class="modal fade"
+  id="modalCliente"
+  tabindex="-1"
+  aria-labelledby="nuevoClienteModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="nuevoClienteModalLabel">
+          Registrar Cliente Rápido
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form
+          id="clienteForm"
+          method="post"
+          action="{% url 'crear_cliente_rapido' %}"
+        >
+          {% csrf_token %}
+          <div class="mb-3">
+            <label class="form-label">Tipo</label>
+            <select class="form-select" name="tipo" required>
+              <option value="NATURAL">Persona Natural</option>
+              <option value="JURIDICO">Persona Jurídica</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Identificación</label>
+            <input
+              type="text"
+              class="form-control"
+              name="identificacion"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Nombre</label>
+            <input type="text" class="form-control" name="nombre" required />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="text" class="form-control" name="telefono" />
+          </div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-bs-dismiss="modal"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn btn-primary" id="guardarCliente">
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para buscar artículo -->
+<div
+  class="modal fade"
+  id="buscarArticuloModal"
+  tabindex="-1"
+  aria-labelledby="buscarArticuloModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="buscarArticuloModalLabel">
+          Buscar Artículo
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="busquedaArticulo"
+            placeholder="Código, nombre o descripción"
+          />
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            id="buscarBtn"
+          >
+            <i class="bi bi-search"></i> Buscar
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover" id="resultadosBusqueda">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Precio</th>
+                <th>Stock</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="resultadosBody">
+              <!-- Resultados de búsqueda aparecerán aquí -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para agregar cantidad -->
+<div
+  class="modal fade"
+  id="cantidadModal"
+  tabindex="-1"
+  aria-labelledby="cantidadModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="cantidadModalLabel">Agregar Artículo</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <form id="cantidadForm">
+          <input type="hidden" id="articuloId" />
+          <div class="mb-3">
+            <label for="cantidadInput" class="form-label">Cantidad</label>
+            <input
+              type="number"
+              class="form-control"
+              id="cantidadInput"
+              min="0.001"
+              step="0.001"
+              value="1"
+            />
+          </div>
+          <div class="mb-3">
+            <label for="descuentoInput" class="form-label">Descuento</label>
+            <div class="input-group">
+              <span class="input-group-text">COP</span>
+              <input
+                type="number"
+                class="form-control"
+                id="descuentoInput"
+                min="0"
+                value="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" id="agregarArticuloBtn">
+          Agregar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para buscar cliente -->
+<div
+  class="modal fade"
+  id="buscarClienteModal"
+  tabindex="-1"
+  aria-labelledby="buscarClienteModalLabel"
+  aria-hidden="true"
+>
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="buscarClienteModalLabel">Buscar Cliente</h5>
+        <button
+          type="button"
+          class="btn-close"
+          data-bs-dismiss="modal"
+          aria-label="Close"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group mb-3">
+          <input
+            type="text"
+            class="form-control"
+            id="busquedaCliente"
+            placeholder="Nombre, identificación o teléfono"
+          />
+          <button
+            class="btn btn-outline-secondary"
+            type="button"
+            id="buscarClienteModalBtn"
+          >
+            <i class="bi bi-search"></i> Buscar
+          </button>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-hover" id="resultadosCliente">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Identificación</th>
+                <th>Teléfono</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="resultadosClienteBody">
+              <!-- Resultados aparecerán aquí -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+          Cerrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/ventas/crear_venta.js' %}"></script>
+{% endblock %}

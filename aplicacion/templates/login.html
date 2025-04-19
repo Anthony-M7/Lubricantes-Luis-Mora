@@ -1,0 +1,65 @@
+{% extends 'base.html' %} {% load static %} {% block extra_css %}
+<!-- CSS solo para esta vista -->
+<link rel="stylesheet" href="{% static 'css/styles_login.css' %}" />
+{% endblock %} {% block content %}
+
+<article class="login-container-img">
+  <div class="login-container">
+    <!-- Espacio para el logo -->
+    <div class="logo-space">
+      <img
+        src="../static/img/Logo sin Fondo.png"
+        alt="Imagen del Logo sin Fondo"
+      />
+    </div>
+
+    <div class="company-name">
+      <h1>LUIS MORA</h1>
+      <p>LUBRICANTES Y REPUESTOS</p>
+    </div>
+
+    <div class="login-form">
+      <h2>Acceso al sistema</h2>
+
+      <form method="post">
+        {% csrf_token %}
+
+        {% if messages %}
+        <div class="alert alert-danger position_left">
+          {% for message in messages %} {{ message }} {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="form-group">
+          <label for="usuario">Usuario</label>
+          <input
+            type="input"
+            id="usuario"
+            name="usuario"
+            required
+            placeholder="Ingrese el Nombre de Usuario"
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="password">Contraseña</label>
+          <input
+            type="input"
+            id="password"
+            name="password"
+            required
+            placeholder="Ingrese su contraseña"
+          />
+        </div>
+
+        <button type="submit" class="login-button">Iniciar sesión</button>
+
+        <div class="forgot-password">
+          <a href="#">¿Olvidó su contraseña?</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</article>
+
+{% endblock %}

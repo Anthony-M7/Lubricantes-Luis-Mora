@@ -1,0 +1,300 @@
+{% extends 'base_ventas.html' %}
+{% load static %}
+{% load static humanize %}
+
+{% block venta_title %}Lista de Ventas{% endblock %}
+
+{% block venta_buttons %}
+<div class="btn-toolbar mb-2 mb-md-0">
+  <div class="btn-group me-2">
+    <a href="{% url 'crear_venta' %}" class="btn btn-primary me-2">
+      <i class="bi bi-plus-circle"></i> Nueva Venta
+    </a>
+  </div>
+  <button class="btn btn-outline-secondary dropdown-toggle" type="button" 
+          data-bs-toggle="dropdown" aria-expanded="false">
+    <i class="bi bi-filter"></i> Filtros
+  </button>
+  <div class="dropdown-menu p-3" style="min-width: 300px;">
+    <form method="get" id="filtrosForm">
+      <div class="mb-3">
+        <label for="estado" class="form-label">Estado</label>
+        <select class="form-select" name="estado" id="estado">
+          <option value="">Todos</option>
+          {% for value, label in estados.items %}
+          <option value="{{ value }}" {% if filtros.estado == value %}selected{% endif %}>
+            {{ label }}
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="mb-3">
+        <label for="fecha_inicio" class="form-label">Fecha desde</label>
+        <input type="date" class="form-control" name="fecha_inicio" 
+               value="{{ filtros.fecha_inicio }}">
+      </div>
+      <div class="mb-3">
+        <label for="fecha_fin" class="form-label">Fecha hasta</label>
+        <input type="date" class="form-control" name="fecha_fin" 
+               value="{{ filtros.fecha_fin }}">
+      </div>
+      <button type="submit" class="btn btn-primary btn-sm">Aplicar</button>
+      <a href="{% url 'lista_ventas' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block venta_content %}
+<!-- Sección de Estadísticas (Nueva) -->
+<div class="row mb-4 g-3">
+  <div class="col-md-3">
+    <div class="card h-100">
+      <div class="card-body text-center">
+        <h6 class="card-subtitle mb-2 text-muted">Total Ventas</h6>
+        <h3 class="card-title">{{ total_ventas|intcomma }}</h3>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 border-success">
+      <div class="card-body text-center">
+        <h6 class="card-subtitle mb-2 text-muted">Completadas</h6>
+        <h3 class="card-title text-success">{{ ventas_completadas.count|intcomma }}</h3>
+        <p class="card-text small">COP {{ ventas_completadas.total|floatformat:2|intcomma }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 border-warning">
+      <div class="card-body text-center">
+        <h6 class="card-subtitle mb-2 text-muted">Pendientes</h6>
+        <h3 class="card-title text-warning">{{ ventas_pendientes.count|intcomma }}</h3>
+        <p class="card-text small">COP {{ ventas_pendientes.total|floatformat:2|intcomma }}</p>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="card h-100 border-danger">
+      <div class="card-body text-center">
+        <h6 class="card-subtitle mb-2 text-muted">Canceladas</h6>
+        <h3 class="card-title text-danger">{{ ventas_canceladas.count|intcomma }}</h3>
+        <p class="card-text small">COP {{ ventas_canceladas.total|floatformat:2|intcomma }}</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="table-responsive">
+      <table class="table table-hover">
+        <thead class="table-light ">
+          <tr>
+            <th>Código</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th colspan="2">Artículos</th>
+            <th>Total</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for venta_data in page_obj %}
+          <tr>
+            <td>{{ venta_data.venta.codigo }}</td>
+            <td>{{ venta_data.venta.fecha|date:"d/m/Y H:i" }}</td>
+            <td>{{ venta_data.venta.cliente.nombre|default:"-"|truncatechars:20 }}</td>
+            <td>{{ venta_data.venta.num_articulos|floatformat:0|default:0 }}</td>
+            <td>
+              {% for articulo in venta_data.articulos %}
+                  {{ articulo|truncatechars:25 }}{% if not forloop.last %}, {% endif %}
+              {% endfor %}
+          </td>
+            <td>COP {{ venta_data.venta.total|floatformat:2 }}</td>
+            <td>
+              <span class="badge 
+                {% if venta_data.venta.estado == 'COMPLETADA' %}bg-success
+                {% elif venta_data.venta.estado == 'CANCELADA' %}bg-danger
+                {% elif venta_data.venta.estado == 'PENDIENTE' %}bg-warning text-dark
+                {% else %}bg-secondary{% endif %}">
+                {{ venta_data.venta.get_estado_display }}
+              </span>
+            </td>
+            <td class="text-nowrap">
+              <a href="{% url 'detalle_venta' venta_data.venta.id %}" class="btn btn-sm btn-outline-primary" 
+                 title="Ver detalle">
+                <i class="bi bi-eye"></i>
+              </a>
+              {% if venta_data.venta.estado == 'BORRADOR' or venta_data.venta.estado == 'PENDIENTE' %}
+              <a href="{% url 'editar_venta' venta_data.venta.id %}" class="btn btn-sm btn-outline-secondary" 
+                 title="Editar">
+                <i class="bi bi-pencil"></i>
+              </a>
+              <button class="btn btn-sm btn-outline-danger delete-venta" 
+                      data-id="{{ venta_data.venta.id }}" title="Eliminar" data-bs-toggle="modal"
+                      data-bs-target="#confirmDeleteModal">
+                <i class="bi bi-trash"></i>
+              </button>
+              {% endif %}
+              
+              <!-- Botón para cambiar estado (visible para todas excepto COMPLETADA) -->
+              {% if venta_data.venta.estado != 'COMPLETADA' %}
+              <button class="btn btn-sm btn-outline-info cambiar-estado" 
+                      data-id="{{ venta_data.venta.id }}" 
+                      data-estado-actual="{{ venta_data.venta.estado }}"
+                      title="Cambiar estado" 
+                      data-bs-toggle="modal"
+                      data-bs-target="#cambiarEstadoModal">
+                <i class="bi bi-arrow-repeat"></i>
+              </button>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="7" class="text-center py-4">No se encontraron ventas</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Paginación -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav aria-label="Page navigation">
+      <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+          <a class="page-link" href="?page=1{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            &laquo; Primera
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            Anterior
+          </a>
+        </li>
+        {% endif %}
+        
+        <li class="page-item disabled">
+          <span class="page-link">
+            Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}
+          </span>
+        </li>
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            Siguiente
+          </a>
+        </li>
+        <li class="page-item">
+          <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key,value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">
+            Última &raquo;
+          </a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal para cambiar estado -->
+<div class="modal fade" id="cambiarEstadoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Cambiar Estado de Venta</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="cambiarEstadoForm" method="post" action="{% url 'cambiar_estado_venta' %}">
+          {% csrf_token %}
+          <input type="hidden" name="venta_id" id="ventaIdEstado">
+          <div class="mb-3">
+            <label for="nuevoEstado" class="form-label">Nuevo estado</label>
+            <select class="form-select" name="nuevo_estado" id="nuevoEstado" required>
+              <option value="PENDIENTE">Pendiente</option>
+              <option value="CANCELADA">Cancelada</option>
+              <option value="BORRADOR">Borrador</option>
+              <!-- No incluimos COMPLETADA como opción -->
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="observaciones" class="form-label">Observaciones</label>
+            <textarea class="form-control" name="observaciones" id="observaciones" rows="3"></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-primary" id="confirmarCambioEstado">Guardar Cambios</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title">Confirmar Eliminación</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro que deseas eliminar esta venta? Esta acción no se puede deshacer.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+  // Configurar modal de cambio de estado
+  const cambiarEstadoButtons = document.querySelectorAll('.cambiar-estado');
+  const ventaIdEstadoInput = document.getElementById('ventaIdEstado');
+  const nuevoEstadoSelect = document.getElementById('nuevoEstado');
+  const confirmarCambioEstadoBtn = document.getElementById('confirmarCambioEstado');
+  
+  cambiarEstadoButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const ventaId = this.getAttribute('data-id');
+      const estadoActual = this.getAttribute('data-estado-actual');
+      
+      ventaIdEstadoInput.value = ventaId;
+      
+      // Configurar opciones según estado actual
+      if(estadoActual === 'BORRADOR') {
+        nuevoEstadoSelect.innerHTML = `
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="CANCELADA">Cancelada</option>
+        `;
+      } else if(estadoActual === 'PENDIENTE') {
+        nuevoEstadoSelect.innerHTML = `
+          <option value="BORRADOR">Borrador</option>
+          <option value="CANCELADA">Cancelada</option>
+        `;
+      } else if(estadoActual === 'CANCELADA') {
+        nuevoEstadoSelect.innerHTML = `
+          <option value="BORRADOR">Borrador</option>
+          <option value="PENDIENTE">Pendiente</option>
+        `;
+      }
+    });
+  });
+  
+  confirmarCambioEstadoBtn.addEventListener('click', function() {
+    document.getElementById('cambiarEstadoForm').submit();
+  });
+});
+</script>
+{% endblock %}

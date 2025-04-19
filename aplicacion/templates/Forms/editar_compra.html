@@ -1,0 +1,218 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+
+{% block dashboard %}
+
+<br>
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="bi bi-cart-plus"></i> {{ titulo }}
+            </h3>
+        </div>
+        
+        <div class="card-body">
+            <form method="post" class="needs-validation" novalidate>
+                {% csrf_token %}
+                
+                <!-- Sección de información del artículo -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.articulo.id_for_label }}" class="form-label">
+                                {{ form.articulo.label }}
+                            </label>
+                            {{ form.articulo }}
+                            <div class="invalid-feedback">
+                                Por favor seleccione un artículo
+                            </div>
+                            {% if form.articulo.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.articulo.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="{{ form.proveedor.id_for_label }}" class="form-label">
+                                {{ form.proveedor.label }}
+                            </label>
+                            {{ form.proveedor }}
+                            {% if form.proveedor.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.proveedor.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Sección de valores de compra -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.cantidad.id_for_label }}" class="form-label">
+                                {{ form.cantidad.label }}
+                            </label>
+                            <div class="input-group">
+                                {{ form.cantidad }}
+                                <span class="input-group-text">unidades</span>
+                            </div>
+                            <div class="invalid-feedback">
+                                {{ form.cantidad.errors|join:", " }}
+                            </div>
+                            {% if form.cantidad.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.cantidad.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.costo_unitario.id_for_label }}" class="form-label">
+                                {{ form.costo_unitario.label }}
+                            </label>
+                            <div class="input-group">
+                                <span class="input-group-text">COP</span>
+                                {{ form.costo_unitario }}
+                            </div>
+                            <div class="invalid-feedback">
+                                {{ form.costo_unitario.errors|join:", " }}
+                            </div>
+                            {% if form.costo_unitario.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.costo_unitario.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="{{ form.referencia.id_for_label }}" class="form-label">
+                                {{ form.referencia.label }}
+                            </label>
+                            {{ form.referencia }}
+                            {% if form.referencia.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.referencia.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Campo de observaciones -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="form-group">
+                            <label for="{{ form.observaciones.id_for_label }}" class="form-label">
+                                {{ form.observaciones.label }}
+                            </label>
+                            {{ form.observaciones }}
+                            {% if form.observaciones.help_text %}
+                            <small class="form-text text-muted">
+                                {{ form.observaciones.help_text }}
+                            </small>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{% url 'detalle_compra' compra.pk %}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle"></i> Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="alert alert-info">
+        <p>Artículo: {{ articulo }}</p>
+        <p>Stock actual: {{ stock_actual }}</p>
+        <p>Cantidad en compra: {{ compra.cantidad|floatformat:0 }}</p>
+    </div>
+    
+    <!-- Sección de información actual del artículo -->
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-info-circle"></i> Estado Actual del Artículo
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-box-seam fs-3 me-3 text-primary"></i>
+                        <div>
+                            <h6 class="mb-0">Stock Actual</h6>
+                            <p class="fs-4 fw-bold mb-0">{{ stock_actual }} unidades</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-currency-dollar fs-3 me-3 text-success"></i>
+                        <div>
+                            <h6 class="mb-0">Costo Promedio</h6>
+                            <p class="fs-4 fw-bold mb-0">COP {{ costo_promedio|floatformat:1 }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center">
+                        <i class="bi bi-tag fs-3 me-3 text-warning"></i>
+                        <div>
+                            <h6 class="mb-0">Código</h6>
+                            <p class="fs-4 fw-bold mb-0">{{ codigo }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Script para validación del formulario -->
+<script>
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        // Fetch all the forms we want to apply custom Bootstrap validation styles to
+        var forms = document.getElementsByClassName('needs-validation');
+        
+        // Loop over them and prevent submission
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+
+<!-- Inicialización de select2 -->
+<script>
+$(document).ready(function() {
+    $('.select2').select2({
+        theme: 'bootstrap-5',
+        width: '100%'
+    });
+});
+</script>
+{% endblock %}

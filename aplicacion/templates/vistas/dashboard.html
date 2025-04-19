@@ -1,0 +1,557 @@
+{% extends 'paneles/admin.html' %} 
+
+{% load static humanize %}
+{% load mathfilters %}
+{% load static %}
+
+{% block dashboard%}
+<div
+  class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom text-black"
+>
+  <h1 class="h2">Panel de Administración</h1>
+</div>
+
+<!-- WIDGET DE DATA DE HOY -- PERFECTAMENTE TERMINADO -->
+<div class="row">
+  <div class="col-md-4 mb-4">
+    <div class="card text-white bg-primary h-100">
+      <div class="card-body">
+        <h5 class="card-title">Clientes Registrados Hoy</h5>
+        <p class="card-text display-4">{{ clientes_hoy|intcomma }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-white-50">Total: {{ total_clientes|intcomma }}</small>
+          <span class="badge bg-light text-primary">
+            <i class="bi bi-arrow-up"></i> Hoy
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4 mb-4">
+    <div class="card text-white bg-success h-100">
+      <div class="card-body">
+        <h5 class="card-title">Ventas Hoy</h5>
+        <p class="card-text display-4">
+          COP {{ ventas_hoy.total|default:0|floatformat:2|intcomma }}
+        </p>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-white-50">{{ ventas_hoy.count|default:0 }} transacciones</small>
+          <span class="badge bg-light text-success">
+            <i class="bi bi-cash-stack"></i> Hoy
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4 mb-4">
+    <div class="card text-white bg-info h-100">
+      <div class="card-body">
+        <h5 class="card-title">Artículos Vendidos Hoy</h5>
+        <p class="card-text display-4">{{ ventas_hoy.articulos_vendidos|default:0|intcomma }}</p>
+        <div class="d-flex justify-content-between align-items-center">
+          <small class="text-white-50">{{ ventas_hoy.count|default:0 }} pedidos</small>
+          <span class="badge bg-light text-info">
+            <i class="bi bi-box-seam"></i> Hoy
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Total de Artículos -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-primary">
+      <div class="card-body">
+        <h5 class="card-title">Artículos Totales</h5>
+        <h2 class="text-primary">{{ total_articulos|intcomma }}</h2>
+        <p class="text-muted">{{ variacion_articulos }}% vs mes anterior</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Valor Total del Inventario -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-success">
+      <div class="card-body">
+        <h5 class="card-title">Valor Total</h5>
+        <h2 class="text-success">
+          COP {{ valor_inventario|floatformat:2|intcomma }}
+        </h2>
+        <p class="text-muted">{{ variacion_valor }}% vs mes anterior</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artículos con Stock Bajo -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-warning">
+      <div class="card-body">
+        <h5 class="card-title">Stock Bajo</h5>
+        <h2 class="text-warning">{{ stock_bajo.count|intcomma }}</h2>
+        <p class="text-muted">Necesitan reabastecimiento</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Artículos Inactivos -->
+  <div class="col-md-3 mb-4">
+    <div class="card border-danger">
+      <div class="card-body">
+        <h5 class="card-title">Inactivos</h5>
+        <h2 class="text-danger">{{ articulos_inactivos|intcomma }}</h2>
+        <p class="text-muted">Sin movimiento en 3 meses</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Nueva sección de métricas avanzadas -- PERFECTAMENTE BIEN -->
+<div class="row mt-4">
+  <div class="col-md-6 mb-4">
+      <div class="card h-100">
+          <div class="card-header bg-light">
+              <h5 class="mb-0">Top Performers</h5>
+          </div>
+          <div class="card-body">
+              <div class="row">
+                  <div class="col-md-4">
+                      <div class="text-center">
+                          <h6 class="text-muted">Mejor Cliente</h6>
+                          <h4 class="text-primary">
+                              {{ cliente_top.cliente__nombre|default:"N/A"|truncatechars:15 }}
+                          </h4>
+                          <small class="text-success">
+                              COP {{ cliente_top.monto_total|default:0|floatformat:2|intcomma }}
+                          </small>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="text-center">
+                          <h6 class="text-muted">Artículo Top</h6>
+                          <h4 class="text-success">
+                              {{ articulo_top.articulo__nombre|default:"N/A"|truncatechars:15 }}
+                          </h4>
+                          <small class="text-muted">
+                              {{ articulo_top.cantidad_vendida|default:0|intcomma }} unidades
+                          </small>
+                      </div>
+                  </div>
+                  <div class="col-md-4">
+                      <div class="text-center">
+                          <h6 class="text-muted">Vendedor Top</h6>
+                          <h4 class="text-info">
+                              {{ usuario_top.creado_por__first_name|default:"N/A"|truncatechars:15 }}
+                          </h4>
+                          <small class="text-muted">
+                              {{ usuario_top.total_ventas|default:0|intcomma }} ventas
+                          </small>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+  
+
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Margen de Ganancia</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="border-end pe-3">
+                        <h6 class="text-success">Mejor Margen</h6>
+                        <h5>{{ articulo_mejor_margen.nombre|truncatechars:20 }}</h5>
+                        <div class="d-flex justify-content-between">
+                            <small>Costo: COP {{ articulo_mejor_margen.costo_promedio|floatformat:2|intcomma }}</small>
+                            <small>Venta: COP {{ articulo_mejor_margen.precio_venta|floatformat:2|intcomma }}</small>
+                        </div>
+                        <small class="text-success">
+                            +{{ articulo_mejor_margen.margen_porcentaje|floatformat:2 }}% (COP {{ articulo_mejor_margen.margen|floatformat:2|intcomma }})
+                        </small>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="ps-3">
+                        <h6 class="text-danger">Peor Margen</h6>
+                        <h5>{{ articulo_peor_margen.nombre|truncatechars:20 }}</h5>
+                        <div class="d-flex justify-content-between">
+                            <small>Costo: COP {{ articulo_peor_margen.costo_promedio|floatformat:2|intcomma }}</small>
+                            <small>Venta: COP {{ articulo_peor_margen.precio_venta|floatformat:2|intcomma }}</small>
+                        </div>
+                        <small class="text-danger">
+                            {{ articulo_peor_margen.margen_porcentaje|floatformat:2 }}% (COP {{ articulo_peor_margen.margen|floatformat:2|intcomma }})
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<!-- Sección de Productos por Categoría -->
+<div class="col-md-6 mb-4">
+  <div class="card h-100">
+      <div class="card-header bg-light">
+          <h5 class="mb-0">Productos por Categoría</h5>
+      </div>
+      <div class="card-body">
+          <div class="table-responsive">
+              <table class="table table-sm">
+                  <thead>
+                      <tr>
+                          <th>Categoría</th>
+                          <th class="text-end">Cantidad</th>
+                          <th class="text-end">Valor Total</th>
+                          <th class="text-end">% del Total</th>
+                      </tr>
+                  </thead>
+                  <tbody>
+                      {% for cat in productos_por_categoria %}
+                      <tr>
+                          <td>{{ cat.categoria__nombre|default:"Sin categoría" }}</td>
+                          <td class="text-end">{{ cat.total|intcomma }}</td>
+                          <td class="text-end">COP {{ cat.valor_total|default:0|floatformat:2|intcomma }}</td>
+                          <td class="text-end">
+                              {{ cat.valor_total|div:valor_inventario|mul:100|floatformat:2 }}%
+                          </td>
+                      </tr>
+                      {% empty %}
+                      <tr>
+                          <td colspan="4" class="text-center py-3">No hay categorías registradas</td>
+                      </tr>
+                      {% endfor %}
+                  </tbody>
+                  <tfoot>
+                      <tr class="table-light">
+                          <th>Total</th>
+                          <th class="text-end">{{ total_articulos|intcomma }}</th>
+                          <th class="text-end">COP {{ valor_inventario|floatformat:2|intcomma }}</th>
+                          <th class="text-end">100%</th>
+                      </tr>
+                  </tfoot>
+              </table>
+          </div>
+      </div>
+  </div>
+</div>
+
+<div class="container mt-4">
+  <div class="card">
+      <div class="card-header bg-primary text-white">
+          <h3 class="mb-0">
+              <i class="fas fa-tags me-2"></i>Productos por Categoría
+          </h3>
+      </div>
+      <div class="card-body">
+          <!-- Gráfico y tabla responsive -->
+          <div class="row">
+              <div class="col-md-6 mb-4">
+                  <div class="chart-container" style="position: relative; height:300px;">
+                      <canvas id="categoriasChart"></canvas>
+                  </div>
+              </div>
+              <div class="col-md-6">
+                  <div class="table-responsive">
+                      <table class="table table-striped table-hover" style="border-radius: 0.5rem; --bs-table-striped-bg: #ffffff; overflow: hidden;">
+                          <thead style="--bs-table-bg: #00203F; border-radius: 1rem; --bs-table-color: #f5f5f5;">
+                              <tr>
+                                  <th>Categoría</th>
+                                  <th class="text-end">Cantidad</th>
+                                  <th class="text-end">Valor Total</th>
+                              </tr>
+                          </thead>
+                          <tbody>
+                              {% for item in productos_por_categoria %}
+                              <tr>
+                                  <td>{{ item.categoria__nombre|default:"Sin categoría" }}</td>
+                                  <td class="text-end">{{ item.total }}</td>
+                                  <td class="text-end">${{ item.valor_total|floatformat:2|intcomma }}</td>
+                              </tr>
+                              {% empty %}
+                              <tr>
+                                  <td colspan="3" class="text-center">No hay datos disponibles</td>
+                              </tr>
+                              {% endfor %}
+                          </tbody>
+                          <tfoot class="table-secondary">
+                              <tr>
+                                  <th>Total</th>
+                                  <th class="text-end">{{ productos_por_categoria|length }}</th>
+                                  <th class="text-end">${{ total_general|floatformat:2|intcomma }}</th>
+                              </tr>
+                          </tfoot>
+                      </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+
+<!-- Ventas por período -- PERFECTAMENTE BIEN -->
+<div class="card mb-4">
+  <div class="card-header">
+      <h5>Ventas por Período</h5>
+  </div>
+  <div class="card-body">
+      <div class="row text-center">
+          <div class="col-md-4">
+              <div class="card border-primary">
+                  <div class="card-body">
+                      <h6 class="text-muted">Este Mes</h6>
+                      <h3 class="text-primary">COP {{ ventas_mes|floatformat:2|intcomma }}</h3>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-4">
+              <div class="card border-success">
+                  <div class="card-body">
+                      <h6 class="text-muted">Último Trimestre</h6>
+                      <h3 class="text-success">COP {{ ventas_trimestre|floatformat:2|intcomma }}</h3>
+                  </div>
+              </div>
+          </div>
+          <div class="col-md-4">
+              <div class="card border-info">
+                  <div class="card-body">
+                      <h6 class="text-muted">Último Semestre</h6>
+                      <h3 class="text-info">COP {{ ventas_semestre|floatformat:2|intcomma }}</h3>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div>
+</div>
+
+<!-- Recent Activity -->
+<div class="card mb-4">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Artículos por Reabastecer</h5>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>Código</th>
+            <th>Artículo</th>
+            <th>Categoría</th>
+            <th>Stock Actual</th>
+            <th>Stock Mínimo</th>
+            <th>Días Restantes</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for articulo in stock_bajo %}
+          <tr class="table-warning">
+            <td>{{ articulo.codigo }}</td>
+            <td>{{ articulo.nombre|truncatechars:20 }}</td>
+            <td>{{ articulo.categoria.nombre|default:"-" }}</td>
+            <td>{{ articulo.stock_actual|floatformat:"0" }}</td>
+            <td>{{ articulo.stock_minimo|floatformat:"0" }}</td>
+            <td>{{ articulo.dias_restantes|default:"-" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-3">
+              No hay artículos con stock bajo
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h5>Últimas Transacciones</h5>
+    <div class="btn-group" id="filtro-transacciones">
+      <button class="btn btn-sm btn-outline-secondary" data-filtro="entrada">Entradas</button>
+      <button class="btn btn-sm btn-outline-secondary" data-filtro="salida">Salidas</button>
+      <button class="btn btn-sm btn-outline-primary active" data-filtro="todas">Todas</button>
+    </div>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0" id="tabla-transacciones">
+        <thead class="table-light">
+          <tr>
+            <th>Fecha</th>
+            <th>Tipo</th>
+            <th>Artículo</th>
+            <th>Cantidad</th>
+            <th>Responsable</th>
+            <th>Documento</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for movimiento in ultimos_movimientos %}
+          <tr data-tipo="{{ movimiento.tipo|lower }}">
+            <td>{{ movimiento.fecha|date:"d/m/Y" }}</td>
+            <td>
+              <span class="badge {% if movimiento.tipo == 'ENTRADA' %}bg-success{% else %}bg-danger{% endif %}">
+                {{ movimiento.get_tipo_display }}
+              </span>
+            </td>
+            <td>{{ movimiento.articulo.nombre|truncatechars:20 }}</td>
+            <td>{{ movimiento.cantidad|floatformat:"0" }}</td>
+            <td>
+              {{ movimiento.usuario.get_full_name|default:movimiento.usuario.username }}
+            </td>
+            <td>{{ movimiento.referencia|default:"-"|truncatechars:15 }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center py-3">
+              No hay movimientos recientes
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<br /><br /><br /><br /><br />
+
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000">
+  <div class="btn-group dropup">
+    <button
+      type="button"
+      class="btn btn-primary rounded-circle shadow-lg action-btn"
+      data-bs-toggle="dropdown"
+      aria-expanded="false"
+    >
+      <svg
+        width="60px"
+        height="60px"
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+        <g
+          id="SVGRepo_tracerCarrier"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        ></g>
+        <g id="SVGRepo_iconCarrier">
+          <path
+            fill-rule="evenodd"
+            clip-rule="evenodd"
+            d="M22 12c0 5.523-4.477 10-10 10S2 17.523 2 12 6.477 2 12 2s10 4.477 10 10Zm-5 0L9 7.5v9l8-4.5Z"
+            fill="#f5f5f5"
+          ></path>
+        </g>
+      </svg>
+    </button>
+    <ul class="dropdown-menu dropdown-menu-lg-end">
+      <li>
+        <a class="dropdown-item" href="{% url 'crear_articulo' %}"
+          ><i class="bi bi-box-seam me-2"></i>Nuevo Artículo</a
+        >
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'nueva_compra' %}"
+          ><i class="bi bi-arrow-down-circle me-2"></i>Entrada de Inventario</a
+        >
+      </li>
+      <li>
+        <a class="dropdown-item" href="{% url 'crear_venta' %}"
+          ><i class="bi bi-arrow-up-circle me-2"></i>Salida de Inventario</a
+        >
+      </li>
+      <li><hr class="dropdown-divider" /></li>
+      <li>
+        <a class="dropdown-item" href=""
+          ><i class="bi bi-file-earmark-text me-2"></i>Generar Reporte</a
+        >
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Notificaciones -->
+<div class="toast-container position-fixed top-50 end-0 p-3" style="z-index: 1100">
+  {% for notificacion in notificaciones %}
+  <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header bg-{{ notificacion.tipo }} text-black">
+          <strong class="me-auto">Notificación</strong>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+      </div>
+      <div class="toast-body text-black">
+          {{ notificacion.mensaje }}
+      </div>
+  </div>
+  {% endfor %}
+</div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="{% static 'js/chart.min.js'' %}"></script>
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('categoriasChart').getContext('2d');
+    
+    // Preparar datos para el gráfico
+    const categorias = [{% for item in productos_por_categoria %}'{{ item.categoria__nombre|default:"Sin categoría" }}',{% endfor %}];
+    const cantidades = [{% for item in productos_por_categoria %}{{ item.total }},{% endfor %}];
+    const colores = generarColores(categorias.length);
+    
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: categorias,
+            datasets: [{
+                data: cantidades,
+                backgroundColor: colores,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'right',
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    // Función para generar colores aleatorios
+    function generarColores(cantidad) {
+        const colores = [];
+        for(let i = 0; i < cantidad; i++) {
+            colores.push(`hsl(${Math.floor(Math.random() * 360)}, 70%, 50%)`);
+        }
+        return colores;
+    }
+});
+</script>
+
+{% endblock %}

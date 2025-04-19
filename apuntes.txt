@@ -1,0 +1,37 @@
+Paleta de Colores: 
+
+Azul Marino Oscuro: #00203F
+Azul Marino Medio: #004080
+Azul Marino Claro: #005BBB
+Azul Acero: #4682B4
+Gris Azul: #708090
+Blanco Humo: #F5F5F5
+
+Funciones Importantes: 
+
+- Inicio de Sesion
+- Interfaz de Estadisticas Generales
+- Tabla de Productos
+- Cards de Productos
+- CRUD completo de Productos
+- Manejo de Usuarios
+- Responsive Design
+- Notificaciones y Alertas
+- Validaciones de Conteo de Productos
+
+Vistas:
+
+- Login o Inicio de Sesion
+- Dashboard o Panel Principal
+
+- Almacen:
+    - Agregar Producto a Inventario
+    - Eliminar Producto de Inventario
+    - Editar Producto de Inventario
+    - Ver Listado de Productos en Existencia
+
+-Alacena: 
+    - Seccion de Listado de Productos con Opcion de buscar producto por codigo, nombre, marca, o otros. Junto Con Informacion de cuantas unidades hay por cada producto y algunas alertas de productos escazos.
+
+-Caja:
+    - Agregar Pedido

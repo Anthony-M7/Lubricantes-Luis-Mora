@@ -1,0 +1,194 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4 text-black">
+    <h2 class="mb-4">Registrar Nuevo Artículo</h2>
+    
+    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+        {% csrf_token %}
+        
+        <div class="row">
+            <!-- Columna Izquierda -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        Información Básica
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.codigo.label_tag }}
+                            {{ form.codigo }}
+                            <div class="invalid-feedback">
+                                {{ form.codigo.errors }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.codigo_barras.label_tag }}
+                            {{ form.codigo_barras }}
+                            <div class="invalid-feedback">
+                                {{ form.codigo_barras.errors }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.nombre.label_tag }}
+                            {{ form.nombre }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.descripcion.label_tag }}
+                            {{ form.descripcion }}
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.categoria.label_tag }}
+                            {{ form.categoria }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.marca.label_tag }}
+                                {{ form.marca }}
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.modelo.label_tag }}
+                                {{ form.modelo }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">
+                        Información Financiera
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.costo_promedio.label_tag }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.costo_promedio }}
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                {{ form.precio_venta.label_tag }}
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.precio_venta }}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.tasa_impuesto.label_tag }}
+                            {{ form.tasa_impuesto }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Columna Derecha -->
+            <div class="col-md-6">
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        Gestión de Inventario
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                {{ form.stock_actual.label_tag }}
+                                {{ form.stock_actual }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.stock_minimo.label_tag }}
+                                {{ form.stock_minimo }}
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                {{ form.stock_maximo.label_tag }}
+                                {{ form.stock_maximo }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.unidad_medida.label_tag }}
+                            {{ form.unidad_medida }}
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-warning text-dark">
+                        Proveedor y Estado
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.proveedor_principal.label_tag }}
+                            {{ form.proveedor_principal }}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.lead_time.label_tag }}
+                                <div class="input-group">
+                                    {{ form.lead_time }}
+                                    <span class="input-group-text">días</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3 d-flex align-items-end">
+                                <div class="form-check form-switch">
+                                    {{ form.activo }}
+                                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                        Artículo activo
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-secondary text-white">
+                        Información Adicional
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.imagen.label_tag }}
+                            {{ form.imagen }}
+                        </div>
+                        {% if form.instance.imagen %}
+                            <img src="{{ form.instance.imagen.url }}" class="img-thumbnail" width="150">
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            {{ form.palabras_clave.label_tag }}
+                            {{ form.palabras_clave }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <button type="submit" class="btn btn-primary me-md-2">
+                <i class="bi bi-save"></i> Guardar Artículo
+            </button>
+            <a href="{% url 'inventario' %}" class="btn btn-outline-secondary">
+                <i class="bi bi-x-circle"></i> Cancelar
+            </a>
+        </div>
+        
+        {{ form.creado_por }}
+    </form>
+</div>
+
+<br><br><br>
+
+<script src="{% static 'js/script_formulario.js' %}"></script>
+
+{% endblock %}

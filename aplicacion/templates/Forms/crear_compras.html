@@ -1,0 +1,168 @@
+{% extends 'paneles/admin.html' %} {% load static %} {% block dashboard %}
+
+<link rel="stylesheet" href="{% static 'css/crear_compras.css' %}" />
+
+<div class="container">
+  <br />
+  <div class="card border-0 shadow-lg mt-4">
+    <div class="card-header bg-primary text-white">
+      <h3 class="mb-0"><i class="bi bi-cart-plus"></i> {{ titulo }}</h3>
+    </div>
+
+    <div class="card-body">
+      <form method="post" id="compra-form" class="needs-validation " novalidate>
+        {% csrf_token %}
+
+        <!-- Sección Artículo y Proveedor -->
+        <div class="row mb-4">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">{{ form.articulo.label }}</label>
+            {{ form.articulo }}
+            <div class="invalid-feedback articulo-feedback">
+              {% if form.articulo.errors %} {{ form.articulo.errors }} {% else
+              %} Por favor seleccione un artículo {% endif %}
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">{{ form.proveedor.label }}</label>
+            {{ form.proveedor }}
+            <small class="text-muted">(Opcional)</small>
+          </div>
+        </div>
+
+        <!-- Sección Cantidad y Precio -->
+        <div class="row mb-4">
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold">{{ form.cantidad.label }}</label>
+            <div class="input-group">
+              {{ form.cantidad }}
+              <span class="input-group-text unidad-medida">
+                {% if form.instance.articulo %}
+                    {{ form.instance.articulo.get_unidad_medida_display }}
+                {% else %} 
+                    UN 
+                {% endif %}
+              </span>
+            </div>
+            <div class="invalid-feedback cantidad-feedback">
+              {{ form.cantidad.errors|default:"La cantidad debe ser mayor a 0"
+              }}
+            </div>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label fw-bold"
+              >{{ form.costo_unitario.label }}</label
+            >
+            <div class="input-group">
+              <span class="input-group-text">COP</span>
+              {{ form.costo_unitario }}
+            </div>
+            <div class="invalid-feedback precio-feedback">
+              {{ form.costo_unitario.errors|default:"El precio debe ser mayor a0" }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección Referencia -->
+        <div class="mb-4">
+          <label class="form-label fw-bold">{{ form.referencia.label }}</label>
+          <div class="input-group">
+            {{ form.referencia }}
+            <button
+              type="button"
+              class="btn btn-outline-secondary"
+              id="generar-referencia"
+            >
+              <i class="bi bi-arrow-repeat"></i> Generar
+            </button>
+          </div>
+          <small class="text-muted referencia-ayuda"
+            >Ej: COMPRA-{{ "now"|date:"ymd" }}-001</small
+          >
+        </div>
+
+        <!-- Sección Observaciones -->
+        <div class="mb-4">
+          <label class="form-label fw-bold"
+            >{{ form.observaciones.label }}</label
+          >
+          {{ form.observaciones }}
+        </div>
+
+        <!-- Resumen de compra mejorado -->
+        <div class="card mb-4 border-primary card-resumen ">
+          <div class="card-header bg-light">
+            <h5 class="mb-0">Resumen del Artículo</h5>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4 text-center">
+                <img
+                  id="imagen-articulo"
+                  src=""
+                  class="img-thumbnail mb-2"
+                  style="max-height: 100px; display: none"
+                />
+                <p class="mb-1"><strong>Artículo:</strong></p>
+                <p id="resumen-articulo" class="fw-bold">No seleccionado</p>
+              </div>
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Stock actual:</strong></p>
+                <h5 id="stock-actual" class="text-info">
+                    0.00 
+                    <span id="unidad-stock" class="unidad-medida text-muted">UN</span>
+                </h5>
+
+                <p class="mb-1 mt-3"><strong>Precio referencia:</strong></p>
+                <h5 id="precio-referencia" class="text-muted">$0.00</h5>
+
+
+                <div id="variacion-precio" class="small mt-1"></div>
+                <div id="comparacion-precio-venta" class="small mt-1"></div>
+              </div>
+              
+              <div class="col-md-4">
+                <p class="mb-1"><strong>Stock futuro:</strong></p>
+                <h5 id="stock-futuro" class="text-success">
+                  0.00 <span class="unidad-medida text-muted">UN</span>
+                </h5>
+
+                <p class="mb-1 mt-3"><strong>Total compra:</strong></p>
+                <h4 id="total-compra" class="text-primary">$0.00</h4>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="d-flex justify-content-between mt-4">
+          <a href="{% url 'compras' %}" class="btn btn-secondary btn-lg">
+            <i class="bi bi-arrow-left"></i> Cancelar
+          </a>
+
+          <div id="estado-formulario" class="badge bg-secondary">
+            <!-- El texto se actualizará dinámicamente -->
+            Estado del formulario
+        </div>
+
+          <button
+            type="submit"
+            class="btn btn-primary btn-lg"
+            id="submit-btn"
+            disabled
+            style="z-index: 9999999;"
+          >
+            <i class="bi bi-save"></i> {{ boton_submit }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<br>
+
+
+
+<script src="{% static 'js/compras/crear_compras.js' %}"></script>
+{% endblock %}

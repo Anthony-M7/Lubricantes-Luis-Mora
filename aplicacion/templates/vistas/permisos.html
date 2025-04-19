@@ -1,0 +1,131 @@
+{% extends "paneles/admin.html" %}
+{% load static %}
+
+{% block dashboard %}
+<div class="container-fluid">
+    <h2>Gestión de Permisos para {% if is_user %}Usuario: {{ target.username }}{% else %}Grupo: {{ target.name }}{% endif %}</h2>
+    
+    <form id="permisosForm" method="post">
+        {% csrf_token %}
+        
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">Selección de Permisos</h4>
+                    </div>
+                    <div class="card-body" style="max-height: 70vh; overflow-y: auto;">
+                        {% for grupo in permisos_organizados %}
+                        <div class="mb-4 border-bottom pb-3">
+                            <h5>
+                                <i class="fas fa-folder-open"></i> 
+                                {{ grupo.app|title }} › 
+                                <span class="text-info">{{ grupo.verbose_name|title }}</span>
+                            </h5>
+                            
+                            <div class="row">
+                                {% for permiso in grupo.permisos %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card permiso-card">
+                                        <div class="card-body">
+                                            <div class="form-check">
+                                                <input class="form-check-input" type="checkbox" 
+                                                       name="permisos" value="{{ permiso.obj.id }}"
+                                                       id="perm_{{ permiso.obj.id }}"
+                                                       {% if permiso.obj.id in current_perms %}checked{% endif %}>
+                                                <label class="form-check-label" for="perm_{{ permiso.obj.id }}">
+                                                    <strong>{{ permiso.obj.name }}</strong>
+                                                    <small class="text-muted d-block">
+                                                        {{ permiso.obj.codename }}
+                                                    </small>
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="permiso-descripcion mt-2 small">
+                                                <div class="alert alert-info p-2 mb-0">
+                                                    {{ permiso.descripcion }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h4 class="mb-0">Información</h4>
+                    </div>
+                    <div class="card-body">
+                        <h5><i class="fas fa-info-circle"></i> Tipos de Permisos</h5>
+                        <ul class="list-group list-group-flush mb-4">
+                            <li class="list-group-item">
+                                <strong>Add:</strong> {{ descripciones.add }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Change:</strong> {{ descripciones.change }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>Delete:</strong> {{ descripciones.delete }}
+                            </li>
+                            <li class="list-group-item">
+                                <strong>View:</strong> {{ descripciones.view }}
+                            </li>
+                        </ul>
+                        
+                        <button type="submit" class="btn btn-success btn-block">
+                            <i class="fas fa-save"></i> Guardar Permisos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+    .permiso-card {
+        border-left: 4px solid #6c757d;
+        transition: all 0.3s ease;
+    }
+    .permiso-card:hover {
+        border-left-color: #007bff;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    .permiso-descripcion {
+        font-size: 0.85rem;
+    }
+</style>
+
+<script>
+document.getElementById('permisosForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if(data.success) {
+            alert('Permisos actualizados correctamente');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error al guardar los permisos');
+    });
+});
+</script>
+{% endblock %}

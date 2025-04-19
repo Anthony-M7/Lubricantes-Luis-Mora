@@ -1,0 +1,336 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+{% block dashboard %}
+
+<link rel="stylesheet" href="{% static 'css/inventario.css' %}">
+
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+  <h1 class="h2">Editar Producto: {{ producto.nombre }}</h1>
+  <div>
+    <a href="{% url 'inventario' %}" class="btn btn-outline-secondary me-2">
+      <i class="bi bi-arrow-left"></i> Volver
+    </a>
+  </div>
+</div>
+
+<!-- Mensajes -->
+{% if messages %}
+<div class="alert-container">
+  {% for message in messages %}
+  <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card shadow-sm mb-4">
+      <div class="card-body">
+        <form method="post" enctype="multipart/form-data" id="productForm">
+          {% csrf_token %}
+          
+          <!-- Sección 1: Información Básica -->
+          <h5 class="mb-3 text-primary">Información Básica</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_codigo" class="form-label">Código del artículo</label>
+              {{ form.codigo }}
+              {% if form.codigo.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.codigo.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_codigo_barras" class="form-label">Código de Barras</label>
+              {{ form.codigo_barras }}
+              {% if form.codigo_barras.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.codigo_barras.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_nombre" class="form-label">Nombre*</label>
+              {{ form.nombre }}
+              {% if form.nombre.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.nombre.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_categoria" class="form-label">Categoría*</label>
+              {{ form.categoria }}
+              {% if form.categoria.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.categoria.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_marca" class="form-label">Marca</label>
+              {{ form.marca }}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_modelo" class="form-label">Modelo</label>
+              {{ form.modelo }}
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="id_descripcion" class="form-label">Descripción</label>
+            {{ form.descripcion }}
+          </div>
+          
+          <!-- Sección 2: Gestión de Inventario -->
+          <h5 class="mb-3 mt-4 text-primary">Gestión de Inventario</h5>
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="id_stock_actual" class="form-label">Stock Actual*</label>
+              {{ form.stock_actual }}
+              {% if form.stock_actual.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.stock_actual.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-4">
+              <label for="id_stock_minimo" class="form-label">Stock Mínimo*</label>
+              {{ form.stock_minimo }}
+              {% if form.stock_minimo.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.stock_minimo.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-4">
+              <label for="id_stock_maximo" class="form-label">Stock Máximo</label>
+              {{ form.stock_maximo }}
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_unidad_medida" class="form-label">Unidad de Medida*</label>
+              {{ form.unidad_medida }}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_lead_time" class="form-label">Tiempo de Reposición (días)</label>
+              {{ form.lead_time }}
+            </div>
+          </div>
+          
+          <!-- Sección 3: Información Financiera -->
+          <h5 class="mb-3 mt-4 text-primary">Información Financiera</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_costo_promedio" class="form-label">Costo Promedio*</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.costo_promedio }}
+              </div>
+              {% if form.costo_promedio.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.costo_promedio.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_precio_venta" class="form-label">Precio de Venta*</label>
+              <div class="input-group">
+                <span class="input-group-text">$</span>
+                {{ form.precio_venta }}
+              </div>
+              {% if form.precio_venta.errors %}
+              <div class="invalid-feedback d-block">
+                {{ form.precio_venta.errors.0 }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_tasa_impuesto" class="form-label">Impuesto Aplicable*</label>
+              {{ form.tasa_impuesto }}
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_proveedor_principal" class="form-label">Proveedor Principal</label>
+              {{ form.proveedor_principal }}
+            </div>
+          </div>
+          
+          <!-- Sección 4: Otros Datos -->
+          <h5 class="mb-3 mt-4 text-primary">Otros Datos</h5>
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="id_palabras_clave" class="form-label">Palabras Clave</label>
+              {{ form.palabras_clave }}
+              <small class="text-muted">Separadas por comas (ej: Toyota, Carro, Automático)</small>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_imagen" class="form-label">Imagen del Producto</label>
+              {{ form.imagen }}
+              
+              {% if producto.imagen %}
+              <div class="mt-2">
+                <img src="{{ producto.imagen.url }}" alt="Imagen actual" class="img-thumbnail mt-2" style="max-height: 150px;">
+                <div class="form-check mt-2">
+                  <input class="form-check-input" type="checkbox" id="eliminar_imagen" name="eliminar_imagen">
+                  <label class="form-check-label" for="eliminar_imagen">
+                    Eliminar imagen actual
+                  </label>
+                </div>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <div class="form-check form-switch">
+                {{ form.activo }}
+                <label class="form-check-label" for="id_activo">¿Artículo activo?</label>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <label for="id_fecha_creacion" class="form-label">Fecha de Creación</label>
+              {{ form.fecha_creacion }}
+            </div>
+          </div>
+          
+          {{ form.creado_por }}
+          
+          <div class="d-flex justify-content-between mt-4">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-save"></i> Guardar Cambios
+            </button>
+            
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+              <i class="bi bi-trash"></i> Eliminar Producto
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Columna derecha con resumen -->
+  <div class="col-lg-4">
+    <!-- Resumen del Producto -->
+    <div class="card shadow-sm mb-4">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Resumen del Producto</h5>
+      </div>
+      <div class="card-body">
+        <div class="mb-3">
+          <h6 class="text-muted">Estado Actual</h6>
+          <span class="badge {% if producto.stock_actual == 0 %}bg-danger{% elif producto.necesita_reabastecimiento %}bg-warning text-dark{% else %}bg-success{% endif %}">
+            {% if producto.stock_actual == 0 %}Agotado{% elif producto.necesita_reabastecimiento %}Stock Bajo{% else %}En Stock{% endif %}
+          </span>
+        </div>
+        
+        <div class="mb-3">
+          <h6 class="text-muted">Valor Total en Inventario</h6>
+          <p>${{ producto.valor_total|floatformat:2 }} COP</p>
+        </div>
+        
+        <div class="mb-3">
+          <h6 class="text-muted">Margen de Ganancia</h6>
+          <p>{{ producto.margen_ganancia|floatformat:2 }}%</p>
+        </div>
+        
+        <div class="mb-3">
+          <h6 class="text-muted">Última Actualización</h6>
+          <p>{{ producto.fecha_actualizacion|date:"d/m/Y H:i" }}</p>
+        </div>
+        
+        <div class="mb-3">
+          <h6 class="text-muted">Creado por</h6>
+          <p>{{ producto.creado_por.get_full_name|default:producto.creado_por.username }}</p>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Historial de Movimientos -->
+    <div class="card shadow-sm">
+      <div class="card-header bg-light">
+        <h5 class="mb-0">Movimientos Recientes</h5>
+      </div>
+      <div class="card-body">
+        {% if movimientos %}
+        <div class="list-group list-group-flush">
+          {% for movimiento in movimientos %}
+          <div class="list-group-item border-0 px-0 py-2">
+            <div class="d-flex justify-content-between">
+              <div>
+                <h6 class="mb-1">{{ movimiento.get_tipo_display }}</h6>
+                <small class="text-muted">{{ movimiento.fecha|date:"d/m/Y H:i" }}</small>
+              </div>
+              <div class="text-end">
+                <span class="d-block {% if movimiento.tipo == 'entrada' %}text-success{% else %}text-danger{% endif %}">
+                  {% if movimiento.tipo == 'entrada' %}+{% else %}-{% endif %}{{ movimiento.cantidad }}
+                </span>
+                <small class="text-muted">Stock: {{ movimiento.stock_resultante }}</small>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">No hay movimientos registrados</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmación de Eliminación -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteModalLabel">Confirmar Eliminación</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>¿Estás seguro que deseas eliminar el producto <strong>{{ producto.nombre }}</strong>?</p>
+        <p class="text-danger">Esta acción no se puede deshacer y se perderán todos los datos asociados al producto.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <form action="{% url 'eliminar_producto' producto.id %}" method="post" style="display: inline;">
+          {% csrf_token %}
+          <button type="submit" class="btn btn-danger">
+            <i class="bi bi-trash"></i> Eliminar Definitivamente
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts -->
+<script src="{% static 'js/inventario/editar_articulo.js' %}"></script>
+
+{% endblock %}

@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: lubricantes-app
+    env: python
+    buildCommand: ""
+    startCommand: gunicorn lubricantesLuisMora.wsgi
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        value: tu_clave_segura
+      - key: DJANGO_DEBUG
+        value: False

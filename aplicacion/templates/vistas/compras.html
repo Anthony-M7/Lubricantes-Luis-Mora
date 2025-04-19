@@ -1,0 +1,250 @@
+{% extends 'paneles/admin.html' %} {% load static %}
+{% block dashboard %}
+
+<div class="container-fluid">
+    
+    <br>
+    <div class="d-flex justify-content-between align-items-center mb-4 text-black">
+        <h2 class="mb-0">{{ titulo }}</h2>
+        <a href="{% url 'nueva_compra' %}" class="btn btn-success">
+            <i class="bi bi-plus-circle"></i> Nueva Compra
+        </a>
+    </div>
+    
+    <!-- Filtros Avanzados -->
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-funnel"></i> Filtros Avanzados</h5>
+        </div>
+        <div class="card-body">
+            <form method="get" class="row g-3">
+                <div class="col-md-5">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-search"></i></span>
+                        <input type="text" name="q" value="{{ q }}" class="form-control" 
+                               placeholder="Buscar por artículo, código o referencia">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="dias" class="form-select">
+                        <option value="7" {% if dias == 7 %}selected{% endif %}>Últimos 7 días</option>
+                        <option value="15" {% if dias == 15 %}selected{% endif %}>Últimos 15 días</option>
+                        <option value="30" {% if dias == 30 %}selected{% endif %}>Últimos 30 días</option>
+                        <option value="90" {% if dias == 90 %}selected{% endif %}>Últimos 3 meses</option>
+                        <option value="365" {% if dias == 365 %}selected{% endif %}>Último año</option>
+                        <option value="0" {% if dias == 0 %}selected{% endif %}>Todos los registros</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="proveedor" class="form-select">
+                        <option value="">Todos los proveedores</option>
+                        {% for prov in proveedores %}
+                        <option value="{{ prov.id }}" {% if proveedor_id == prov.id %}selected{% endif %}>{{ prov.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-funnel"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resumen Estadístico -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h6 class="card-title">Total Compras</h6>
+                    <h4 class="card-text">COP {{ total_compras|floatformat:0 }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h6 class="card-title">Artículos Comprados</h6>
+                    <h4 class="card-text">{{ total_articulos }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h6 class="card-title">Promedio por Compra</h6>
+                    <h4 class="card-text">COP {{ promedio_compra|floatformat:0 }}</h4>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-white bg-secondary">
+                <div class="card-body">
+                    <h6 class="card-title">Registros Encontrados</h6>
+                    <h4 class="card-text">{{ compras.paginator.count }}</h4>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de compras mejorada -->
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped mb-0 text-start">
+                    <thead style="--bs-table-bg: #004080; --bs-table-color: #f5f5f5;">
+                        <tr>
+                            <th width="120">Fecha</th>
+                            <th>Artículo</th>
+                            <th width="100">Cantidad</th>
+                            <th width="120">Precio Unit.</th>
+                            <th width="120">Total</th>
+                            <th width="150">Proveedor</th>
+                            <th width="120">Usuario</th>
+                            <th width="150">Referencia</th>
+                            <th width="120">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for compra in compras %}
+                        <tr>
+                            <td>{{ compra.fecha|date:"d/m/Y H:i" }}</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div>
+                                        <strong>{{ compra.articulo.nombre }}</strong>
+                                        <br>
+                                        <small class="text-muted">{{ compra.articulo.codigo }}</small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>{{ compra.cantidad|floatformat:"0" }} {{ compra.articulo.get_unidad_medida_display }}</td>
+                            <td>COP {{ compra.costo_unitario|floatformat:"0" }}</td>
+                            <td class="fw-bold">COP {{ compra.total|floatformat:"0" }}</td>
+                            <td>
+                                {% if compra.proveedor %}
+                                <span class="badge bg-info">{{ compra.proveedor.nombre }}</span>
+                                {% else %}
+                                <span class="badge bg-secondary">No especificado</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ compra.usuario.get_short_name }}</td>
+                            <td>
+                                {% if compra.referencia %}
+                                <span class="badge bg-light text-dark">{{ compra.referencia }}</span>
+                                {% else %}
+                                -
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <a href="{% url 'editar_compra' compra.id %}" class="btn btn-outline-primary" title="Editar">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <a href="{% url 'detalle_compra' compra.id %}" class="btn btn-outline-info" title="Detalle">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <button type="button" class="btn btn-outline-danger" 
+                                            data-bs-toggle="modal" data-bs-target="#eliminarModal{{ compra.id }}" title="Eliminar">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                                
+                                <!-- Modal de Confirmación para Eliminar -->
+                                <div class="modal fade" id="eliminarModal{{ compra.id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header bg-principal text-white">
+                                                <h5 class="modal-title">Confirmar Eliminación</h5>
+                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                ¿Estás seguro de eliminar esta compra?
+                                                <ul class="mt-2">
+                                                    <li>Artículo: {{ compra.articulo.nombre }}</li>
+                                                    <li>Cantidad: {{ compra.cantidad|floatformat:"0" }}</li>
+                                                    <li>Fecha: {{ compra.fecha|date:"d/m/Y" }}</li>
+                                                </ul>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <form action="{% url 'eliminar_compra' compra.id %}" method="post" class="d-inline">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn" style="background-color: #00203F; color: #f5f5f5;">
+                                                        <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="9" class="text-center py-4">
+                                <div class="alert alert-warning mb-0">
+                                    <i class="bi bi-exclamation-triangle"></i> No se encontraron compras registradas
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Paginación Mejorada -->
+    {% if compras.has_other_pages %}
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination justify-content-center">
+            {% if compras.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page=1&dias={{ dias }}&q={{ q }}&proveedor={{ proveedor_id }}" 
+                   title="Primera página">
+                    <i class="bi bi-chevron-double-left"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ compras.previous_page_number }}&dias={{ dias }}&q={{ q }}&proveedor={{ proveedor_id }}" 
+                   title="Página anterior">
+                    <i class="bi bi-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_range %}
+            {% if compras.number == num %}
+            <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+            {% else %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ num }}&dias={{ dias }}&q={{ q }}&proveedor={{ proveedor_id }}">{{ num }}</a>
+            </li>
+            {% endif %}
+            {% endfor %}
+            
+            {% if compras.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ compras.next_page_number }}&dias={{ dias }}&q={{ q }}&proveedor={{ proveedor_id }}" 
+                   title="Siguiente página">
+                    <i class="bi bi-chevron-right"></i>
+                </a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?page={{ compras.paginator.num_pages }}&dias={{ dias }}&q={{ q }}&proveedor={{ proveedor_id }}" 
+                   title="Última página">
+                    <i class="bi bi-chevron-double-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+</div>
+    
+
+{% endblock %}

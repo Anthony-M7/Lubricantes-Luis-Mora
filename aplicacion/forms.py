@@ -490,4 +490,37 @@ class ClienteForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'correo@ejemplo.com'
             }),
+            'activo': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+
+class ClienteSearchForm(forms.Form):
+    TIPO_CHOICES = [
+        ('', 'Todos los tipos'),
+        ('NATURAL', 'Persona Natural'),
+        ('JURIDICO', 'Persona Jurídica'),
+    ]
+    
+    ESTADO_CHOICES = [
+        ('', 'Todos los estados'),
+        ('activo', 'Activo'),
+        ('inactivo', 'Inactivo'),
+    ]
+    
+    search = forms.CharField(
+        required=False,
+        widget=forms.TextInput(attrs={
+            'placeholder': 'Buscar por nombre, ID o teléfono',
+            'class': 'form-control'
+        })
+    )
+    tipo = forms.ChoiceField(
+        choices=TIPO_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    estado = forms.ChoiceField(
+        choices=ESTADO_CHOICES,
+        required=False,
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )

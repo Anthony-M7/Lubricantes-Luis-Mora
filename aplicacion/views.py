@@ -15,7 +15,7 @@ from django.http import JsonResponse
 import json
 
 from .models import *
-from .forms import ArticuloForm, CompraInventarioForm, PersonalForm, UserUpdateForm
+from .forms import ArticuloForm, CompraInventarioForm, PersonalForm, UserUpdateForm, ClienteForm, ClienteSearchForm
 import os
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -801,7 +801,7 @@ def profile(request):
                     pass
             else:
                 pass
-            
+
             messages.success(request, 'Tu perfil ha sido actualizado correctamente!')
             return redirect('perfil')
         else:
@@ -815,6 +815,93 @@ def profile(request):
     }
 
     return render(request, 'vistas/perfil.html', context)
+
+
+
+# =============================================================================
+
+def listar_clientes(request):
+    clientes = Cliente.objects.filter(activo=True).order_by('-fecha_creacion')
+    
+    # Filtros
+    tipo = request.GET.get('tipo')
+    estado = request.GET.get('estado')
+    search_query = request.GET.get('search')
+    
+    if tipo:
+        clientes = clientes.filter(tipo=tipo)
+    if estado:
+        clientes = clientes.filter(activo=estado == 'activo')
+    if search_query:
+        clientes = clientes.filter(
+            models.Q(nombre__icontains=search_query) |
+            models.Q(identificacion__icontains=search_query) |
+            models.Q(telefono__icontains=search_query)
+        )
+    
+    paginator = Paginator(clientes, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    search_form = ClienteSearchForm(request.GET or None)
+    
+    return render(request, 'vistas/clientes.html', {
+        'clientes': page_obj,
+        'page_obj': page_obj,
+        'search_form': search_form
+    })
+
+def crear_cliente(request):
+    if request.method == 'POST':
+        form = ClienteForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('clientes')
+    else:
+        form = ClienteForm()
+    
+    return render(request, 'clientes/cliente_form.html', {
+        'form': form,
+        'titulo': 'Crear Nuevo Cliente'
+    })
+
+def editar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    
+    if request.method == 'POST':
+        form = ClienteForm(request.POST, instance=cliente)
+        if form.is_valid():
+            form.save()
+            return redirect('clientes')
+    else:
+        form = ClienteForm(instance=cliente)
+    
+    return render(request, 'clientes/cliente_form.html', {
+        'form': form,
+        'object': cliente,
+        'titulo': 'Editar Cliente'
+    })
+
+def detalle_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    return render(request, 'clientes/detalles_cliente.html', {
+        'cliente': cliente
+    })
+
+def eliminar_cliente(request, pk):
+    cliente = get_object_or_404(Cliente, pk=pk)
+    
+    if request.method == 'POST':
+        cliente.activo = False
+        cliente.save()
+        return redirect('clientes')
+    
+    return render(request, 'clientes/cliente_confirm_delete.html', {
+        'object': cliente
+    })
+
+
+
 
 
 @nivel_requerido('admin')

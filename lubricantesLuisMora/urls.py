@@ -70,6 +70,13 @@ urlpatterns = [
     path('ventas/<int:venta_id>/eliminar/', eliminar_venta, name='eliminar_venta'),
     path('ventas/<int:venta_id>/detalle/', detalle_venta, name='detalle_venta'),
     
+    # Clientes
+    path('clientes/', listar_clientes, name='clientes'),
+    path('nuevo-cliente/', crear_cliente, name='nuevo_cliente'),
+    path('detalles-cliente/<int:pk>/', detalle_cliente, name='detalles_cliente'),
+    path('detalles-cliente/<int:pk>/editar/', editar_cliente, name='editar_cliente'),
+    path('detalles-cliente/<int:pk>/eliminar/', eliminar_cliente, name='eliminar_cliente'),
+
     # Detalles de venta
     path('ventas/cambiar-estado/', cambiar_estado_venta, name='cambiar_estado_venta'),
     path('ventas/<int:venta_id>/agregar-detalle/', agregar_detalle, name='agregar_detalle'),

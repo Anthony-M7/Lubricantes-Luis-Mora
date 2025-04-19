@@ -1,0 +1,49 @@
+{% extends 'paneles/admin.html' %}
+
+{% block dashboard %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="mb-0"><i class="bi bi-person-circle"></i> Detalle del Cliente</h3>
+                <div>
+                    <a href="{% url 'editar_cliente' cliente.pk %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-pencil"></i> Editar
+                    </a>
+                    <a href="{% url 'clientes' %}" class="btn btn-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h5>Información Básica</h5>
+                        <hr>
+                        <p><strong>Tipo:</strong> {{ cliente.get_tipo_display }}</p>
+                        <p><strong>Identificación:</strong> {{ cliente.identificacion }}</p>
+                        <p><strong>Nombre:</strong> {{ cliente.nombre }}</p>
+                        <p><strong>Estado:</strong> 
+                            <span class="badge bg-{% if cliente.activo %}success{% else %}danger{% endif %}">
+                                {% if cliente.activo %}Activo{% else %}Inactivo{% endif %}
+                            </span>
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <h5>Información de Contacto</h5>
+                        <hr>
+                        <p><strong>Dirección:</strong> {{ cliente.direccion|default:"-" }}</p>
+                        <p><strong>Teléfono:</strong> {{ cliente.telefono|default:"-" }}</p>
+                        <p><strong>Email:</strong> {{ cliente.email|default:"-" }}</p>
+                        <p><strong>Fecha de Registro:</strong> {{ cliente.fecha_creacion|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

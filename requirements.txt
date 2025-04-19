@@ -3,6 +3,7 @@ chardet==5.2.0
 dj-database-url==2.3.0
 Django==5.1.7
 django-mathfilters==1.0.0
+django-sslserver==0.22
 gunicorn==23.0.0
 packaging==24.2
 pillow==11.1.0

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+
+<div class="blog-container" style="margin-top: 2rem;">
+    <!-- Banner principal -->
+    <section class="banner-principal" style="background-color: #00203F;">
+        <div class="banner-content">
+            <h1>Conocimiento técnico sobre lubricantes</h1>
+            <p class="subtitle">Aprende sobre las mejores marcas y productos para el cuidado de tu motor</p>
+        </div>
+    </section>
+
+    <!-- Productos destacados -->
+    <section class="seccion-productos">
+        <h2 class="section-title">Productos Destacados</h2>
+        <div class="productos-grid">
+            {% for producto in productos_destacados %}
+            <div class="producto-card">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="producto-imagen">
+                {% endif %}
+                <div class="producto-info">
+                    <h3>{{ producto.nombre }}</h3>
+                    <p class="producto-marca">{{ producto.marca }}</p>
+                    <p class="producto-precio">${{ producto.precio_venta }}</p>
+                    <a href="{% url 'detalle_post' post_id=producto.id %}" class="btn-ver-mas">Ver detalles</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Contenido informativo (blog) -->
+    <section class="seccion-blog">
+        <h2 class="section-title">Artículos Informativos</h2>
+        
+        <div class="blog-content-wrapper">
+            <!-- Sidebar de categorías -->
+            <div class="categorias-sidebar">
+                <h3>Categorías</h3>
+                <ul class="categorias-list">
+                    {% for categoria in categorias_principales %}
+                    <li class="categoria-item">
+                        <a href="{% url 'posts_categoria' categoria.slug %}" class="categoria-link">
+                            {{ categoria.nombre }}
+                        </a>
+                        {% if categoria.subcategorias.all %}
+                        <ul class="subcategorias-list">
+                            {% for subcat in categoria.subcategorias.all %}
+                            <li class="subcategoria-item">
+                                <a href="{% url 'posts_categoria' subcat.slug %}" class="subcategoria-link">
+                                    {{ subcat.nombre }}
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            
+            <!-- Contenido principal -->
+            <div class="blog-main-content">
+                {% if page_obj.object_list %}
+                <div class="posts-grid">
+                    {% for post in page_obj %}
+                    <article class="post-card">
+                        <!-- {% if post.imagen %}
+                        <div class="post-imagen-container">
+                            <img src="{{ post.imagen.url }}" alt="{{ post.nombre }}" class="post-imagen">
+                        </div>
+                        {% endif %} -->
+                        <div class="post-content">
+                            <span class="post-categoria">{{ post.categoria.nombre }}</span>
+                            <h3><a href="{% url 'detalle_post' post_id=post.id %}">{{ post.nombre }}</a></h3>
+                            <!-- <p class="post-excerpt">
+                                {% if post.descripcion %}
+                                    {{ post.descripcion|truncatechars:150 }}
+                                {% else %}
+                                    Este artículo no tiene descripción disponible.
+                                {% endif %}
+                            </p> -->
+                            <div class="post-meta">
+                                <span class="post-date">{{ post.fecha_creacion|date:"d M Y" }}</span>
+                                {% if post.marca %}
+                                <span class="post-brand">{{ post.marca }}</span>
+                                {% endif %}
+                                <a href="{% url 'detalle_post' post_id=post.id %}" class="read-more">Leer más →</a>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+                
+                <!-- Paginación -->
+                {% if page_obj.paginator.num_pages > 1 %}
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}" class="page-link">« Anterior</a>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                        {% if page_obj.number == num %}
+                            <span class="current-page">{{ num }}</span>
+                        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                            <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}" class="page-link">Siguiente »</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+                
+                {% else %}
+                <div class="no-posts-message">
+                    <p>No hay artículos informativos disponibles en este momento.</p>
+                    {% if not request.user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn-login">Iniciar sesión para agregar contenido</a>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Marcas/proveedores -->
+    <section class="seccion-marcas">
+        <h2 class="section-title">Marcas que trabajamos</h2>
+        <div class="marcas-grid">
+            {% for marca in marcas_destacadas %}
+            <div class="marca-card">
+                <h3>{{ marca.nombre }}</h3>
+                <p>{{ marca.contacto }}</p>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Paginación -->
+    {% if page_obj.paginator.num_pages > 1 %}
+    <div class="pagination">
+        {% if page_obj.has_previous %}
+            <a href="?page={{ page_obj.previous_page_number }}" class="page-link">← Anterior</a>
+        {% endif %}
+        
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="current-page">{{ num }}</span>
+            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}" class="page-link">Siguiente →</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

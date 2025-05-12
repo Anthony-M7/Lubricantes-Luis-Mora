@@ -1,0 +1,340 @@
+{% extends 'paneles/admin.html' %}
+{% load static humanize %}
+{% load mathfilters %}
+
+{% block dashboard %}
+<link rel="stylesheet" href="{% static 'css/finanzas.css' %}">
+
+<div class="finance-reports-container">
+    <h1 class="report-title">Reportes Financieros</h1>
+    
+    <!-- Filtros -->
+    <div class="report-filters">
+        <p>Filtro aplicado: desde {{ fecha_inicio }} hasta {{ fecha_fin }}</p>
+        <form method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="fecha_inicio">Fecha Inicio:</label>
+                    <input type="date" name="fecha_inicio" id="fecha_inicio" value="{{ fecha_inicio }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="fecha_fin">Fecha Fin:</label>
+                    <input type="date" name="fecha_fin" id="fecha_fin" value="{{ fecha_fin }}">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="tipo_reporte">Tipo de Reporte:</label>
+                    <select name="tipo_reporte" id="tipo_reporte" class="form-select">
+                        <option value="ventas" {% if tipo_reporte == 'ventas' %}selected{% endif %}>Ventas</option>
+                        <option value="articulos" {% if tipo_reporte == 'articulos' %}selected{% endif %}>Artículos más vendidos</option>
+                        <option value="articulo_detalle" {% if tipo_reporte == 'articulo_detalle' %}selected{% endif %}>Detalle por artículo</option>
+                    </select>
+                </div>
+                
+                {% if tipo_reporte == 'articulo_detalle' %}
+                <div class="filter-group">
+                    <label for="articulo">Artículo:</label>
+                    <select name="articulo" id="articulo" class="form-select">
+                        {% for art in articulos %}
+                        <option value="{{ art.id }}" {% if art.id|stringformat:"s" == articulo_id %}selected{% endif %}>{{ art.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                {% if tipo_reporte == 'ventas' %}
+                <div class="filter-group">
+                    <label for="agrupacion">Agrupación:</label>
+                    <select name="agrupacion" id="agrupacion" class="form-select">
+                        <option value="mes" {% if request.GET.agrupacion == 'mes' %}selected{% endif %}>Por Mes</option>
+                        <option value="dia" {% if request.GET.agrupacion == 'dia' %}selected{% endif %}>Por Día</option>
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="filter-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-filter"></i> Filtrar
+                    </button>
+                    <a href="{% url 'reportes' %}" class="btn btn-secondary">
+                        <i class="bi bi-stars"></i> Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Reporte de Ventas -->
+    {% if tipo_reporte == 'ventas' and ventas_report %}
+    <div class="report-section">
+        <h2 class="section-title">Reporte de Ventas</h2>
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Total Ventas</h3>
+                <p class="amount">{{ total_ventas }}</p>
+            </div>
+            <!-- Actualizar los totales generales: -->
+            <div class="summary-card">
+                <h3>Monto Total</h3>
+                <p class="amount">COP {{ monto_total|default:0|floatformat:2|intcomma }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Ganancia Total</h3>
+                <p class="amount">COP {{ ganancia_total|default:0|floatformat:2|intcomma }}</p>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <!-- Sección de Ventas -->
+            <table class="report-table table table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Periodo</th>
+                    <th>Total Ventas</th>
+                    <th>Monto Total</th>
+                    <th>Costo Total</th>
+                    <th>Ganancia</th>
+                    <th>Margen</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for venta in ventas_report %}
+                <tr>
+                    <td>
+                        {% if request.GET.agrupacion == 'mes' %}
+                            {{ venta.periodo|date:"F Y" }}
+                        {% else %}
+                            {{ venta.periodo|date:"d/m/Y" }}
+                        {% endif %}
+                    </td>
+                    <td>{{ venta.total_ventas|default:0 }}</td>
+                    <td>COP {{ venta.monto_total|default:0|floatformat:2|intcomma }}</td>
+                    <td>COP {{ venta.costo_total|default:0|floatformat:2|intcomma }}</td>
+                    <td>COP {{ venta.ganancia_total|default:0|floatformat:2|intcomma }}</td>
+                    <td>
+                        {% if venta.monto_total|default:0 > 0 %}
+                            {{ venta.ganancia_total|default:0|div:venta.monto_total|mul:100|floatformat:2 }}%
+                        {% else %}
+                            0.00%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No hay ventas en el período seleccionado</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Reporte de Artículos más Vendidos -->
+    {% if tipo_reporte == 'articulos' and articulos_report %}
+    <div class="report-section">
+        <h2 class="section-title">Artículos Más Vendidos</h2>
+        
+        <div class="table-responsive">
+            <!-- Sección de Artículos -->
+            <table class="report-table table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Categoría</th>
+                        <th>Cantidad Vendida</th>
+                        <th>Monto Total</th>
+                        <th>Ganancia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for art in articulos_report %}
+                    <tr>
+                        <td>{{ art.articulo__codigo|default:"N/A" }}</td>
+                        <td>{{ art.articulo__nombre|default:"N/A" }}</td>
+                        <td>{{ art.articulo__categoria__nombre|default:"N/A" }}</td>
+                        <td>{{ art.cantidad_vendida|default:0 }}</td>
+                        <td>COP {{ art.monto_total|default:0|floatformat:2|intcomma }}</td>
+                        <td>COP {{ art.ganancia_total|default:0|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No hay artículos vendidos en el período seleccionado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detalle por Artículo -->
+    {% if tipo_reporte == 'articulo_detalle' and articulo_detalle %}
+    <div class="report-section">
+        <h2 class="section-title">Detalle de Ventas: {{ articulo.nombre }}</h2>
+        
+        <div class="article-info">
+            <div class="info-row">
+                <span class="label">Código:</span>
+                <span class="value">{{ articulo.codigo }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Categoría:</span>
+                <span class="value">{{ articulo.categoria.nombre }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Precio Actual:</span>
+                <span class="value">COP {{ articulo.precio_venta|intcomma }}</span>
+            </div>
+            <div class="info-row">
+                <span class="label">Costo Promedio:</span>
+                <span class="value">COP {{ articulo.costo_promedio|intcomma }}</span>
+            </div>
+        </div>
+        
+        <div class="summary-cards">
+            <div class="summary-card">
+                <h3>Cantidad Total Vendida</h3>
+                <p class="amount">{{ total_cantidad }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Monto Total</h3>
+                <p class="amount">COP {{ total_monto|intcomma }}</p>
+            </div>
+            <div class="summary-card">
+                <h3>Ganancia Total</h3>
+                <p class="amount">COP {{ total_ganancia|intcomma }}</p>
+            </div>
+        </div>
+        
+        <div class="table-responsive">
+            <!-- Sección de Detalle por Artículo -->
+            <table class="report-table table table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Venta</th>
+                        <th>Cantidad</th>
+                        <th>Precio Unitario</th>
+                        <th>Monto</th>
+                        <th>Ganancia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in articulo_detalle %}
+                    <tr>
+                        <td>{{ detalle.dia|date:"d/m/Y" }}</td>
+                        <td>{{ detalle.venta__codigo|default:"N/A" }}</td>
+                        <td>{{ detalle.cantidad|default:0 }}</td>
+                        <td>COP {{ detalle.monto|default:0|div:detalle.cantidad|default:1|floatformat:2|intcomma }}</td>
+                        <td>COP {{ detalle.monto|default:0|floatformat:2|intcomma }}</td>
+                        <td>COP {{ detalle.ganancia|default:0|floatformat:2|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6">No hay ventas de este artículo en el período seleccionado</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Exportar Reporte -->
+    {% if ventas_report or articulos_report or articulo_detalle %}
+    <div class="export-actions mt-4">
+        <a href="?{{ request.GET.urlencode }}&export=pdf" class="btn btn-danger me-2">
+            <i class="bi bi-file-earmark-pdf-fill"></i> Exportar a PDF
+        </a>
+        <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-success me-2">
+            <i class="bi bi-file-excel-fill"></i> Exportar a Excel
+        </a>
+        <button class="btn btn-primary" onclick="window.print()">
+            <i class="bi bi-printer-fill"></i> Imprimir Reporte
+        </button>
+    </div>
+    {% endif %}
+
+    <!-- Después de la sección de exportación -->
+    <div class="chart-container mt-5">
+        <h2 class="section-title">Gráfico de Ventas Mensuales</h2>
+        <div class="chart-wrapper">
+            <canvas id="ventasChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Agrega estos estilos CSS -->
+    <style>
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            width: 100%;
+        }
+    </style>
+
+
+    <script src="{% static 'js/chart.min.js'' %}"></script>
+    <!-- Script para renderizar el gráfico -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const ctx = document.getElementById('ventasChart').getContext('2d');
+            const meses = {{ grafica_meses|safe }};
+            const ventas = {{ grafica_ventas|safe }};
+            
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: meses,
+                    datasets: [{
+                        label: 'Ventas por Mes',
+                        data: ventas,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Cantidad de Ventas'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Mes'
+                            }
+                        }
+                    },
+                    plugins: {
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Ventas: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+
+    
+</div>
+{% endblock %}

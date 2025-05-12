@@ -1,3 +1,5 @@
+import io
+from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required, user_passes_test
@@ -5,9 +7,18 @@ from django.contrib import messages
 from django.urls import reverse
 from .decorators import nivel_requerido
 from django.contrib.auth import logout
-from django.db.models import Q, Sum, Count, F
+from django.db.models import Q, Sum, Count, F, CharField, DecimalField, ExpressionWrapper
+from django.db.models.functions import TruncMonth, TruncDay
+from django.views.generic import TemplateView
+from django.db.models.functions import Length
 from django.utils import timezone
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.lib import colors
+from openpyxl import Workbook
+
 from django.core.paginator import Paginator
 from django.core import serializers
 
@@ -20,9 +31,6 @@ import os
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import lubricantesLuisMora.settings as settings
-
-
-
 
 
 def inicio(request):
@@ -93,7 +101,6 @@ def panel_usuario(request):
 def custom_logout(request):
     logout(request)
     return redirect('inicio')  # Redirige a la página principal
-
 
 def dashboard(request):
     """
@@ -382,6 +389,7 @@ def generar_notificaciones(hoy, stock_bajo, articulos_inactivos, ventas_hoy, cli
     
     return notificaciones
 
+@login_required
 def inventario_view(request):
     categorias = Categoria.objects.all()
     query = request.GET.get('q', '').strip()
@@ -820,6 +828,7 @@ def profile(request):
 
 # =============================================================================
 
+@login_required
 def listar_clientes(request):
     clientes = Cliente.objects.filter(activo=True).order_by('-fecha_creacion')
     
@@ -851,6 +860,7 @@ def listar_clientes(request):
         'search_form': search_form
     })
 
+@login_required
 def crear_cliente(request):
     if request.method == 'POST':
         form = ClienteForm(request.POST)
@@ -865,6 +875,7 @@ def crear_cliente(request):
         'titulo': 'Crear Nuevo Cliente'
     })
 
+@login_required
 def editar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     
@@ -882,12 +893,14 @@ def editar_cliente(request, pk):
         'titulo': 'Editar Cliente'
     })
 
+@login_required
 def detalle_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     return render(request, 'clientes/detalles_cliente.html', {
         'cliente': cliente
     })
 
+@login_required
 def eliminar_cliente(request, pk):
     cliente = get_object_or_404(Cliente, pk=pk)
     
@@ -901,7 +914,399 @@ def eliminar_cliente(request, pk):
     })
 
 
+# ===============================================================================
 
+def blog_informativo(request):
+    # Obtener artículos destacados
+    productos_destacados = Articulo.objects.filter(
+        activo=True,
+        stock_actual__gt=0
+    ).order_by('-fecha_creacion')[:4]
+    
+    # Obtener categorías principales
+    categorias_principales = Categoria.objects.filter(padre__isnull=True).prefetch_related('subcategorias')
+    
+    # Obtener marcas destacadas
+    marcas_destacadas = Proveedor.objects.filter(activo=True)[:6]
+    
+    # Obtener artículos para el blog (versión más flexible)
+    posts_blog = Articulo.objects.filter(
+        activo=True
+    ).exclude(descripcion__isnull=True).exclude(descripcion__exact='').order_by('-fecha_creacion')
+    
+    # Paginación
+    paginator = Paginator(posts_blog, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'productos_destacados': productos_destacados,
+        'categorias_principales': categorias_principales,
+        'marcas_destacadas': marcas_destacadas,
+        'page_obj': page_obj,
+    }
+    
+    return render(request, 'vistas/blog.html', context)
+
+
+def posts_por_categoria(request, slug):
+    categoria = get_object_or_404(Categoria, slug=slug)
+    
+    # Obtener todos los artículos de esta categoría y subcategorías - solución corregida
+    subcategorias = categoria.subcategorias.all()
+    posts = Articulo.objects.filter(activo=True).annotate(
+        desc_len=Length('descripcion')
+    ).filter(
+        Q(categoria=categoria) | Q(categoria__in=subcategorias)
+    ).order_by('-fecha_creacion')
+    
+    print(posts)
+
+    # Paginación
+    paginator = Paginator(posts, 6)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    context = {
+        'categoria': categoria,
+        'page_obj': page_obj,
+    }
+    
+    return render(request, 'vistas/posts_por_categoria.html', context)
+
+# La función detalle_post no necesita cambios
+def detalle_post(request, categoria_slug=None, post_id=None):
+    post = get_object_or_404(Articulo, id=post_id, activo=True)
+    
+    # Productos relacionados (misma categoría)
+    productos_relacionados = Articulo.objects.filter(
+        categoria=post.categoria,
+        activo=True
+    ).exclude(id=post.id)[:4]
+    
+    # Obtener especificaciones técnicas si existen
+    especificaciones = []
+    if post.descripcion:
+        # Parsear descripción para extraer especificaciones
+        import re
+        especificaciones = re.findall(r'•\s*(.*?)\s*\n', post.descripcion)
+    
+    # Obtener otros productos de la misma marca
+    productos_misma_marca = []
+    if post.marca:
+        productos_misma_marca = Articulo.objects.filter(
+            marca=post.marca,
+            activo=True
+        ).exclude(id=post.id)[:3]
+    
+    context = {
+        'post': post,
+        'productos_relacionados': productos_relacionados,
+        'especificaciones': especificaciones,
+        'productos_misma_marca': productos_misma_marca,
+        'meta_description': f"Información detallada sobre {post.nombre}. {post.descripcion[:160]}" if post.descripcion else "",
+    }
+    
+    return render(request, 'vistas/blog_details.html', context)
+
+
+
+# ================================================================================
+
+class ReportesFinancierosView(TemplateView):
+    template_name = 'finanzas/finanzas.html'
+    
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Obtener parámetros del request con manejo robusto
+        fecha_inicio_str = self.request.GET.get('fecha_inicio')
+        fecha_fin_str = self.request.GET.get('fecha_fin')
+
+        # Valores por defecto (últimos 30 días)
+        fecha_actual = timezone.now().date()
+        fecha_30_dias_atras = fecha_actual - timedelta(days=30)
+
+        articulo_id = self.request.GET.get('articulo')
+        tipo_reporte = self.request.GET.get('tipo_reporte', 'ventas')
+        
+        # Convertir fechas con manejo de errores mejorado
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio_str, '%Y-%m-%d').date() if fecha_inicio_str else fecha_30_dias_atras
+            fecha_fin = datetime.strptime(fecha_fin_str, '%Y-%m-%d').date() if fecha_fin_str else fecha_actual
+        except (ValueError, TypeError):
+            fecha_inicio = fecha_30_dias_atras
+            fecha_fin = fecha_actual
+
+         # Validar que fecha_inicio <= fecha_fin
+        if fecha_inicio > fecha_fin:
+            # Si las fechas están invertidas, las intercambiamos
+            fecha_inicio, fecha_fin = fecha_fin, fecha_inicio
+        
+         # Base queryset con filtrado mejorado
+        ventas = Venta.objects.filter(
+            fecha__date__range=(fecha_inicio, fecha_fin),  # Usamos __range para mayor claridad
+            estado='COMPLETADA'
+        ).order_by('fecha')
+
+        # Resto del código permanece igual...
+        articulo_id = self.request.GET.get('articulo')
+        tipo_reporte = self.request.GET.get('tipo_reporte', 'ventas')
+        
+        # Reporte de Ventas
+        if tipo_reporte == 'ventas':
+            agrupacion = self.request.GET.get('agrupacion', 'mes')
+            
+            # Por esta versión corregida:
+            ventas_report = DetalleVenta.objects.filter(
+                venta__in=ventas
+            ).annotate(
+                periodo=TruncMonth('venta__fecha') if agrupacion == 'mes' else TruncDay('venta__fecha'),
+                costo_linea=F('cantidad') * F('articulo__costo_promedio'),
+                ganancia_linea=F('cantidad') * (F('precio_unitario') - F('articulo__costo_promedio'))
+            ).values('periodo').annotate(
+                total_ventas=Count('venta', distinct=True),
+                monto_total=Sum('venta__total'),
+                costo_total=Sum('costo_linea'),
+                ganancia_total=Sum('ganancia_linea')
+            ).order_by('periodo')
+            
+            # Calcular totales generales
+            total_general = ventas.aggregate(
+                total_monto=Sum('total'),
+                total_ventas=Count('id')
+            )
+            
+            # Calcular costos y ganancias si existen detalles
+            try:
+                detalles_totales = DetalleVenta.objects.filter(venta__in=ventas).aggregate(
+                    total_costo=Sum(F('cantidad') * F('articulo__costo_promedio')),
+                    total_ganancia=Sum(F('cantidad') * (F('precio_unitario') - F('articulo__costo_promedio'))),
+                )
+            except:
+                detalles_totales = {'total_costo': 0, 'total_ganancia': 0}
+            
+            # Datos para la gráfica de ventas mensuales
+            ventas_mensuales = ventas.annotate(
+                mes=TruncMonth('fecha')
+            ).values('mes').annotate(
+                total_ventas=Count('id')
+            ).order_by('mes')
+            
+            # Preparar datos para Chart.js
+            meses = [v['mes'].strftime("%Y-%m") for v in ventas_mensuales]
+            cantidades = [v['total_ventas'] for v in ventas_mensuales]
+
+            context.update({
+                'ventas_report': ventas_report,
+                'monto_total': total_general['total_monto'] or 0,
+                'costo_total': detalles_totales['total_costo'] or 0,
+                'ganancia_total': detalles_totales['total_ganancia'] or 0,
+                'total_ventas': total_general['total_ventas'] or 0,
+                
+                'grafica_meses': meses,
+                'grafica_ventas': cantidades,
+            })
+        
+        # Reporte de Artículos
+        elif tipo_reporte == 'articulos':
+            articulos_report = DetalleVenta.objects.filter(
+                venta__in=ventas
+            ).annotate(
+                costo_linea=F('cantidad') * F('articulo__costo_promedio'),
+                ganancia_linea=F('cantidad') * (F('precio_unitario') - F('articulo__costo_promedio'))
+            ).values(
+                'articulo__codigo', 
+                'articulo__nombre',
+                'articulo__categoria__nombre'
+            ).annotate(
+                cantidad_vendida=Sum('cantidad'),
+                monto_total=Sum(F('cantidad') * F('precio_unitario')),
+                ganancia_total=Sum('ganancia_linea')
+            ).order_by('-monto_total')[:20]
+            
+            context['articulos_report'] = articulos_report
+        
+        # Detalle por Artículo
+        elif tipo_reporte == 'articulo_detalle' and articulo_id:
+            try:
+                articulo = Articulo.objects.get(id=articulo_id)
+                articulo_detalle = DetalleVenta.objects.filter(
+                    venta__in=ventas,
+                    articulo=articulo
+                ).annotate(
+                    dia=TruncDay('venta__fecha'),
+                    # Precalculamos los valores por línea primero
+                    monto_linea=F('cantidad') * F('precio_unitario'),
+                    ganancia_linea=F('cantidad') * (F('precio_unitario') - F('articulo__costo_promedio'))
+                ).values(
+                    'dia',
+                    'venta__codigo'
+                ).annotate(
+                    cantidad=Sum('cantidad'),
+                    # Sumamos los valores precalculados
+                    monto=Sum('monto_linea'),
+                    ganancia=Sum('ganancia_linea')
+                ).order_by('dia')
+                
+                context.update({
+                    'articulo_detalle': articulo_detalle,
+                    'articulo': articulo,
+                    'total_cantidad': articulo_detalle.aggregate(total=Sum('cantidad'))['total'] or 0,
+                    'total_monto': articulo_detalle.aggregate(total=Sum('monto'))['total'] or 0,
+                    'total_ganancia': articulo_detalle.aggregate(total=Sum('ganancia'))['total'] or 0,
+                })
+            except Articulo.DoesNotExist:
+                pass
+        
+        # Contexto común
+        context.update({
+            'fecha_inicio': fecha_inicio.strftime('%Y-%m-%d'),
+            'fecha_fin': fecha_fin.strftime('%Y-%m-%d'),
+            'tipo_reporte': tipo_reporte,
+            'articulo_id': articulo_id,
+            'articulos': Articulo.objects.filter(activo=True).order_by('nombre'),
+        })
+        
+        return context
+
+    def get(self, request, *args, **kwargs):
+        export_format = request.GET.get('export')
+        
+        if export_format in ['pdf', 'excel']:
+            context = self.get_context_data(**kwargs)
+            
+            if export_format == 'pdf':
+                return self.generate_pdf(context)
+            elif export_format == 'excel':
+                return self.generate_excel(context)
+        
+        return super().get(request, *args, **kwargs)
+    
+    def generate_pdf(self, context):
+        response = HttpResponse(content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="reporte_financiero.pdf"'
+        
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        
+        # Título del reporte
+        title = f"Reporte Financiero - {context.get('tipo_reporte', 'general').title()}"
+        
+        # Datos según el tipo de reporte
+        if context['tipo_reporte'] == 'ventas':
+            data = [['Periodo', 'Ventas', 'Monto', 'Costo', 'Ganancia', 'Margen']]
+            for venta in context['ventas_report']:
+                margen = (venta['ganancia_total'] / venta['monto_total'] * 100) if venta['monto_total'] else 0
+                data.append([
+                    venta['periodo'].strftime('%B %Y') if 'month' in str(venta['periodo']) else venta['periodo'].strftime('%d/%m/%Y'),
+                    venta['total_ventas'],
+                    f"${venta['monto_total']:,.2f}",
+                    f"${venta['costo_total']:,.2f}",
+                    f"${venta['ganancia_total']:,.2f}",
+                    f"{margen:.2f}%"
+                ])
+        
+        elif context['tipo_reporte'] == 'articulos':
+            data = [['Código', 'Artículo', 'Categoría', 'Cantidad', 'Monto', 'Ganancia']]
+            for art in context['articulos_report']:
+                data.append([
+                    art['articulo__codigo'],
+                    art['articulo__nombre'],
+                    art['articulo__categoria__nombre'],
+                    art['cantidad_vendida'],
+                    f"${art['monto_total']:,.2f}",
+                    f"${art['ganancia_total']:,.2f}"
+                ])
+        
+        elif context['tipo_reporte'] == 'articulo_detalle' and 'articulo_detalle' in context:
+            data = [['Fecha', 'Venta', 'Cantidad', 'P. Unitario', 'Monto', 'Ganancia']]
+            for detalle in context['articulo_detalle']:
+                precio_unitario = detalle['monto'] / detalle['cantidad'] if detalle['cantidad'] else 0
+                data.append([
+                    detalle['dia'].strftime('%d/%m/%Y'),
+                    detalle['venta__codigo'],
+                    detalle['cantidad'],
+                    f"${precio_unitario:,.2f}",
+                    f"${detalle['monto']:,.2f}",
+                    f"${detalle['ganancia']:,.2f}"
+                ])
+        
+        # Crear tabla
+        if len(data) > 1:
+            table = Table(data)
+            style = TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('FONTSIZE', (0, 0), (-1, 0), 12),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ])
+            table.setStyle(style)
+            elements.append(table)
+        
+        doc.build(elements)
+        pdf = buffer.getvalue()
+        buffer.close()
+        response.write(pdf)
+        return response
+    
+    def generate_excel(self, context):
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = 'attachment; filename="reporte_financiero.xlsx"'
+        
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Reporte"
+        
+        # Datos según el tipo de reporte
+        if context['tipo_reporte'] == 'ventas':
+            ws.append(['Periodo', 'Ventas', 'Monto', 'Costo', 'Ganancia', 'Margen'])
+            for venta in context['ventas_report']:
+                margen = (venta['ganancia_total'] / venta['monto_total'] * 100) if venta['monto_total'] else 0
+                ws.append([
+                    venta['periodo'].strftime('%B %Y') if 'month' in str(venta['periodo']) else venta['periodo'].strftime('%d/%m/%Y'),
+                    venta['total_ventas'],
+                    venta['monto_total'],
+                    venta['costo_total'],
+                    venta['ganancia_total'],
+                    margen
+                ])
+        
+        elif context['tipo_reporte'] == 'articulos':
+            ws.append(['Código', 'Artículo', 'Categoría', 'Cantidad', 'Monto', 'Ganancia'])
+            for art in context['articulos_report']:
+                ws.append([
+                    art['articulo__codigo'],
+                    art['articulo__nombre'],
+                    art['articulo__categoria__nombre'],
+                    art['cantidad_vendida'],
+                    art['monto_total'],
+                    art['ganancia_total']
+                ])
+        
+        elif context['tipo_reporte'] == 'articulo_detalle' and 'articulo_detalle' in context:
+            ws.append(['Fecha', 'Venta', 'Cantidad', 'P. Unitario', 'Monto', 'Ganancia'])
+            for detalle in context['articulo_detalle']:
+                precio_unitario = detalle['monto'] / detalle['cantidad'] if detalle['cantidad'] else 0
+                ws.append([
+                    detalle['dia'].strftime('%d/%m/%Y'),
+                    detalle['venta__codigo'],
+                    detalle['cantidad'],
+                    precio_unitario,
+                    detalle['monto'],
+                    detalle['ganancia']
+                ])
+        
+        wb.save(response)
+        return response
+
+
+# ================================================================================
 
 
 @nivel_requerido('admin')

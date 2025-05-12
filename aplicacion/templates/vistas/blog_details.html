@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+
+<div class="product-detail-container" style="margin-top: 1rem;">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'inicio' %}">Inicio</a> &gt;
+        <span>{{ post.nombre }}</span>
+    </nav>
+
+    <div class="product-main">
+        <!-- Galería de imágenes -->
+        <div class="product-gallery">
+            <div class="main-image">
+                {% if post.imagen %}
+                <img src="{{ post.imagen.url }}" alt="{{ post.nombre }}" id="zoom-image">
+                {% else %}
+                <img src="{% static 'img/placeholder-product.png' %}" alt="Imagen no disponible">
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Información principal -->
+        <div class="product-info">
+            <div class="product-header">
+                <span class="product-category text-white">{{ post.categoria.nombre }}</span>
+                <h1 class="product-title">{{ post.nombre }}</h1>
+                
+                <div class="product-meta">
+                    <span class="product-date"><i class="fas fa-calendar-alt"></i> {{ post.fecha_creacion|date:"d M Y" }}</span>
+                    {% if post.marca %}
+                    <span class="product-brand"><i class="fas fa-tag"></i> {{ post.marca }}</span>
+                    {% endif %}
+                    <span class="product-code"><i class="fas fa-barcode"></i> {{ post.codigo }}</span>
+                </div>
+            </div>
+
+            <!-- Precio y disponibilidad -->
+            <div class="product-pricing">
+                {% if post.precio_venta > 0 %}
+                <div class="price-container">
+                    <span class="price-label">Precio:</span>
+                    <span class="price-amount">${{ post.precio_venta|floatformat:2 }}</span>
+                    {% if post.tasa_impuesto > 0 %}
+                    <span class="tax-info">IVA {{ post.tasa_impuesto|floatformat:0 }}% incluido</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+            <!-- <div class="stock-container">
+                    {% if post.stock_actual > 0 %}
+                    <span class="stock-available"><i class="fas fa-check-circle"></i> En stock ({{ post.stock_actual }} {{ post.get_unidad_medida_display }})</span>
+                    {% else %}
+                    <span class="stock-out"><i class="fas fa-times-circle"></i> Agotado</span>
+                    {% endif %}
+                </div> -->
+
+                <!-- {% if post.stock_actual > 0 %}
+                <div class="product-actions">
+                    <button class="btn-add-to-cart">
+                        <i class="fas fa-shopping-cart"></i> Añadir al carrito
+                    </button>
+                    <button class="btn-quote">
+                        <i class="fas fa-file-alt"></i> Solicitar cotización
+                    </button>
+                </div>
+                {% endif %} -->
+            </div>
+
+            <!-- Descripción corta -->
+            <div class="product-excerpt">
+                {{ post.descripcion|truncatewords:50|linebreaks }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Sección de Descripción -->
+    <section class="product-section">
+        <h2 class="section-title">Descripción detallada</h2>
+        <div class="section-content">
+            {{ post.descripcion|linebreaks }}
+        </div>
+    </section>
+    <br>
+
+    <!-- Sección de Especificaciones -->
+    <section class="product-section">
+        <h2 class="section-title">Especificaciones técnicas</h2>
+        <div class="section-content">
+            {% if especificaciones %}
+            <ul class="specs-list">
+                {% for spec in especificaciones %}
+                <li>{{ spec }}</li>
+                {% endfor %}
+            </ul>
+            {% else %}
+            <p>No hay especificaciones técnicas disponibles.</p>
+            {% endif %}
+        </div>
+    </section>
+    <br>
+
+    <!-- Sección de Aplicaciones -->
+    <section class="product-section">
+        <h2 class="section-title">Recomendaciones de uso</h2>
+        <div class="section-content">
+            {% if post.palabras_clave %}
+            <div class="tags-container">
+                <h4>Compatibilidad:</h4>
+                <div class="tags">
+                    {% for tag in post.lista_palabras_clave %}
+                    <span class="tag">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if post.aplicaciones %}  <!-- Si tienes un campo específico para aplicaciones -->
+            <div class="usage-info">
+                {{ post.aplicaciones|linebreaks }}
+            </div>
+            {% else %}
+            <p>Este producto es compatible con una amplia gama de vehículos. Consulte con nuestro personal técnico para recomendaciones específicas.</p>
+            {% endif %}
+        </div>
+    </section>
+    <br>
+
+    <!-- Productos relacionados -->
+    <section class="related-products">
+        <h2 class="section-title">Productos relacionados</h2>
+        <div class="products-grid">
+            {% for producto in productos_relacionados %}
+            <div class="product-card">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="product-image">
+                {% endif %}
+                <div class="product-info">
+                    <h3><a href="{% url 'detalle_post' post_id=producto.id %}">{{ producto.nombre }}</a></h3>
+                    <p class="product-category text-white">{{ producto.categoria.nombre }}</p>
+                    <p class="product-price">${{ producto.precio_venta|floatformat:2 }}</p>
+                    <a href="{% url 'detalle_post' post_id=producto.id %}" class="btn-view">Ver detalles</a>
+                </div>
+            </div>
+            {% empty %}
+            <p>No hay productos relacionados disponibles.</p>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Productos de la misma marca -->
+    {% if productos_misma_marca %}
+    <section class="same-brand-products">
+        <h2 class="section-title">Más productos {{ post.marca }}</h2>
+        <div class="products-grid">
+            {% for producto in productos_misma_marca %}
+            <div class="product-card">
+                {% if producto.imagen %}
+                <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" class="product-image">
+                {% endif %}
+                <div class="product-info">
+                    <h3><a href="{% url 'detalle_post' post_id=producto.id %}">{{ producto.nombre }}</a></h3>
+                    <p class="product-price">${{ producto.precio_venta|floatformat:2 }}</p>
+                    <a href="{% url 'detalle_post' post_id=producto.id %}" class="btn-view">Ver detalles</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <br>
+</div>
+{% endblock %}

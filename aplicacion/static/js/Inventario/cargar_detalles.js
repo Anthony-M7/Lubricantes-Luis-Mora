@@ -57,8 +57,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     }
                 </div>
                 <div class="d-flex align-items-center">
-                    <h4 class="mb-0 me-3">$${data.precio_venta} COP</h4>
-                    <small class="text-muted">Costo: $${
+                    <h4 class="mb-0 me-3">COP ${data.precio_venta}</h4>
+                    <small class="text-muted">Costo: COP ${
                       data.costo_promedio
                     } (Margen: ${data.margen_ganancia})</small>
                 </div>

@@ -4,6 +4,7 @@ from django.core.exceptions import ValidationError
 from decimal import Decimal
 from django.core.validators import MinValueValidator
 from django.utils import timezone
+from django.utils.text import slugify
 from django.db.models import Sum
     
 class CustomUser(AbstractUser):
@@ -53,6 +54,7 @@ class Categoria(models.Model):
     Modelo para categorizar los artículos
     """
     nombre = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True, blank=True)  # Nuevo campo
     padre = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, 
                             related_name='subcategorias')
     descripcion = models.TextField(blank=True)
@@ -67,9 +69,18 @@ class Categoria(models.Model):
     def __str__(self):
         return self.nombre
 
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.nombre)
+        super().save(*args, **kwargs)
+
     def clean(self):
         if self.padre and self.padre.id == self.id:
             raise ValidationError(('Una categoría no puede ser padre de sí misma'))
+        
+        # Validar que el slug sea único considerando también las subcategorías
+        if Categoria.objects.filter(slug=self.slug).exclude(id=self.id).exists():
+            raise ValidationError(('Ya existe una categoría con este slug'))
 
 
 class Proveedor(models.Model):
@@ -308,7 +319,7 @@ class Venta(models.Model):
     )
     
     codigo = models.CharField(max_length=20, unique=True, verbose_name="Código de venta")
-    cliente = models.ForeignKey('Cliente', on_delete=models.SET_NULL, null=True, blank=True)
+    cliente = models.ForeignKey('Cliente', on_delete=models.SET_NULL, null=True, blank=True, default="0")
     fecha = models.DateTimeField(default=timezone.now)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     impuesto = models.DecimalField(max_digits=12, decimal_places=2, default=0)

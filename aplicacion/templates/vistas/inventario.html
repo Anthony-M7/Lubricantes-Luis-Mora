@@ -270,12 +270,12 @@
                 class="d-flex justify-content-between align-items-center mt-3"
               >
                 <span class="fw-bold text-dark">
-                  ${{ producto.precio_venta|floatformat:"0" }}
+                  COP {{ producto.precio_venta|floatformat:"2" }}
                 </span>
                 <span
                   class="badge {% if producto.stock == 0 %}bg-danger{% elif producto.necesita_reabastecimiento %}bg-warning text-dark{% else %}bg-success{% endif %}"
                 >
-                  Stock: {{ producto.stock_actual|floatformat:"0" }}
+                  Stock: {{ producto.stock_actual|floatformat:"2" }}
                 </span>
               </div>
             </div>

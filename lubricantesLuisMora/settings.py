@@ -32,13 +32,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["192.168.0.105", "localhost", ".onrender.com", "127.0.0.1"]
 
-CSRF_USE_SESSIONS = False  # Para usar cookies en lugar de sesiones
-CSRF_COOKIE_HTTPONLY = False  # Para que JavaScript pueda acceder al token
+# CSRF_USE_SESSIONS = False  # Para usar cookies en lugar de sesiones
+# CSRF_COOKIE_HTTPONLY = True  # Para que JavaScript pueda acceder al token
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = False
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# SESSION_COOKIE_SECURE = True
+# CSRF_COOKIE_SECURE = True
 
 
 # Application definition

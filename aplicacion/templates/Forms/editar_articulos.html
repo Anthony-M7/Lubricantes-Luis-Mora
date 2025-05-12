@@ -142,7 +142,7 @@
             <div class="col-md-6">
               <label for="id_costo_promedio" class="form-label">Costo Promedio*</label>
               <div class="input-group">
-                <span class="input-group-text">$</span>
+                <span class="input-group-text">COP</span>
                 {{ form.costo_promedio }}
               </div>
               {% if form.costo_promedio.errors %}
@@ -155,7 +155,7 @@
             <div class="col-md-6">
               <label for="id_precio_venta" class="form-label">Precio de Venta*</label>
               <div class="input-group">
-                <span class="input-group-text">$</span>
+                <span class="input-group-text">COP</span>
                 {{ form.precio_venta }}
               </div>
               {% if form.precio_venta.errors %}
@@ -252,7 +252,7 @@
         
         <div class="mb-3">
           <h6 class="text-muted">Valor Total en Inventario</h6>
-          <p>${{ producto.valor_total|floatformat:2 }} COP</p>
+          <p>{{ producto.valor_total|floatformat:2 }} COP</p>
         </div>
         
         <div class="mb-3">

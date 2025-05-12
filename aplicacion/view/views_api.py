@@ -11,6 +11,21 @@ from django.db import transaction
 import os
 from django.db.models import ProtectedError
 
+from django.http import HttpResponse
+from django.template.loader import render_to_string
+from django.utils import timezone
+from weasyprint import HTML
+from django.conf import settings
+import os
+from django.db import models
+
+from django.views import View
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+from openpyxl.utils import get_column_letter
+from datetime import datetime
+
+# =================================================================================
 
 def producto_detalle_api(request, pk):
     try:
@@ -274,3 +289,145 @@ def eliminar_producto(request, producto_id):
         return redirect('inventario')
 
     return redirect('editar_producto', producto_id=producto_id)
+
+# =================================================================================
+
+def generar_catalogo_pdf(request):
+    # Obtener artículos organizados por categoría
+    categorias = Categoria.objects.prefetch_related(
+        models.Prefetch(
+            'articulo_set',
+            queryset=Articulo.objects.filter(activo=True).select_related('proveedor_principal'),
+            to_attr='articulos'
+        )
+    ).order_by('nombre')
+
+    # Contexto para el template
+    context = {
+        'categorias': categorias,
+        'empresa': "Lubricantes Luis Mora",
+        'fecha': timezone.now().strftime("%d/%m/%Y"),
+        'base_url': request.build_absolute_uri('/')[:-1]  # Para imágenes
+    }
+
+    # Renderizar template HTML
+    html_string = render_to_string('catalogo_pdf.html', context)
+    
+    # Crear respuesta PDF
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'filename="catalogo_lubricantes.pdf"'
+    
+    # Generar PDF
+    HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf(response)
+    
+    return response
+
+# ==================================================================================
+
+class GenerarTalonarioPagoExcel(View):
+    def get(self, request):
+        # Obtener artículos organizados por categoría
+        categorias = Categoria.objects.prefetch_related(
+            models.Prefetch(
+                'articulo_set',
+                queryset=Articulo.objects.filter(activo=True)
+                          .select_related('proveedor_principal')
+                          .order_by('nombre'),
+                to_attr='articulos'
+            )
+        ).order_by('nombre')
+
+        # Crear el libro de Excel
+        wb = Workbook()
+        ws = wb.active
+        ws.title = "Talonario de Pagos"
+
+        # Estilos
+        header_font = Font(bold=True, color="FFFFFF")
+        header_fill = PatternFill(start_color="3498db", end_color="3498db", fill_type="solid")
+        categoria_font = Font(bold=True, color="FFFFFF")
+        categoria_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
+        thin_border = Border(left=Side(style='thin'), 
+                            right=Side(style='thin'), 
+                            top=Side(style='thin'), 
+                            bottom=Side(style='thin'))
+        center_alignment = Alignment(horizontal='center', vertical='center')
+        right_alignment = Alignment(horizontal='right', vertical='center')
+
+        # Encabezado
+        ws.merge_cells('A1:H1')
+        ws['A1'] = "TALONARIO DE PAGOS - LUBRICANTES LUIS MORA"
+        ws['A1'].font = Font(bold=True, size=14)
+        ws['A1'].alignment = center_alignment
+
+        ws.merge_cells('A2:H2')
+        ws['A2'] = f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+        ws['A2'].font = Font(size=10, italic=True)
+        ws['A2'].alignment = center_alignment
+
+        # Encabezados de columnas
+        columns = [
+            ("Código", 15),
+            ("Nombre", 40),
+            ("Proveedor", 25),
+            ("Tipo", 20),
+            ("Precio", 15),
+            ("IVA %", 10),
+            ("Precio con IVA", 15),
+            ("Cantidad", 15)
+        ]
+
+        # Escribir datos por categoría
+        row_num = 4
+        for categoria in categorias:
+            if not categoria.articulos:
+                continue  # Saltar categorías vacías
+
+            # Encabezado de categoría
+            ws.merge_cells(f'A{row_num}:H{row_num}')
+            ws[f'A{row_num}'] = categoria.nombre.upper()
+            ws[f'A{row_num}'].font = categoria_font
+            ws[f'A{row_num}'].fill = categoria_fill
+            ws[f'A{row_num}'].alignment = center_alignment
+            row_num += 1
+
+            # Encabezados de columnas
+            for col_num, (column_title, column_width) in enumerate(columns, 1):
+                cell = ws.cell(row=row_num, column=col_num, value=column_title)
+                cell.font = header_font
+                cell.fill = header_fill
+                cell.border = thin_border
+                cell.alignment = center_alignment
+                ws.column_dimensions[get_column_letter(col_num)].width = column_width
+
+            row_num += 1
+
+            # Artículos de la categoría
+            for articulo in categoria.articulos:
+                precio_con_iva = articulo.precio_venta * (1 + (articulo.tasa_impuesto or 16) / 100)
+
+                ws.cell(row=row_num, column=1, value=articulo.codigo or "SIN-COD").border = thin_border
+                ws.cell(row=row_num, column=2, value=articulo.nombre).border = thin_border
+                ws.cell(row=row_num, column=3, value=articulo.proveedor_principal.nombre if articulo.proveedor_principal else "N/A").border = thin_border
+                ws.cell(row=row_num, column=4, value=articulo.marca or "").border = thin_border
+                ws.cell(row=row_num, column=5, value=articulo.precio_venta).border = thin_border
+                ws.cell(row=row_num, column=5).number_format = '"COP "#,##0.00'
+                ws.cell(row=row_num, column=6, value=articulo.tasa_impuesto*100 or 16).border = thin_border
+                ws.cell(row=row_num, column=6).alignment = center_alignment
+                ws.cell(row=row_num, column=7, value=precio_con_iva).border = thin_border
+                ws.cell(row=row_num, column=7).number_format = '"COP "#,##0.00'
+                ws.cell(row=row_num, column=8).border = thin_border
+                ws.cell(row=row_num, column=8).alignment = center_alignment
+
+                row_num += 1
+
+            # Espacio entre categorías
+            row_num += 1
+
+        # Configurar respuesta
+        response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        response['Content-Disposition'] = f'attachment; filename="talonario_pagos_{datetime.now().strftime("%Y%m%d")}.xlsx"'
+        wb.save(response)
+
+        return response
+    

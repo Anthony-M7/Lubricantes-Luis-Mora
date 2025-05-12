@@ -31,7 +31,12 @@ urlpatterns = [
     path('panel_administrador/', panel_admin, name='panel_administrador'),
     path('personal/', panel_personal, name='panel_personal'),
     path('usuario/', panel_usuario, name='panel_usuario'),
-    path('', inicio, name='inicio'),
+    # path('', inicio, name='inicio'),
+
+    # Blog
+    path('', blog_informativo, name='inicio'),
+    path('categoria/<slug:slug>/', posts_por_categoria, name='posts_categoria'),
+    path('blog/<int:post_id>/', detalle_post, name='detalle_post'),
 
     # vistas
     path('dashboard/', dashboard, name='dashboard'),
@@ -47,6 +52,8 @@ urlpatterns = [
     path('perfil/', profile, name='perfil'),
     path('actualizar_perfil/', profile, name='actualizar_perfil'),
 
+    path('reportes/', ReportesFinancierosView.as_view(), name='reportes'),
+
     # Formularios
     path('articulos/nuevo/', crear_articulo, name='crear_articulo'),
     path('compras/nueva/', registrar_compras, name='nueva_compra'),
@@ -61,6 +68,9 @@ urlpatterns = [
 
     path('articulos/editar/<int:producto_id>/', editar_producto, name='editar_articulo'),
     path('articulos/<int:producto_id>/eliminar/', eliminar_producto, name='eliminar_producto'),
+
+    path('catalogo/pdf/', generar_catalogo_pdf, name='catalogo_pdf'),
+    path('talonario-pagos/', GenerarTalonarioPagoExcel.as_view(), name='talonario_pagos'),
 
 
     # Ventas

@@ -1,7 +1,7 @@
 {% extends 'paneles/admin.html' %}
 {% load static %}
 
-{% block content %}
+{% block dashboard %}
 
 <div class="container mt-4 text-black">
     <h2 class="mb-4">Registrar Nuevo Artículo</h2>
@@ -70,14 +70,14 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.costo_promedio.label_tag }}
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">COP</span>
                                     {{ form.costo_promedio }}
                                 </div>
                             </div>
                             <div class="col-md-6 mb-3">
                                 {{ form.precio_venta.label_tag }}
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">COP</span>
                                     {{ form.precio_venta }}
                                 </div>
                             </div>

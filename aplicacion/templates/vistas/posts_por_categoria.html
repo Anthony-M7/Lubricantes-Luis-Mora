@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/blog.css' %}">
+
+<div class="category-posts-container">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb">
+        <a href="{% url 'inicio' %}">Inicio</a> &gt;
+        <span>{{ categoria.nombre }}</span>
+    </nav>
+
+    <!-- Header de categoría -->
+    <header class="category-header">
+        <h1 class="category-title">{{ categoria.nombre }}</h1>
+        {% if categoria.descripcion %}
+        <p class="category-description">{{ categoria.descripcion }}</p>
+        {% endif %}
+    </header>
+
+    <!-- Subcategorías -->
+    {% if categoria.subcategorias.all %}
+    <section class="subcategories-section">
+        <h2 class="section-subtitle">Subcategorías</h2>
+        <div class="subcategories-grid">
+            {% for subcat in categoria.subcategorias.all %}
+            <div class="subcategory-card">
+                <a href="{% url 'posts_categoria' subcat.slug %}">
+                    <h3>{{ subcat.nombre }}</h3>
+                    {% if subcat.descripcion %}
+                    <p>{{ subcat.descripcion|truncatechars:100 }}</p>
+                    {% endif %}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Listado de artículos -->
+    <section class="posts-section">
+        <h2 class="section-subtitle">Artículos en {{ categoria.nombre }}</h2>
+        
+        {% if page_obj.object_list %}
+        <div class="posts-grid">
+            {% for post in page_obj %}
+            <article class="post-card">
+                <a href="{% url 'detalle_post' post_id=post.id %}">
+                    {% if post.imagen %}
+                    <div class="post-image-container">
+                        <img src="{{ post.imagen.url }}" alt="{{ post.nombre }}" class="post-image">
+                    </div>
+                    {% endif %}
+                    <div class="post-content">
+                        <span class="post-category">{{ post.categoria.nombre }}</span>
+                        <h3>{{ post.nombre }}</h3>
+                        <p class="post-excerpt">{{ post.descripcion|truncatechars:150 }}</p>
+                        <div class="post-meta">
+                            <span>{{ post.fecha_creacion|date:"d M Y" }}</span>
+                            {% if post.marca %}
+                            <span class="post-brand">{{ post.marca }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </a>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-posts text-black">
+            <p>No hay artículos disponibles en esta categoría.</p>
+            <a href="{% url 'inicio' %}" class="btn-back">Volver al blog</a>
+        </div>
+        {% endif %}
+
+        <!-- Paginación -->
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page={{ page_obj.previous_page_number }}" class="page-link">« Anterior</a>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <span class="current-page">{{ num }}</span>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                    <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}" class="page-link">Siguiente »</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

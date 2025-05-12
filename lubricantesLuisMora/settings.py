@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-4a%m1#zx1y@d9d7rsj8g2n9w)!iq2$k*_035kvyl3c8#+0e@kl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.0.105", "localhost", ".onrender.com", "127.0.0.1"]
+ALLOWED_HOSTS = ["192.168.0.107", "localhost", ".onrender.com", "127.0.0.1"]
 
 # CSRF_USE_SESSIONS = False  # Para usar cookies en lugar de sesiones
 # CSRF_COOKIE_HTTPONLY = True  # Para que JavaScript pueda acceder al token

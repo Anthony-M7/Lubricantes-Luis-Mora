@@ -6,6 +6,22 @@ const finalizarBtn = document.getElementById("finalizarBtn");
 const crearVentaForm = document.getElementById("crearVentaForm");
 
 document.addEventListener("DOMContentLoaded", function () {
+  // // Inicializar tooltips
+  // const tooltipTriggerList = [].slice.call(
+  //   document.querySelectorAll("[title]")
+  // );
+  // tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+  //   new bootstrap.Tooltip(tooltipTriggerEl);
+  // });
+
+  // Inicializar Select2 si existe
+  // if ($().select2) {
+  //   $(".select2").select2({
+  //     placeholder: "Seleccione...",
+  //     allowClear: true,
+  //   });
+  // }
+
   // Event listeners
   document
     .getElementById("buscarArticuloBtn")

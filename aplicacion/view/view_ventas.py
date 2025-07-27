@@ -1,19 +1,17 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
-from aplicacion.models import Articulo, MovimientoInventario, HistorialStock, Cliente
-from .models import Venta, DetalleVenta
-from aplicacion.forms import ClienteForm
-from .forms import *
+from ..models import Venta, DetalleVenta, Cliente, Articulo, MovimientoInventario, HistorialStock
+from ..forms import VentaForm, DetalleVentaForm, ClienteForm
 
 from django.db import models
 from django.forms import forms
 from decimal import Decimal, InvalidOperation
 import json
 
-from django.db.models import Sum, Q, Count
+from django.db.models import Sum, F, Q, Count
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_GET, require_POST
 
@@ -23,12 +21,16 @@ from django.utils import timezone
 
 from django.forms.models import model_to_dict
 
+from django.http import HttpResponse
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
-from reportlab.platypus import Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import Paragraph, Table, TableStyle
 from reportlab.lib.units import inch
 from io import BytesIO
+from reportlab.lib.utils import ImageReader
+from django.conf import settings
 
 
 
@@ -351,7 +353,6 @@ def buscar_articulos(request):
     articulos = Articulo.objects.filter(
         models.Q(nombre__icontains=term) |
         models.Q(codigo__icontains=term) |
-        models.Q(palabras_clave__icontains=term) |
         models.Q(codigo_barras__icontains=term),
         activo=True,
         stock_actual__gt=0  # Solo artículos con stock disponible
@@ -364,8 +365,6 @@ def buscar_articulos(request):
     articulos_list = list(articulos)
     for articulo in articulos_list:
         articulo['disponible'] = articulo['stock_actual']
-
-    print(term, articulos_list)
     
     return JsonResponse(articulos_list, safe=False)
 
@@ -629,5 +628,3 @@ def cambiar_estado_venta(request):
         messages.error(request, 'No se pudo encontrar la venta')
     
     return redirect('lista_ventas')
-
-

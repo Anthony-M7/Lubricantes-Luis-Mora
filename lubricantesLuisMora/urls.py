@@ -15,17 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
 from aplicacion.views import * 
-from aplicacion.view.views_api import *
+from aplicacion.view.views_api import * 
+from aplicacion.view.view_ventas import * 
 from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path('', include('ProductosVentas.urls')),
+    path('admin/', admin.site.urls, name="panel_admin"),
 
     # path('', home, name='home'),
-    path('admin/', admin.site.urls, name="panel_admin"),
     path('login/', login_view, name='login'),
     path('logout/', custom_logout, name='logout'),
     path('panel_administrador/', panel_admin, name='panel_administrador'),
@@ -71,6 +71,14 @@ urlpatterns = [
 
     path('catalogo/pdf/', generar_catalogo_pdf, name='catalogo_pdf'),
     path('talonario-pagos/', GenerarTalonarioPagoExcel.as_view(), name='talonario_pagos'),
+
+
+    # Ventas
+    path('ventas/', lista_ventas, name='lista_ventas'),
+    path('ventas/crear/', crear_venta, name='crear_venta'),
+    path('ventas/editar/<int:pk>/', editar_venta, name='editar_venta'),
+    path('ventas/<int:venta_id>/eliminar/', eliminar_venta, name='eliminar_venta'),
+    path('ventas/<int:venta_id>/detalle/', detalle_venta, name='detalle_venta'),
     
     # Clientes
     path('clientes/', listar_clientes, name='clientes'),
@@ -78,6 +86,18 @@ urlpatterns = [
     path('detalles-cliente/<int:pk>/', detalle_cliente, name='detalles_cliente'),
     path('detalles-cliente/<int:pk>/editar/', editar_cliente, name='editar_cliente'),
     path('detalles-cliente/<int:pk>/eliminar/', eliminar_cliente, name='eliminar_cliente'),
+
+    # Detalles de venta
+    path('ventas/cambiar-estado/', cambiar_estado_venta, name='cambiar_estado_venta'),
+    path('ventas/<int:venta_id>/agregar-detalle/', agregar_detalle, name='agregar_detalle'),
+    path('ventas/detalles/<int:detalle_id>/', eliminar_detalle, name='eliminar_detalle'),
+    path('venta/<int:venta_id>/descargar_recibo/', descargar_recibo, name='descargar_recibo'),
+    
+    # Búsquedas
+    path('ventas/buscar-articulos/', buscar_articulos, name='buscar_articulos'),
+    path('api/articulos/<int:pk>/', obtener_articulo_api, name='obtener_articulo_api'),
+    path('ventas/crear-cliente-rapido/', crear_cliente_rapido, name='crear_cliente_rapido'),
+    path('api/clientes/buscar/', buscar_clientes_api, name='buscar_clientes_api'),
 
     # PERMISOS
     path('gestion-permisos/usuario/<int:user_id>/', gestion_permisos, name='gestion_permisos_user'),

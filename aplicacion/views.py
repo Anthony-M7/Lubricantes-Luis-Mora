@@ -2,12 +2,12 @@ import io
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.urls import reverse
 from .decorators import nivel_requerido
 from django.contrib.auth import logout
-from django.db.models import Q, Sum, Count, F
+from django.db.models import Q, Sum, Count, F, CharField, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncMonth, TruncDay
 from django.views.generic import TemplateView
 from django.db.models.functions import Length
@@ -23,16 +23,14 @@ from django.core.paginator import Paginator
 from django.core import serializers
 
 from django.http import JsonResponse
+import json
 
 from .models import *
-from ProductosVentas.models import *
 from .forms import ArticuloForm, CompraInventarioForm, PersonalForm, UserUpdateForm, ClienteForm, ClienteSearchForm
 import os
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import lubricantesLuisMora.settings as settings
-from django.contrib.auth.models import Group
-from django.contrib.contenttypes.models import ContentType
 
 
 def inicio(request):

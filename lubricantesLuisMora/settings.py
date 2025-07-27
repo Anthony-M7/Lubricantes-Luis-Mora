@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django.contrib.humanize',
     "aplicacion",
+    "ProductosVentas",
     "barcode",
     "mathfilters",
     'sslserver'

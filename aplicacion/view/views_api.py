@@ -1,13 +1,13 @@
 from django.http import JsonResponse
-from ..models import Articulo, MovimientoInventario, HistorialStock, Categoria
+from ..models import Articulo, Categoria
+from ProductosCompras.models import *
 from barcode import get_barcode_class
 from barcode.writer import ImageWriter
 from io import BytesIO
 import base64
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib import messages
-from ..forms import CompraInventarioForm, ArticuloForm
-from django.db import transaction
+from ..forms import ArticuloForm
 import os
 from django.db.models import ProtectedError
 
@@ -15,7 +15,6 @@ from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.utils import timezone
 from weasyprint import HTML
-from django.conf import settings
 import os
 from django.db import models
 
@@ -133,99 +132,6 @@ def api_articulos(request):
     
     # Retornar como JSON
     return JsonResponse(articulos_list, safe=False)
-
-
-def eliminar_compra(request, pk):
-    # Obtener el movimiento de compra
-    movimiento = get_object_or_404(MovimientoInventario, pk=pk, tipo='ENTRADA')
-    
-    if request.method == 'POST':
-        try:
-            articulo = movimiento.articulo
-            
-            # 3. Eliminar el movimiento
-            movimiento.delete()
-            
-            messages.success(request, 'Compra eliminada correctamente y stock revertido')
-            
-        except Exception as e:
-            messages.error(request, f'Error al eliminar la compra: {str(e)}')
-            return redirect('compras')
-    
-    return redirect('compras')
-
-
-def detalle_compra(request, pk):
-    # Obtener datos principales
-    compra = get_object_or_404(
-        MovimientoInventario.objects.select_related('articulo', 'proveedor', 'usuario'),
-        pk=pk,
-        tipo='ENTRADA'
-    )
-    historico = get_object_or_404(HistorialStock, movimiento=compra)
-    
-    # Calcular valores necesarios
-    total = compra.cantidad * compra.costo_unitario
-    
-    # Variación de cantidad (% aumento stock)
-    aumento_stock_pct = (compra.cantidad / historico.stock_antes * 100) if historico.stock_antes > 0 else 0
-    aumento_stock_text = f"+{compra.cantidad:.0f} ({aumento_stock_pct:.1f}%)"
-    
-    # Variación de precio (vs compra anterior)
-    if historico.costo_unitario_anterior:
-        variacion_precio = (
-            (compra.costo_unitario - historico.costo_unitario_anterior) / 
-            historico.costo_unitario_anterior * 100
-        )
-    else:
-        variacion_precio = 0
-    
-    # Variación de costo promedio
-    if historico.costo_promedio_antes > 0:
-        variacion_promedio = (
-            (historico.costo_promedio_despues - historico.costo_promedio_antes) / 
-            historico.costo_promedio_antes * 100
-        )
-        variacion_promedio_text = f"{'↑' if variacion_promedio > 0 else '↓'} {abs(variacion_promedio):.1f}%"
-    else:
-        variacion_promedio = 0
-        variacion_promedio_text = "0.0%"
-    
-    context = {
-        'compra': compra,
-        'historico': historico,
-        'titulo': f'Detalle de Compra #{compra.id}',
-        'total': total,
-        'aumento_stock_text': aumento_stock_text,
-        'variacion_precio': variacion_precio,
-        'variacion_promedio_text': variacion_promedio_text,
-    }
-    
-    return render(request, 'detalles/detalles_compra.html', context)
-
-
-def editar_compra(request, pk):
-    compra = get_object_or_404(MovimientoInventario, pk=pk, tipo='ENTRADA')
-    
-    if request.method == 'POST':
-        form = CompraInventarioForm(request.POST, instance=compra, user=request.user)
-        if form.is_valid():
-            # El formulario se encarga de toda la lógica de actualización
-            form.save()
-            messages.success(request, 'Compra actualizada correctamente')
-            return redirect('detalle_compra', pk=compra.pk)
-    else:
-        form = CompraInventarioForm(instance=compra, user=request.user)
-    
-    return render(request, 'Forms/editar_compra.html', {
-        'form': form,
-        'compra': compra,
-        "titulo": f"Editar Compra #{compra.id}",
-        "codigo": compra.articulo.codigo,
-        "articulo": compra.articulo.nombre,
-        "stock_actual": int(compra.articulo.stock_actual),
-        "costo_promedio": compra.articulo.costo_promedio,
-    })
 
 
 def editar_producto(request, producto_id):

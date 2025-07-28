@@ -3,7 +3,8 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
-from aplicacion.models import Articulo, MovimientoInventario, HistorialStock, Cliente
+from aplicacion.models import Articulo, Cliente
+from ProductosCompras.models import *
 from .models import Venta, DetalleVenta
 from aplicacion.forms import ClienteForm
 from .forms import *

@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('', include('ProductosVentas.urls')),
+    path('', include('ProductosCompras.urls')),
 
     # path('', home, name='home'),
     path('admin/', admin.site.urls, name="panel_admin"),
@@ -41,7 +42,6 @@ urlpatterns = [
     # vistas
     path('dashboard/', dashboard, name='dashboard'),
     path('inventario/', inventario_view, name='inventario'),
-    path('compras/', compras_view, name='compras'),
 
     path('nomina/', gestion_personal, name='nomina_personal'),
     path('crear_personal/', crear_editar_personal, name='crear_personal'),
@@ -56,15 +56,10 @@ urlpatterns = [
 
     # Formularios
     path('articulos/nuevo/', crear_articulo, name='crear_articulo'),
-    path('compras/nueva/', registrar_compras, name='nueva_compra'),
 
     # APIs
     path('api/productos/<int:pk>/', producto_detalle_api, name='producto-detalle-api'),
     path('api/articulos/', api_articulos, name='api_articulos'),
-
-    path('compras/editar/<int:pk>/', editar_compra, name='editar_compra'),
-    path('compras/<int:pk>/eliminar/', eliminar_compra, name='eliminar_compra'),
-    path('compras/detalle/<int:pk>/', detalle_compra, name='detalle_compra'),
 
     path('articulos/editar/<int:producto_id>/', editar_producto, name='editar_articulo'),
     path('articulos/<int:producto_id>/eliminar/', eliminar_producto, name='eliminar_producto'),
@@ -82,5 +77,6 @@ urlpatterns = [
     # PERMISOS
     path('gestion-permisos/usuario/<int:user_id>/', gestion_permisos, name='gestion_permisos_user'),
     path('gestion-permisos/grupo/<int:group_id>/', gestion_permisos, name='gestion_permisos_group'),
+
 
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

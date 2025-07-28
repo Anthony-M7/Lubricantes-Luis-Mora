@@ -3,6 +3,8 @@
 *.pyo
 *.pyd
 __pycache__/
+migrations/
+management/
 
 # Django stuff:
 *.log

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import CustomUser,Categoria, Proveedor, Articulo, MovimientoInventario, HistorialStock, Cliente
+from .models import CustomUser,Categoria, Articulo, Cliente
 from django.utils.translation import gettext_lazy as _
 from django.apps import AppConfig
 
@@ -58,10 +58,7 @@ class ArticuloAdmin(admin.ModelAdmin):
     )
 
 admin.site.register(Categoria)
-admin.site.register(Proveedor)
 admin.site.register(Articulo, ArticuloAdmin)
-admin.site.register(MovimientoInventario)
-admin.site.register(HistorialStock)
 admin.site.register(Cliente)
 
 admin.site.register(CustomUser, CustomUserAdmin)

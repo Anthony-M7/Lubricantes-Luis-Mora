@@ -13,13 +13,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from pathlib import Path
 import os
 import dj_database_url
-
+from dotenv import load_dotenv  # <-- Nueva importación
 
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+load_dotenv()
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
@@ -41,6 +42,8 @@ SECURE_SSL_REDIRECT = False
 # CSRF_COOKIE_SECURE = True
 
 
+
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -53,10 +56,32 @@ INSTALLED_APPS = [
     'django.contrib.humanize',
     "aplicacion",
     "ProductosVentas",
+    "ProductosCompras",
     "barcode",
     "mathfilters",
-    'sslserver'
+    'sslserver',
+    "storages"
 ]
+
+# --- Configuración AWS S3 (debe ir después de INSTALLED_APPS) ---
+AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = 'bucket-lubricantes-luis-mora'
+AWS_S3_REGION_NAME = 'us-east-2'
+AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+AWS_S3_OBJECT_PARAMETERS = {
+    'CacheControl': 'max-age=86400',
+    'ACL': 'private'
+}
+AWS_S3_FILE_OVERWRITE = False
+AWS_DEFAULT_ACL = None
+AWS_QUERYSTRING_AUTH = False
+
+# --- Almacenamiento ---# Para media
+DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+AWS_LOCATION = 'media'  # Opcional: organiza en subcarpetas
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Para static files
 
 # Agrega esta línea justo después de INSTALLED_APPS
 AUTH_USER_MODEL = 'aplicacion.CustomUser'
@@ -100,20 +125,23 @@ WSGI_APPLICATION = 'lubricantesLuisMora.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
-
-# DATABASES = {
-#     'default': dj_database_url.parse(
-#         "postgresql://lubricantes_db_user:eRKGxT3H6UF2e094TSHjN2hraPfmB1BE@dpg-d0164aidbo4c73dt5v90-a.virginia-postgres.render.com/lubricantes_db",
-#         conn_max_age=600,
-#         ssl_require=True
-#     )
-# }
 
 
 # Password validation
@@ -152,7 +180,6 @@ USE_TZ = False
 STATIC_URL = '/static/'
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'aplicacion/static'),
@@ -174,7 +201,6 @@ LOGOUT_REDIRECT_URL = 'inicio'
 # # Para manejo de archivos media
 # settings.py
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# MEDIA_URL = '/media/'
 
 

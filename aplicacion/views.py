@@ -26,13 +26,17 @@ from django.http import JsonResponse
 
 from .models import *
 from ProductosVentas.models import *
-from .forms import ArticuloForm, CompraInventarioForm, PersonalForm, UserUpdateForm, ClienteForm, ClienteSearchForm
+from ProductosCompras.models import *
+from .forms import ArticuloForm, PersonalForm, UserUpdateForm, ClienteForm, ClienteSearchForm
+from ProductosCompras.forms import *
 import os
 
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 import lubricantesLuisMora.settings as settings
 from django.contrib.auth.models import Group
 from django.contrib.contenttypes.models import ContentType
+
+from django.core.files.storage import default_storage
 
 
 def inicio(request):
@@ -78,6 +82,7 @@ def get_redirect_url(user):
         return reverse('panel_usuario')  # Panel de usuario regular
     else:
         return reverse('inicio')  # Página principal para clientes
+
 
 @login_required
 def panel_admin(request):
@@ -454,91 +459,6 @@ def crear_articulo(request):
     
     return render(request, 'Forms/crear_articulos.html', {'form': form})
 
-@login_required
-def compras_view(request):
-    # Obtener parámetros de la URL
-    dias = int(request.GET.get('dias', 30))
-    busqueda = request.GET.get('q', '')
-    proveedor_id = request.GET.get('proveedor', '')
-    page_number = request.GET.get('page', 1)
-    
-    # Obtener el queryset base
-    compras = MovimientoInventario.objects.filter(
-        tipo='ENTRADA'
-    ).select_related('articulo', 'usuario', 'proveedor').order_by('-fecha')
-    
-    # Aplicar filtros
-    fecha_inicio = timezone.now() - timedelta(days=dias)
-    compras = compras.filter(fecha__gte=fecha_inicio)
-    
-    if busqueda:
-        compras = compras.filter(
-            Q(articulo__nombre__icontains=busqueda) |
-            Q(articulo__codigo__icontains=busqueda) |
-            Q(referencia__icontains=busqueda)
-        )
-    
-    if proveedor_id:
-        compras = compras.filter(proveedor_id=proveedor_id)
-    
-    # Paginación
-    paginator = Paginator(compras, 20)  # 20 items por página
-    page_obj = paginator.get_page(page_number)
-    
-    # Cálculos para estadísticas
-    # Con esto:
-    total_compras = sum(compra.cantidad * compra.costo_unitario for compra in page_obj.object_list if compra.costo_unitario)
-    articulos_ids = set(c.articulo.id for c in page_obj.object_list)
-    total_articulos = len(articulos_ids)
-    promedio_compra = total_compras / len(page_obj.object_list) if page_obj else 0
-    
-    # Generar rango de páginas para la paginación (mostrar 5 páginas alrededor de la actual)
-    page_range = []
-    if paginator.num_pages <= 5:
-        page_range = range(1, paginator.num_pages + 1)
-    else:
-        if page_obj.number <= 3:
-            page_range = range(1, 6)
-        elif page_obj.number >= paginator.num_pages - 2:
-            page_range = range(paginator.num_pages - 4, paginator.num_pages + 1)
-        else:
-            page_range = range(page_obj.number - 2, page_obj.number + 3)
-    
-    # Preparar el contexto completo
-    context = {
-        'titulo': 'Últimas Compras Registradas',
-        'compras': page_obj,
-        'dias': dias,
-        'q': busqueda,
-        'proveedor_id': int(proveedor_id) if proveedor_id else '',
-        'proveedores': Proveedor.objects.all(),
-        'total_compras': total_compras,
-        'total_articulos': total_articulos,
-        'promedio_compra': promedio_compra,
-        'page_obj': page_obj,
-        'page_range': page_range,
-    }
-    
-    return render(request, 'vistas/compras.html', context)
-
-@login_required
-def registrar_compras(request):
-    if request.method == 'POST':
-        form = CompraInventarioForm(request.POST, user=request.user)
-        if form.is_valid():
-            form.save()
-            return redirect('compras')
-    else:
-        form = CompraInventarioForm(user=request.user)
-    
-    context = {
-        'titulo': 'Registrar Nueva Compra',
-        'boton_submit': 'Registrar Compra',
-        'form': form
-    }
-    return render(request, 'Forms/crear_compras.html', context)
-
-
 # ==========================================================================
 
 @login_required
@@ -795,7 +715,7 @@ def profile(request):
             usuario_original = CustomUser.objects.get(pk=request.user.pk)
             foto_anterior_field = usuario_original.foto_perfil
             foto_anterior = os.path.join(
-                settings.MEDIA_ROOT,
+                settings.DEFAULT_FILE_STORAGE,
                 'perfiles',
                 os.path.basename(str(foto_anterior_field))
             )
@@ -1309,6 +1229,10 @@ class ReportesFinancierosView(TemplateView):
 
 
 # ================================================================================
+
+
+
+
 
 
 @nivel_requerido('admin')

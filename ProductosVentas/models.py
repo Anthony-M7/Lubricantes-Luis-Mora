@@ -2,7 +2,8 @@ from django.db import models
 from django.utils import timezone
 from django.core.validators import MinValueValidator
 from django.db.models import Sum
-from aplicacion.models import HistorialStock, CustomUser, Articulo, MovimientoInventario, Cliente
+from aplicacion.models import CustomUser, Articulo, Cliente
+from ProductosCompras.models import HistorialStock, MovimientoInventario
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 
@@ -24,7 +25,7 @@ class Venta(models.Model):
     )
     
     codigo = models.CharField(max_length=20, unique=True, verbose_name="Código de venta")
-    cliente = models.ForeignKey(Cliente, on_delete=models.SET_NULL, null=True, blank=True, default="0")
+    cliente = models.ForeignKey("aplicacion.Cliente", on_delete=models.SET_NULL, null=True, blank=True, default="0")
     fecha = models.DateTimeField(default=timezone.now)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     impuesto = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -32,7 +33,7 @@ class Venta(models.Model):
     estado = models.CharField(max_length=20, choices=ESTADO_CHOICES, default='BORRADOR')
     metodo_pago = models.CharField(max_length=20, choices=METODO_PAGO_CHOICES, null=True, blank=True)
     observaciones = models.TextField(blank=True)
-    creado_por = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
+    creado_por = models.ForeignKey("aplicacion.CustomUser", on_delete=models.PROTECT)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
@@ -137,8 +138,8 @@ class Venta(models.Model):
 
 
 class DetalleVenta(models.Model):
-    venta = models.ForeignKey(Venta, on_delete=models.CASCADE, related_name='detalles')
-    articulo = models.ForeignKey(Articulo, on_delete=models.PROTECT)
+    venta = models.ForeignKey("Venta", on_delete=models.CASCADE, related_name='detalles')
+    articulo = models.ForeignKey("aplicacion.Articulo", on_delete=models.PROTECT)
     cantidad = models.DecimalField(max_digits=10, decimal_places=3, validators=[MinValueValidator(Decimal('0.001'))])
     precio_unitario = models.DecimalField(max_digits=12, decimal_places=2)
     impuesto = models.DecimalField(max_digits=12, decimal_places=2, default=0)

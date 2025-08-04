@@ -23,6 +23,7 @@ from openpyxl import Workbook
 from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime
+from django.core.files.storage import default_storage
 
 # =================================================================================
 
@@ -176,13 +177,19 @@ def eliminar_producto(request, producto_id):
     nombre_producto = producto.nombre
 
     if request.method == 'POST':
-        # Eliminar imagen si existe
-        if producto.imagen and os.path.isfile(producto.imagen.path):
-            os.remove(producto.imagen.path)
-
         try:
+            # Eliminar imagen de S3 si existe
+            if producto.imagen:
+                try:
+                    default_storage.delete(producto.imagen.name)  # Elimina el 
+                except Exception as e:
+                    messages.error(request, f'Error al eliminar la imagen: {str(e)}')
+                    return redirect('inventario')
+
+            # Eliminar el producto de la base de datos
             producto.delete()
             messages.success(request, f'El producto "{nombre_producto}" ha sido eliminado correctamente.')
+            
         except ProtectedError:
             # Si está en uso, desactivar en lugar de eliminar
             producto.activo = False

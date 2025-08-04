@@ -75,10 +75,10 @@
 .input-group #id_cliente {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
-  }
+}
   
-  /* Estilo para el botón de búsqueda */
-  #buscarClienteBtn {
+/* Estilo para el botón de búsqueda */
+#buscarClienteBtn {
     border-top-left-radius: 0;
     border-bottom-left-radius: 0;
-  }
+}

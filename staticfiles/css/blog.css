@@ -1,6 +1,9 @@
 #sidebar{
     display: none !important;
 }
+#cerrar-sesion{
+    display: none !important;
+}
 
 .ocult-header-in-login{
     display: block;

@@ -1,3 +1,10 @@
+#cerrar-sesion{
+    display: block !important;
+}
+#ir-sistema{
+    display: none !important;
+}
+
 .ocult-header-in-login{
     position: initial;
 }

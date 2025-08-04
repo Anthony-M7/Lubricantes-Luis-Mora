@@ -412,11 +412,11 @@
 <script src="{% static 'js/inventario/inventario.js' %}"></script>
 <script src="{% static 'js/inventario/cargar_detalles.js' %}"></script>
 <script>
-    // Forma más segura de pasar datos de Django a JavaScript
-    window.INVENTARIO_DATA = {
-      staticUrl: "{% static '' %}",
-      productos: JSON.parse('{{ productos_json|escapejs }}')
-    };
-  </script>
+  // Forma más segura de pasar datos de Django a JavaScript
+  window.INVENTARIO_DATA = {
+    staticUrl: "{% static '' %}",
+    productos: JSON.parse('{{ productos_json|escapejs }}')
+  };
+</script>
 
 {% endblock %}

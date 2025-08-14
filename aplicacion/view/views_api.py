@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from ..models import Articulo, Categoria
 from ProductosCompras.models import *
-from barcode import get_barcode_class
+from barcode import Code128
 from barcode.writer import ImageWriter
 from io import BytesIO
 import base64
@@ -46,8 +46,7 @@ def producto_detalle_api(request, pk):
         # Generar código de barras
         barcode_buffer = BytesIO()
         if producto.codigo_barras:
-            BarcodeClass = get_barcode_class('code128')
-            codigo = BarcodeClass(str(producto.codigo_barras), writer=ImageWriter())
+            codigo = Code128(str(producto.codigo_barras), writer=ImageWriter())
             codigo.write(
                 barcode_buffer,
                 options={'write_text': False, 'module_height': 10}

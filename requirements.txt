@@ -1,5 +1,4 @@
 asgiref==3.9.1
-# barcode==1.0.4
 boto3==1.40.9
 botocore==1.40.9
 Brotli==1.1.0

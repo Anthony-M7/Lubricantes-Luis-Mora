@@ -117,15 +117,7 @@ def producto_detalle_api(request, pk):
 
 def api_articulos(request):
     # Obtener solo artículos activos
-    articulos = Articulo.objects.filter(activo=True).values(
-        'id',
-        'nombre',
-        'codigo',
-        'unidad_medida',
-        'stock_actual',
-        'costo_promedio',
-        "precio_venta",
-    )
+    articulos = Articulo.objects.filter(activo=True)
 
     # Convertir QuerySet a lista
     articulos_list = list(articulos)

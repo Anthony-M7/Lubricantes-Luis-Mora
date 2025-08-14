@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'corsheaders',
     "aplicacion",
     "ProductosVentas",
     "ProductosCompras",
@@ -88,6 +89,7 @@ AUTH_USER_MODEL = 'aplicacion.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware', # Agrega esta línea
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -121,6 +123,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lubricantesLuisMora.wsgi.application'
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:8100",
+    "http://localhost:8100", # Duplicado por si acaso
+]
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

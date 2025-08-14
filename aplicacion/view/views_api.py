@@ -55,7 +55,7 @@ def producto_detalle_api(request, pk):
             barcode_base64 = base64.b64encode(barcode_buffer.getvalue()).decode('utf-8')
         else:
             barcode_base64 = None
-        
+
         # Preparar datos de última compra
         ultima_compra_data = None
         if ultima_compra:
@@ -127,10 +127,10 @@ def api_articulos(request):
         'costo_promedio',
         "precio_venta",
     )
-    
+
     # Convertir QuerySet a lista
     articulos_list = list(articulos)
-    
+
     # Retornar como JSON
     return JsonResponse(articulos_list, safe=False)
 
@@ -138,31 +138,31 @@ def api_articulos(request):
 def editar_producto(request, producto_id):
     producto = get_object_or_404(Articulo, id=producto_id)
     categorias = Categoria.objects.all()
-    
+
     # Obtener últimos movimientos
     movimientos = MovimientoInventario.objects.filter(articulo=producto).order_by('-fecha')[:5]
-    
+
     if request.method == 'POST':
         form = ArticuloForm(request.POST, request.FILES, instance=producto, editing=True, user=request.user)
         if form.is_valid():
             producto = form.save(commit=False)
-            
+
             # Restauramos los valores de los campos readonly que Django no guarda
             producto.codigo = Articulo.objects.get(id=producto_id).codigo
             producto.codigo_barras = Articulo.objects.get(id=producto_id).codigo_barras
             producto.creado_por = Articulo.objects.get(id=producto_id).creado_por
             producto.fecha_creacion = Articulo.objects.get(id=producto_id).fecha_creacion
-            
+
             # Manejar eliminación de imagen si se seleccionó
             if 'eliminar_imagen' in request.POST and request.POST['eliminar_imagen'] == 'on':
                 producto.imagen.delete(save=True)
-            
+
             producto.save()
             messages.success(request, f'El producto "{producto.nombre}" ha sido actualizado correctamente.')
             return redirect('inventario')
     else:
         form = ArticuloForm(instance=producto, editing=True, user=request.user)
-    
+
     context = {
         'producto': producto,
         'form': form,
@@ -181,7 +181,7 @@ def eliminar_producto(request, producto_id):
             # Eliminar imagen de S3 si existe
             if producto.imagen:
                 try:
-                    default_storage.delete(producto.imagen.name)  # Elimina el 
+                    default_storage.delete(producto.imagen.name)  # Elimina el
                 except Exception as e:
                     messages.error(request, f'Error al eliminar la imagen: {str(e)}')
                     return redirect('inventario')
@@ -189,7 +189,7 @@ def eliminar_producto(request, producto_id):
             # Eliminar el producto de la base de datos
             producto.delete()
             messages.success(request, f'El producto "{nombre_producto}" ha sido eliminado correctamente.')
-            
+
         except ProtectedError:
             # Si está en uso, desactivar en lugar de eliminar
             producto.activo = False
@@ -225,14 +225,14 @@ def generar_catalogo_pdf(request):
 
     # Renderizar template HTML
     html_string = render_to_string('catalogo_pdf.html', context)
-    
+
     # Crear respuesta PDF
     response = HttpResponse(content_type='application/pdf')
     response['Content-Disposition'] = 'filename="catalogo_lubricantes.pdf"'
-    
+
     # Generar PDF
     HTML(string=html_string, base_url=request.build_absolute_uri('/')).write_pdf(response)
-    
+
     return response
 
 # ==================================================================================
@@ -260,9 +260,9 @@ class GenerarTalonarioPagoExcel(View):
         header_fill = PatternFill(start_color="3498db", end_color="3498db", fill_type="solid")
         categoria_font = Font(bold=True, color="FFFFFF")
         categoria_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
-        thin_border = Border(left=Side(style='thin'), 
-                            right=Side(style='thin'), 
-                            top=Side(style='thin'), 
+        thin_border = Border(left=Side(style='thin'),
+                            right=Side(style='thin'),
+                            top=Side(style='thin'),
                             bottom=Side(style='thin'))
         center_alignment = Alignment(horizontal='center', vertical='center')
         right_alignment = Alignment(horizontal='right', vertical='center')
@@ -343,4 +343,4 @@ class GenerarTalonarioPagoExcel(View):
         wb.save(response)
 
         return response
-    
+

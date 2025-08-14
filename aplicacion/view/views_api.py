@@ -116,13 +116,23 @@ def producto_detalle_api(request, pk):
 
 
 def api_articulos(request):
-    # Obtener solo artículos activos
+    # Get only active articles
     articulos = Articulo.objects.filter(activo=True)
 
-    # Convertir QuerySet a lista
-    articulos_list = list(articulos)
+    # Convert the QuerySet to a list of dictionaries
+    articulos_list = [{
+        'id': articulo.id, 
+        'nombre': articulo.nombre, 
+        'descripcion': articulo.descripcion,
+        'marca': articulo.marca,
+        'modelo': articulo.modelo,
+        'imagen_url': articulo.imagen.url if articulo.imagen else None,
+        'precio': articulo.precio_venta,
+        'stock_actual': articulo.stock_actual,
+        'unidad_medida': articulo.unidad_medida,
+    } for articulo in articulos]
 
-    # Retornar como JSON
+    # Return as JSON
     return JsonResponse(articulos_list, safe=False)
 
 

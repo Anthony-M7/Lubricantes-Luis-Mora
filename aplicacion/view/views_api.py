@@ -24,6 +24,8 @@ from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
 from openpyxl.utils import get_column_letter
 from datetime import datetime
 from django.core.files.storage import default_storage
+from django.core.paginator import Paginator
+from django.db.models import Q
 
 # =================================================================================
 
@@ -116,24 +118,48 @@ def producto_detalle_api(request, pk):
 
 
 def api_articulos(request):
-    # Get only active articles
-    articulos = Articulo.objects.filter(activo=True)
+    if request.method == 'GET':
+        # Obtiene el término de búsqueda de los parámetros de la URL
+        search_query = request.GET.get('search', '')
 
-    # Convert the QuerySet to a list of dictionaries
-    articulos_list = [{
-        'id': articulo.id, 
-        'nombre': articulo.nombre, 
-        'descripcion': articulo.descripcion,
-        'marca': articulo.marca,
-        'modelo': articulo.modelo,
-        'imagen_url': articulo.imagen.url if articulo.imagen else None,
-        'precio': articulo.precio_venta,
-        'stock_actual': articulo.stock_actual,
-        'unidad_medida': articulo.unidad_medida,
-    } for articulo in articulos]
+        # Define el queryset base, seleccionando solo los campos necesarios
+        articulos_queryset = Articulo.objects.all().values(
+            'id', 'nombre', 'precio_venta', 'marca', 'stock_actual', 'imagen', 'unidad_medida'
+        ).order_by('nombre')
+        
+        # Si hay un término de búsqueda, filtramos el queryset
+        if search_query:
+            articulos_queryset = articulos_queryset.filter(
+                Q(nombre__icontains=search_query) | Q(marca__icontains=search_query) | Q(palabras_clave__icontains=search_query)
+            )
 
-    # Return as JSON
-    return JsonResponse(articulos_list, safe=False)
+        # Paginación
+        paginator = Paginator(articulos_queryset, 5) # 5 artículos por página
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+
+        # Prepara la respuesta con los datos de paginación
+        response_data = {
+            'total_items': paginator.count,
+            'num_pages': paginator.num_pages,
+            'current_page': page_obj.number,
+            'next_page_url': None,
+            'previous_page_url': None,
+            'results': list(page_obj)
+        }
+        
+        # Creamos las URL de paginación con el término de búsqueda si existe
+        base_url = f"/api/articulos/?search={search_query}&" if search_query else f"/api/articulos/?"
+
+        if page_obj.has_next():
+            response_data['next_page_url'] = f"{base_url}page={page_obj.next_page_number()}"
+        
+        if page_obj.has_previous():
+            response_data['previous_page_url'] = f"{base_url}page={page_obj.previous_page_number()}"
+
+        return JsonResponse(response_data, safe=False)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 
 def editar_producto(request, producto_id):

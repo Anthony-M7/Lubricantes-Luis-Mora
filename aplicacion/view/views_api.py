@@ -127,6 +127,8 @@ def api_articulos(request):
             'id', 'nombre', 'precio_venta', 'marca', 'stock_actual', 'imagen', 'unidad_medida'
         ).order_by('nombre')
         
+        print(articulos_queryset)
+
         # Si hay un término de búsqueda, filtramos el queryset
         if search_query:
             articulos_queryset = articulos_queryset.filter(

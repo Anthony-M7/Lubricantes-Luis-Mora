@@ -124,11 +124,12 @@ TEMPLATES = [
 WSGI_APPLICATION = 'lubricantesLuisMora.wsgi.application'
 
 # settings.py de Django
-CORS_ALLOWED_ORIGINS = [
-    "capacitor://localhost",  # Muy importante para que la app móvil pueda hacer peticiones
-    "http://localhost:8000",  # Para desarrollo web si corres Django localmente en navegador
-    "http://127.0.0.1:8000",  # También útil para desarrollo local
-]
+# CORS_ALLOWED_ORIGINS = [
+#     "https://lubricantes-luis-mora.onrender.com",  # si tu backend se hace requests a sí mismo
+#     "capacitor://localhost",                        # necesario para apps móviles con WebView
+# ]
+
+CORS_ALLOW_ALL_ORIGINS = True
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases

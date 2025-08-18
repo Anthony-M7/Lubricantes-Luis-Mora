@@ -121,10 +121,11 @@ def api_articulos(request):
     if request.method == 'GET':
         # Obtiene el término de búsqueda de los parámetros de la URL
         search_query = request.GET.get('search', '')
+        codigo_barras = request.GET.get('codigo_barras', '')
 
         # Define el queryset base, seleccionando solo los campos necesarios
         articulos_queryset = Articulo.objects.all().values(
-            'id', 'nombre', 'precio_venta', 'marca', 'stock_actual', 'imagen', 'unidad_medida'
+            'id', 'nombre', 'precio_venta', 'marca', 'stock_actual', 'imagen', 'unidad_medida', 'codigo_barras'
         ).order_by('nombre')
         
         print(articulos_queryset)
@@ -134,6 +135,9 @@ def api_articulos(request):
             articulos_queryset = articulos_queryset.filter(
                 Q(nombre__icontains=search_query) | Q(marca__icontains=search_query) | Q(palabras_clave__icontains=search_query)
             )
+
+        if codigo_barras:
+            articulos_queryset = articulos_queryset.filter(codigo_barras=codigo_barras)
 
         # Paginación
         paginator = Paginator(articulos_queryset, 5) # 5 artículos por página

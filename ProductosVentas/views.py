@@ -723,7 +723,6 @@ def api_venta_detalle(request, venta_id):
             'codigo': venta.codigo,
             'cliente_id': venta.cliente.id if venta.cliente else None,
             'cliente_nombre': venta.cliente.nombre if venta.cliente else None,
-            'cliente_documento': venta.cliente.documento if venta.cliente else None,
             'fecha': venta.fecha.isoformat(),
             'subtotal': float(venta.subtotal),
             'impuesto': float(venta.impuesto),

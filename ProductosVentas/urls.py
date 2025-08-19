@@ -21,4 +21,18 @@ urlpatterns = [
     path('api/articulos/<int:pk>/', obtener_articulo_api, name='obtener_articulo_api'),
     path('ventas/crear-cliente-rapido/', crear_cliente_rapido, name='crear_cliente_rapido'),
     path('api/clientes/buscar/', buscar_clientes_api, name='buscar_clientes_api'),
+
+
+
+
+
+
+    # API para ventas
+    path('api/ventas/', api_ventas, name='api_ventas'),
+    path('api/ventas/<int:venta_id>/', api_venta_detalle, name='api_venta_detalle'),
+    path('api/ventas/<int:venta_id>/detalles/', api_detalles_venta, name='api_detalles_venta'),
+    
+    # API para detalles de venta
+    path('api/detalles-venta/', api_detalles_venta_list, name='api_detalles_venta_list'),
+    path('api/detalles-venta/<int:detalle_id>/', api_detalle_venta_detalle, name='api_detalle_venta_detalle'),
 ]

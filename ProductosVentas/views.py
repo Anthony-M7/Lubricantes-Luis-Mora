@@ -31,6 +31,8 @@ from reportlab.platypus import Table, TableStyle
 from reportlab.lib.units import inch
 from io import BytesIO
 
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+
 
 
 def lista_ventas(request):
@@ -632,3 +634,192 @@ def cambiar_estado_venta(request):
     return redirect('lista_ventas')
 
 
+
+
+
+
+
+
+
+
+
+
+@require_GET
+def api_ventas(request):
+    """API para listar ventas con filtros y paginación"""
+    try:
+        # Obtener parámetros de filtro
+        estado = request.GET.get('estado', '')
+        cliente = request.GET.get('cliente', '')
+        codigo = request.GET.get('codigo', '')
+        fecha_inicio = request.GET.get('fecha_inicio', '')
+        fecha_fin = request.GET.get('fecha_fin', '')
+        
+        # Parámetros de paginación
+        page_number = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('page_size', 10))
+        
+        # Construir queryset con filtros
+        queryset = Venta.objects.all().order_by('-fecha')
+        
+        if estado:
+            queryset = queryset.filter(estado=estado)
+        if cliente:
+            queryset = queryset.filter(cliente__nombre__icontains=cliente)
+        if codigo:
+            queryset = queryset.filter(codigo__icontains=codigo)
+        if fecha_inicio and fecha_fin:
+            queryset = queryset.filter(fecha__date__range=[fecha_inicio, fecha_fin])
+        
+        # Paginación
+        paginator = Paginator(queryset, page_size)
+        
+        try:
+            ventas_page = paginator.page(page_number)
+        except PageNotAnInteger:
+            ventas_page = paginator.page(1)
+        except EmptyPage:
+            ventas_page = paginator.page(paginator.num_pages)
+        
+        # Serializar datos
+        ventas_data = []
+        for venta in ventas_page:
+            ventas_data.append({
+                'id': venta.id,
+                'codigo': venta.codigo,
+                'cliente_nombre': venta.cliente.nombre if venta.cliente else None,
+                'cliente_documento': venta.cliente.documento if venta.cliente else None,
+                'fecha': venta.fecha.isoformat(),
+                'subtotal': float(venta.subtotal),
+                'impuesto': float(venta.impuesto),
+                'total': float(venta.total),
+                'estado': venta.estado,
+                'metodo_pago': venta.metodo_pago,
+                'observaciones': venta.observaciones,
+                'creado_por_nombre': venta.creado_por.get_full_name(),
+                'fecha_creacion': venta.fecha_creacion.isoformat(),
+                'fecha_actualizacion': venta.fecha_actualizacion.isoformat(),
+            })
+        
+        return JsonResponse({
+            'results': ventas_data,
+            'total_items': paginator.count,
+            'num_pages': paginator.num_pages,
+            'current_page': ventas_page.number,
+            'has_next': ventas_page.has_next(),
+            'has_previous': ventas_page.has_previous(),
+        })
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def api_venta_detalle(request, venta_id):
+    """API para obtener los detalles de una venta específica"""
+    try:
+        venta = get_object_or_404(Venta, id=venta_id)
+        
+        venta_data = {
+            'id': venta.id,
+            'codigo': venta.codigo,
+            'cliente_id': venta.cliente.id if venta.cliente else None,
+            'cliente_nombre': venta.cliente.nombre if venta.cliente else None,
+            'cliente_documento': venta.cliente.documento if venta.cliente else None,
+            'fecha': venta.fecha.isoformat(),
+            'subtotal': float(venta.subtotal),
+            'impuesto': float(venta.impuesto),
+            'total': float(venta.total),
+            'estado': venta.estado,
+            'metodo_pago': venta.metodo_pago,
+            'observaciones': venta.observaciones,
+            'creado_por_id': venta.creado_por.id,
+            'creado_por_nombre': venta.creado_por.get_full_name(),
+            'fecha_creacion': venta.fecha_creacion.isoformat(),
+            'fecha_actualizacion': venta.fecha_actualizacion.isoformat(),
+        }
+        
+        return JsonResponse(venta_data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def api_detalles_venta(request, venta_id):
+    """API para obtener los detalles de artículos de una venta"""
+    try:
+        venta = get_object_or_404(Venta, id=venta_id)
+        detalles = venta.detalles.all()
+        
+        detalles_data = []
+        for detalle in detalles:
+            detalles_data.append({
+                'id': detalle.id,
+                'venta_id': detalle.venta.id,
+                'articulo_id': detalle.articulo.id,
+                'articulo_nombre': detalle.articulo.nombre,
+                'articulo_codigo': detalle.articulo.codigo,
+                'articulo_unidad_medida': detalle.articulo.unidad_medida,
+                'cantidad': float(detalle.cantidad),
+                'precio_unitario': float(detalle.precio_unitario),
+                'impuesto': float(detalle.impuesto),
+                'subtotal': float(detalle.subtotal),
+                'descuento': float(detalle.descuento),
+            })
+        
+        return JsonResponse(detalles_data, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def api_detalles_venta_list(request):
+    """API para listar todos los detalles de venta"""
+    try:
+        detalles = DetalleVenta.objects.all()
+        
+        detalles_data = []
+        for detalle in detalles:
+            detalles_data.append({
+                'id': detalle.id,
+                'venta_id': detalle.venta.id,
+                'venta_codigo': detalle.venta.codigo,
+                'articulo_id': detalle.articulo.id,
+                'articulo_nombre': detalle.articulo.nombre,
+                'articulo_codigo': detalle.articulo.codigo,
+                'cantidad': float(detalle.cantidad),
+                'precio_unitario': float(detalle.precio_unitario),
+                'impuesto': float(detalle.impuesto),
+                'subtotal': float(detalle.subtotal),
+                'descuento': float(detalle.descuento),
+            })
+        
+        return JsonResponse(detalles_data, safe=False)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+@require_GET
+def api_detalle_venta_detalle(request, detalle_id):
+    """API para obtener un detalle de venta específico"""
+    try:
+        detalle = get_object_or_404(DetalleVenta, id=detalle_id)
+        
+        detalle_data = {
+            'id': detalle.id,
+            'venta_id': detalle.venta.id,
+            'venta_codigo': detalle.venta.codigo,
+            'articulo_id': detalle.articulo.id,
+            'articulo_nombre': detalle.articulo.nombre,
+            'articulo_codigo': detalle.articulo.codigo,
+            'articulo_unidad_medida': detalle.articulo.unidad_medida,
+            'cantidad': float(detalle.cantidad),
+            'precio_unitario': float(detalle.precio_unitario),
+            'impuesto': float(detalle.impuesto),
+            'subtotal': float(detalle.subtotal),
+            'descuento': float(detalle.descuento),
+        }
+        
+        return JsonResponse(detalle_data)
+        
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

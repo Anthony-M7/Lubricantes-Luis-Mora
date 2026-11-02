@@ -158,63 +158,91 @@
             </nav>
           </div>
         </aside>
+      {% endif %}
 
-        <!-- Mobile Drawer Overlay -->
-        <div id="mobile-drawer" class="fixed inset-0 z-50 hidden md:hidden bg-slate-900/60 backdrop-blur-sm transition-opacity">
-          <div class="fixed inset-y-0 left-0 w-64 bg-brand-dark text-slate-200 p-4 shadow-xl flex flex-col justify-between">
-            <div class="space-y-6">
-              <div class="flex items-center justify-between pb-4 border-b border-slate-800">
-                <span class="font-bold text-white text-lg">Menú Principal</span>
-                <button id="close-drawer-btn" class="p-1 text-slate-400 hover:text-white">
-                  <i class="bi bi-x-lg text-xl"></i>
-                </button>
+      <!-- Mobile Drawer Overlay (disponible tanto para autenticados como visitantes) -->
+      <div id="mobile-drawer" class="fixed inset-0 z-50 hidden md:hidden bg-slate-900/60 backdrop-blur-sm transition-opacity">
+        <div class="fixed inset-y-0 left-0 w-72 bg-brand-dark text-slate-200 p-4 shadow-xl flex flex-col justify-between overflow-y-auto">
+          <div class="space-y-6">
+            <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+              <div class="flex items-center space-x-2">
+                <img src="{% static 'img/Logo sin Fondo.png' %}" alt="Logo" class="h-8 w-auto">
+                <span class="font-bold text-white text-base">Menú Principal</span>
               </div>
+              <button id="close-drawer-btn" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                <i class="bi bi-x-lg text-xl"></i>
+              </button>
+            </div>
 
-              <nav class="space-y-1">
-                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+            <!-- Navegación General -->
+            <nav class="space-y-1">
+              <a href="{% url 'inicio' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
+                <i class="bi bi-journal-text text-xl text-sky-400"></i>
+                <span>Inicio & Blog</span>
+              </a>
+
+              {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-speedometer2 text-xl text-sky-400"></i>
                   <span>Dashboard</span>
                 </a>
-                <a href="{% url 'compras' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'compras' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-cart-check text-xl text-emerald-400"></i>
                   <span>Compras</span>
                 </a>
-                <a href="{% url 'inventario' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'inventario' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-box-seam text-xl text-amber-400"></i>
                   <span>Almacén</span>
                 </a>
-                <a href="{% url 'lista_ventas' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'lista_ventas' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-receipt text-xl text-purple-400"></i>
                   <span>Ventas</span>
                 </a>
-                <a href="{% url 'reportes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'reportes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-graph-up-arrow text-xl text-cyan-400"></i>
                   <span>Finanzas</span>
                 </a>
-                <a href="{% url 'nomina_personal' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'nomina_personal' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-people text-xl text-indigo-400"></i>
                   <span>Nómina</span>
                 </a>
-                <a href="{% url 'clientes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'clientes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-person-lines-fill text-xl text-rose-400"></i>
                   <span>Clientes</span>
                 </a>
-                <a href="{% url 'perfil' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                <a href="{% url 'perfil' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white">
                   <i class="bi bi-person-circle text-xl text-teal-400"></i>
                   <span>Perfil</span>
                 </a>
-              </nav>
-            </div>
 
-            <div class="pt-4 border-t border-slate-800">
-              <a href="{% url 'logout' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-rose-400 hover:bg-rose-950/40">
+                {% if user.admin or user.rol == 'admin' %}
+                  <a href="/admin/" target="_blank" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-amber-300 hover:bg-amber-950/40">
+                    <i class="bi bi-shield-lock text-xl text-amber-400"></i>
+                    <span>Panel Django Admin</span>
+                  </a>
+                {% endif %}
+              {% else %}
+                <a href="{% url 'login' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-emerald-400 hover:bg-brand-navy">
+                  <i class="bi bi-box-arrow-in-right text-xl"></i>
+                  <span>Iniciar Sesión</span>
+                </a>
+              {% endif %}
+            </nav>
+          </div>
+
+          {% if user.is_authenticated %}
+            <div class="pt-4 mt-6 border-t border-slate-800">
+              <div class="mb-3 px-3 text-xs text-slate-400">
+                Usuario: <strong class="text-white">{{ user.get_full_name|default:user.username }}</strong>
+              </div>
+              <a href="{% url 'logout' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-rose-400 hover:bg-rose-950/40 transition">
                 <i class="bi bi-box-arrow-right text-xl"></i>
                 <span>Cerrar Sesión</span>
               </a>
             </div>
-          </div>
+          {% endif %}
         </div>
-      {% endif %}
+      </div>
 
       <!-- Main Body Container -->
       <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">

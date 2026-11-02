@@ -1,0 +1,232 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo de Productos - {{ empresa }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+            @top-center {
+                content: "{{ empresa }}";
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 10pt;
+                color: #64748B;
+                font-weight: 600;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }
+            @bottom-center {
+                content: "Página " counter(page) " de " counter(pages);
+                font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+                font-size: 8pt;
+                color: #94A3B8;
+            }
+        }
+        
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-size: 9pt;
+            line-height: 1.5;
+            color: #334155;
+            background-color: #FFFFFF;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 25pt;
+            padding-bottom: 15pt;
+            border-bottom: 2px solid #0EA5E9;
+        }
+        
+        .logo {
+            height: 45pt;
+            margin-bottom: 8pt;
+        }
+        
+        h1 {
+            color: #0F172A;
+            font-size: 18pt;
+            font-weight: 800;
+            text-align: center;
+            margin: 0 0 5pt 0;
+            letter-spacing: -0.5px;
+        }
+        
+        .fecha {
+            text-align: center;
+            color: #64748B;
+            font-size: 9pt;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+        
+        .categoria {
+            margin-bottom: 25pt;
+            page-break-inside: avoid;
+        }
+        
+        .categoria-titulo {
+            background-color: #0EA5E9;
+            color: white;
+            padding: 8pt 12pt;
+            font-size: 12pt;
+            font-weight: 700;
+            margin-bottom: 15pt;
+            border-radius: 6pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .grid-articulos {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12pt;
+            margin-bottom: 10pt;
+        }
+        
+        .articulo-card {
+            page-break-inside: avoid;
+            border: 1px solid #E2E8F0;
+            border-radius: 8pt;
+            padding: 10pt;
+            background-color: #FFFFFF;
+        }
+        
+        .articulo-imagen-container {
+            text-align: center;
+            margin-bottom: 8pt;
+            height: 70pt;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #F8FAFC;
+            border-radius: 4pt;
+            border: 1px solid #F1F5F9;
+            overflow: hidden;
+        }
+        
+        .articulo-imagen {
+            max-width: 95%;
+            max-height: 65pt;
+            object-fit: contain;
+        }
+        
+        .articulo-codigo {
+            font-size: 7pt;
+            font-weight: 700;
+            color: #94A3B8;
+            margin-bottom: 2pt;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .articulo-nombre {
+            font-weight: 700;
+            font-size: 10pt;
+            margin-bottom: 4pt;
+            color: #1E293B;
+            height: 28pt;
+            overflow: hidden;
+            line-height: 1.3;
+        }
+        
+        .articulo-marca {
+            font-size: 8pt;
+            color: #64748B;
+            margin-bottom: 8pt;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-weight: 500;
+        }
+        
+        .articulo-precio-container {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 8pt;
+            border-top: 1px solid #E2E8F0;
+        }
+        
+        .articulo-precio {
+            color: #059669;
+            font-weight: 800;
+            font-size: 11pt;
+        }
+        
+        .articulo-iva {
+            font-size: 7pt;
+            font-weight: 700;
+            color: #64748B;
+            background-color: #F1F5F9;
+            padding: 2pt 4pt;
+            border-radius: 4pt;
+        }
+        
+        .footer-note {
+            text-align: center;
+            font-size: 8pt;
+            color: #94A3B8;
+            margin-top: 20pt;
+            font-weight: 500;
+            border-top: 1px solid #E2E8F0;
+            padding-top: 10pt;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        
+        .sin-imagen {
+            font-size: 8pt;
+            color: #CBD5E1;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <img src="{{ base_url }}{% static 'img/logo.png' %}" class="logo" alt="Logo">
+        <h1>Catálogo de Productos</h1>
+        <div class="fecha">Generado el {{ fecha }}</div>
+    </div>
+    
+    {% for categoria in categorias %}
+    <div class="categoria">
+        <div class="categoria-titulo">{{ categoria.nombre }}</div>
+        
+        <div class="grid-articulos">
+            {% for articulo in categoria.articulos %}
+            <div class="articulo-card">
+                <div class="articulo-imagen-container">
+                    {% if articulo.imagen %}
+                        <img src="{{ base_url }}{{ articulo.imagen.url }}" class="articulo-imagen" alt="{{ articulo.nombre }}">
+                    {% else %}
+                        <span class="sin-imagen">Sin imagen</span>
+                    {% endif %}
+                </div>
+                <div class="articulo-codigo">{{ articulo.codigo|default:"SIN-COD" }}</div>
+                <div class="articulo-nombre">{{ articulo.nombre }}</div>
+                <div class="articulo-marca">
+                    {{ articulo.proveedor_principal.nombre|default:"Proveedor no especificado" }}
+                    {% if articulo.tipo %} | {{ articulo.tipo }}{% endif %}
+                </div>
+                <div class="articulo-precio-container">
+                    <span class="articulo-precio">${{ articulo.precio_venta|floatformat:2 }}</span>
+                    <span class="articulo-iva">IVA {{ articulo.iva|default:"16" }}%</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+
+    <div class="footer-note">
+        Catálogo generado automáticamente - {{ empresa }} - {{ fecha }}
+    </div>
+</body>
+</html>

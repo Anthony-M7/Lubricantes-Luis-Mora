@@ -13,7 +13,8 @@ from django.db import models
 from django.forms import forms
 from decimal import Decimal, InvalidOperation
 import json
-
+import os
+from django.conf import settings
 from django.db.models import Sum, Q, Count
 from django.core.paginator import Paginator
 from django.views.decorators.http import require_GET, require_POST
@@ -143,105 +144,135 @@ def descargar_recibo(request, venta_id):
     usable_width = width - 2 * margin
     current_y = height - margin
     
-    # Encabezado del recibo (centrado)
-    p.setFont("Helvetica-Bold", 18)
-    p.drawCentredString(width/2, current_y, "RECIBO")
-    current_y -= 30
+    # Logo y Encabezado
+    logo_path = os.path.join(settings.BASE_DIR, 'static', 'img', 'Logo sin Fondo.png')
+    if os.path.exists(logo_path):
+        p.drawImage(logo_path, margin, current_y - 40, width=80, height=80, mask='auto', preserveAspectRatio=True)
     
-    # Información de la empresa
+    # Textos del encabezado (Derecha)
+    p.setFont("Helvetica-Bold", 20)
+    p.setFillColor(colors.HexColor('#1e293b')) # slate-800
+    p.drawRightString(width - margin, current_y - 10, "NOTA DE ENTREGA")
+    
     p.setFont("Helvetica-Bold", 10)
-    p.drawString(margin, current_y, "LUBRICANTES LUIS MORA")
-    current_y -= 15
+    p.setFillColor(colors.HexColor('#475569'))
+    p.drawRightString(width - margin, current_y - 30, f"N°: {venta.codigo}")
+    
     p.setFont("Helvetica", 9)
-    p.drawString(margin, current_y, "Calle Principal El Milagro")
-    current_y -= 12
-    p.drawString(margin, current_y, "Troncal 5 - Via El Llano")
-    current_y -= 20
+    p.drawRightString(width - margin, current_y - 45, f"FECHA: {venta.fecha_creacion.strftime('%d/%m/%Y')}")
     
-    # Línea divisoria
-    p.line(margin, current_y, width - margin, current_y)
-    current_y -= 20
+    current_y -= 80
     
-    # Información del cliente
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(margin, current_y, "A:")
-    current_y -= 15
+    # Datos de la Empresa y Cliente (Dos columnas)
+    p.setStrokeColor(colors.HexColor('#e2e8f0'))
+    p.setFillColor(colors.HexColor('#f8fafc'))
+    p.rect(margin, current_y - 70, width - 2 * margin, 60, fill=1, stroke=1)
+    
+    # Empresa (Izquierda)
+    p.setFillColor(colors.HexColor('#0f172a'))
+    p.setFont("Helvetica-Bold", 11)
+    p.drawString(margin + 15, current_y - 20, "LUBRICANTES LUIS MORA")
     p.setFont("Helvetica", 9)
-    p.drawString(margin, current_y, venta.cliente.nombre)
-    current_y -= 12
-    p.drawString(margin, current_y, venta.cliente.direccion if hasattr(venta.cliente, 'direccion') else "Dirección no especificada")
-    current_y -= 12
+    p.setFillColor(colors.HexColor('#475569'))
+    p.drawString(margin + 15, current_y - 35, "Calle Principal El Milagro")
+    p.drawString(margin + 15, current_y - 50, "Troncal 5 - Via El Llano")
     
-    # Línea divisoria
-    p.line(margin, current_y, width - margin, current_y)
-    current_y -= 20
+    # Línea separadora vertical
+    p.line(width/2, current_y - 10, width/2, current_y - 60)
     
-    # Detalles del recibo
+    # Cliente (Derecha)
+    p.setFillColor(colors.HexColor('#0f172a'))
+    p.setFont("Helvetica-Bold", 9)
+    p.drawString(width/2 + 15, current_y - 20, "CLIENTE:")
     p.setFont("Helvetica-Bold", 10)
-    p.drawString(margin, current_y, f"N° DE RECIBO: {venta.codigo}")
-    p.drawString(width/2, current_y, f"FECHA: {venta.fecha_creacion.strftime('%d/%m/%Y')}")
-    current_y -= 15
-    current_y -= 15
+    if venta.cliente:
+        p.drawString(width/2 + 70, current_y - 20, venta.cliente.nombre)
+        p.setFont("Helvetica", 9)
+        p.setFillColor(colors.HexColor('#475569'))
+        p.drawString(width/2 + 70, current_y - 35, venta.cliente.identificacion if hasattr(venta.cliente, 'identificacion') and venta.cliente.identificacion else "Sin ID")
+        p.drawString(width/2 + 70, current_y - 50, venta.cliente.direccion if hasattr(venta.cliente, 'direccion') else "Dirección no especificada")
+    else:
+        p.drawString(width/2 + 70, current_y - 20, "Cliente Ocasional")
+        p.setFont("Helvetica", 9)
+        p.setFillColor(colors.HexColor('#475569'))
+        p.drawString(width/2 + 70, current_y - 35, "Dirección no especificada")
+        
+    current_y -= 100
     
     # Tabla de artículos
-    data = [['CANT.', 'DESCRIPCIÓN', 'PRECIO UNITARIO', 'TASA DE IMPUESTOS', 'IMPORTE']]
+    data = [['CANT.', 'DESCRIPCIÓN', 'PRECIO UNITARIO', 'IMPORTE']]
     
     for detalle in detalles:
+        # Formatear la cantidad para mostrar hasta 3 decimales, pero quitando los ceros finales si es entero
+        cant_str = f"{detalle.cantidad:.3f}".rstrip('0').rstrip('.')
         data.append([
-            str(int(detalle.cantidad)),
+            cant_str,
             detalle.articulo.nombre,
             f"{detalle.precio_unitario:,.2f} COP",
-            f"{detalle.articulo.tasa_impuesto*100}%",
             f"{detalle.subtotal:,.2f} COP"
         ])
     
-    table = Table(data, colWidths=[0.5*inch, 3.0*inch, 1.3*inch, 1.7*inch, 1*inch])
+    table = Table(data, colWidths=[0.8*inch, 3.7*inch, 1.5*inch, 1.5*inch])
     table.setStyle(TableStyle([
-        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#f5f5f5')),
-        ('TEXTCOLOR', (0, 0), (-1, 0), colors.black),
-        ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+        ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1e293b')), # slate-800
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('ALIGN', (0, 0), (1, -1), 'LEFT'),
         ('ALIGN', (2, 0), (-1, -1), 'RIGHT'),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
         ('FONTSIZE', (0, 0), (-1, -1), 9),
-        ('BOTTOMPADDING', (0, 0), (-1, 0), 6),
+        ('BOTTOMPADDING', (0, 0), (-1, 0), 8),
+        ('TOPPADDING', (0, 0), (-1, 0), 8),
         ('BACKGROUND', (0, 1), (-1, -1), colors.white),
-        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e0e0e0')),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.HexColor('#1e293b')),
+        ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e2e8f0')),
+        ('ROWBACKGROUNDS', (0, 1), (-1, -1), [colors.white, colors.HexColor('#f8fafc')]),
     ]))
     
     table.wrapOn(p, usable_width, height)
-    table.drawOn(p, margin, current_y - (len(data) * 15))
-    current_y -= (len(data) * 15) + 20
+    table_height = len(data) * 20
+    table.drawOn(p, margin, current_y - table_height)
+    current_y -= table_height + 30
     
-    # Totales
+    # Totales y Método de pago
+    # Izquierda: Método de pago
+    p.setFillColor(colors.HexColor('#0f172a'))
     p.setFont("Helvetica-Bold", 10)
-    p.drawRightString(width - margin - 100, current_y, f"Subtotal:")
-    p.drawRightString(width - margin, current_y, f"{venta.subtotal:,.2f} COP")
-    current_y -= 15
-    
-    p.drawRightString(width - margin, current_y, f"{venta.impuesto:,.2f} COP")
-    current_y -= 20
-    
-    p.setFont("Helvetica-Bold", 12)
-    p.drawRightString(width - margin - 100, current_y, "TOTAL:")
-    p.drawRightString(width - margin, current_y, f"{venta.total:,.2f} COP")
-    current_y -= 30
-    
-    # Línea divisoria
-    p.line(margin, current_y, width - margin, current_y)
-    current_y -= 20
-    
-    # Información de pago
-    p.setFont("Helvetica-Bold", 10)
-    p.drawString(margin, current_y, "CONDICIONES Y FORMA DE PAGO")
-    current_y -= 15
+    p.drawString(margin, current_y, "MÉTODO DE PAGO")
     p.setFont("Helvetica", 9)
-    p.drawString(margin, current_y, venta.estado or "El pago se realizará en un plazo de 15 días")
-    current_y -= 15
+    p.setFillColor(colors.HexColor('#475569'))
+    metodo = venta.get_metodo_pago_display() if hasattr(venta, 'get_metodo_pago_display') and venta.get_metodo_pago_display() else "No especificado"
+    p.drawString(margin, current_y - 15, f"{metodo} - Estado: {venta.get_estado_display()}")
+    
+    # Derecha: Total
+    p.setFillColor(colors.HexColor('#0f172a'))
+    p.setFont("Helvetica-Bold", 14)
+    p.drawRightString(width - margin - 120, current_y, "TOTAL:")
+    p.setFillColor(colors.HexColor('#059669')) # emerald-600
+    p.drawRightString(width - margin, current_y, f"COP {venta.total:,.2f}")
+    
+    # Espacio para firma y sello (Márgen derecho e izquierdo, más abajo)
+    firma_y = margin + 120
+    
+    # Firma Cliente
+    p.setStrokeColor(colors.HexColor('#94a3b8'))
+    p.line(margin + 30, firma_y, margin + 230, firma_y)
+    p.setFont("Helvetica-Bold", 9)
+    p.setFillColor(colors.HexColor('#475569'))
+    p.drawCentredString(margin + 130, firma_y - 15, "Firma del Cliente")
+    
+    # Firma Vendedor
+    p.line(width - margin - 230, firma_y, width - margin - 30, firma_y)
+    p.setFont("Helvetica-Bold", 9)
+    p.drawCentredString(width - margin - 130, firma_y - 15, "Firma y Sello del Vendedor")
+    p.setFont("Helvetica", 8)
+    p.drawCentredString(width - margin - 130, firma_y - 27, "LUBRICANTES LUIS MORA")
     
     # Pie de página simple
-    current_y -= 20
-    p.setFont("Helvetica", 7)
-    p.drawCentredString(width/2, current_y, "Documento generado automáticamente - No válido como factura")
+    current_y = margin
+    p.setFont("Helvetica", 8)
+    p.setFillColor(colors.HexColor('#94a3b8'))
+    p.line(margin, current_y + 15, width - margin, current_y + 15)
+    p.drawCentredString(width/2, current_y, "Documento generado automáticamente - No válido como factura fiscal")
     
     # Finalizar el PDF
     p.showPage()
@@ -252,7 +283,7 @@ def descargar_recibo(request, venta_id):
     buffer.close()
     
     response = HttpResponse(content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename=recibo_venta_{venta.codigo}.pdf'
+    response['Content-Disposition'] = f'inline; filename=recibo_venta_{venta.codigo}.pdf'
     response.write(pdf)
     
     return response
@@ -268,15 +299,8 @@ def crear_venta(request):
             venta = venta_form.save(commit=False)
             venta.creado_por = request.user
             
-            # DEBUG: Imprimir el contenido de request.POST
-            print("Datos POST recibidos:", request.POST)
-            
-            # Mejorar la detección del botón de finalizar
             finalizar = request.POST.get('finalizar_venta') == '1' or 'finalizar_venta' in request.POST
             venta.estado = 'COMPLETADA' if finalizar else 'BORRADOR'
-            
-            print(f"Estado de venta a guardar: {venta.estado}")  # Debug
-            
             venta.save()
             
             # Procesar detalles de venta

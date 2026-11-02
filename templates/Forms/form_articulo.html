@@ -1,0 +1,1119 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+
+{% block dashboard %}
+<!-- CDN Tesseract.js v5 para OCR de etiquetas -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<!-- CDN Html5Qrcode para escáner de códigos de barras por cámara -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<div class="max-w-4xl mx-auto space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-3">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+        {% if form.instance.pk %}Editar Producto: {{ form.instance.nombre }}{% else %}Registrar Nuevo Artículo{% endif %}
+      </h1>
+      <p class="text-xs text-slate-500">
+        Completa la información. Puedes tomar una foto para autocompletar la etiqueta o ingresar los datos manualmente.
+      </p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <a href="{% url 'inventario' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition">
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver</span>
+      </a>
+      {% if form.instance.pk %}
+      <button type="button" onclick="document.getElementById('deleteModal').classList.remove('hidden')" class="inline-flex items-center space-x-1 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-600 font-bold text-xs rounded-xl border border-rose-200 transition">
+        <i class="bi bi-trash"></i>
+        <span>Eliminar</span>
+      </button>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Indicador de Pasos Wizard (Progress Bar) -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4">
+    <div class="flex items-center justify-between relative">
+      <div class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-200 z-0"></div>
+      <div id="wizard-progress-bar" class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-brand-primary transition-all duration-300 z-0" style="width: 0%;"></div>
+
+      <button type="button" onclick="irAlPaso(1)" class="step-indicator relative z-10 flex flex-col items-center group focus:outline-none" data-step="1">
+        <div class="step-circle w-10 h-10 rounded-full bg-brand-primary text-white font-bold text-sm flex items-center justify-center shadow-md transition-transform group-hover:scale-105">
+          1
+        </div>
+        <span class="text-[11px] font-bold text-brand-dark mt-1">1. Foto y Datos</span>
+      </button>
+
+      <button type="button" onclick="irAlPaso(2)" class="step-indicator relative z-10 flex flex-col items-center group focus:outline-none" data-step="2">
+        <div class="step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+          2
+        </div>
+        <span class="text-[11px] font-bold text-slate-500 mt-1">2. Precios e IVA</span>
+      </button>
+
+      <button type="button" onclick="irAlPaso(3)" class="step-indicator relative z-10 flex flex-col items-center group focus:outline-none" data-step="3">
+        <div class="step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center shadow-sm transition-transform group-hover:scale-105">
+          3
+        </div>
+        <span class="text-[11px] font-bold text-slate-500 mt-1">3. Stock e Inventario</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Banner Flotante de Resultados de Foto OCR / Búsqueda -->
+  <div id="autofill-toast" class="hidden p-4 rounded-2xl border shadow-md transition-all animate-in fade-in duration-200">
+    <div class="flex items-start justify-between gap-3">
+      <div class="flex items-start space-x-3">
+        <div id="autofill-icon-container" class="p-2.5 rounded-2xl">
+          <i id="autofill-main-icon" class="text-2xl"></i>
+        </div>
+        <div class="space-y-1">
+          <h4 id="autofill-title" class="text-xs font-bold uppercase tracking-wider">¡Información Detectada!</h4>
+          <p id="autofill-detected-text" class="text-xs font-bold leading-snug">Se detectó producto</p>
+          <div class="text-[11px] flex flex-wrap gap-2 pt-1 font-medium" id="autofill-details-chips">
+            <!-- Chips dinámicos -->
+          </div>
+          <div class="flex items-center space-x-2 pt-2">
+            <button type="button" id="apply-autofill-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1">
+              <i class="bi bi-check2-circle text-base me-1"></i>
+              <span>Confirmar y Rellenar Formulario</span>
+            </button>
+            <button type="button" onclick="document.getElementById('autofill-toast').classList.add('hidden')" class="px-3 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition">
+              Cerrar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario Multi-Paso -->
+  <form method="post" enctype="multipart/form-data" id="productForm" class="space-y-6">
+    {% csrf_token %}
+
+    <!-- ================= PASO 1: FOTO Y DATOS BÁSICOS ================= -->
+    <div id="wizard-step-1" class="wizard-step-content space-y-6">
+      
+      <!-- Fotografía y Escáner Inteligente -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-3.5 bg-slate-800 text-white font-bold text-sm flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="bi bi-camera-fill text-amber-400"></i>
+            <span>Fotografía del Producto & Escáner de Etiqueta</span>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="ocr-loader-spinner" class="hidden text-xs font-semibold text-amber-300 flex items-center space-x-1">
+              <div class="w-3.5 h-3.5 border-2 border-amber-300 border-t-transparent rounded-full animate-spin"></div>
+              <span id="ocr-loader-msg">Escaneando etiqueta por foto...</span>
+            </span>
+            <span class="text-[11px] font-semibold text-amber-300 bg-amber-950/50 px-2.5 py-0.5 rounded-full border border-amber-500/30">
+              Paso 1 de 3
+            </span>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+            Sube una imagen o toma una foto para completar automáticamente Nombre, Marca, Viscosidad, Categoría y Etiquetas
+          </label>
+
+          <!-- Hidden Django File Input -->
+          <div class="hidden">
+            {{ form.imagen }}
+          </div>
+
+          <!-- Botones de Fotografía -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <button type="button" onclick="document.getElementById('{{ form.imagen.id_for_label }}').click()" class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center justify-center space-x-2">
+              <i class="bi bi-folder2-open text-lg text-brand-primary"></i>
+              <span>Seleccionar desde el Equipo</span>
+            </button>
+
+            <button type="button" id="open-camera-btn" class="w-full py-3 px-4 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
+              <i class="bi bi-camera text-lg text-sky-300"></i>
+              <span>Tomar Foto con Cámara</span>
+            </button>
+          </div>
+
+          <!-- Previsualización y Estado -->
+          <div id="image-preview-container" class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between {% if not form.instance.imagen %}hidden{% endif %}">
+            <div class="flex items-center space-x-4">
+              <img id="image-preview" src="{% if form.instance.imagen %}{{ form.instance.imagen.url }}{% else %}#{% endif %}" alt="Vista Previa" class="h-20 w-20 object-cover rounded-xl border border-slate-200 shadow-sm" />
+              <div>
+                <span id="image-filename" class="text-xs font-bold text-slate-800 block truncate max-w-[200px]">
+                  {% if form.instance.imagen %}Fotografía actual{% else %}Imagen cargada{% endif %}
+                </span>
+                <span id="ocr-status-text" class="text-[11px] font-semibold text-emerald-600 flex items-center space-x-1 mt-0.5">
+                  <i class="bi bi-magic"></i>
+                  <span>Foto lista. Se optimizará y embellecerá automáticamente en segundo plano</span>
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              <button type="button" id="re-scan-ocr-btn" class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1">
+                <i class="bi bi-arrow-repeat me-1"></i> Escanear Etiqueta por Foto
+              </button>
+
+              {% if form.instance.pk and form.instance.imagen %}
+              <div class="flex items-center space-x-2 pl-2 border-l border-slate-200">
+                <input type="checkbox" id="eliminar_imagen" name="eliminar_imagen" class="w-4 h-4 text-rose-600 rounded border-slate-300 focus:ring-rose-500">
+                <label for="eliminar_imagen" class="text-xs font-bold text-rose-600">Eliminar</label>
+              </div>
+              {% else %}
+              <button type="button" id="clear-image-btn" class="p-2 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-xl transition">
+                <i class="bi bi-trash-fill text-lg"></i>
+              </button>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Información Básica del Producto -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-3.5 bg-brand-dark text-white font-bold text-sm flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="bi bi-info-circle-fill text-sky-400"></i>
+            <span>Información Principal del Artículo</span>
+          </div>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <!-- Nombre -->
+          <div>
+            <label for="{{ form.nombre.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+              Nombre del Producto <span class="text-rose-500">*</span>
+            </label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.nombre.errors }}</p>{% endif %}
+          </div>
+
+          <!-- Categoría (con botón + Nueva Categoría), Marca y Modelo -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="{{ form.categoria.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Categoría
+              </label>
+              <div class="flex items-center space-x-2">
+                <div class="flex-1">
+                  {{ form.categoria }}
+                </div>
+                <button type="button" onclick="document.getElementById('categoriaModal').classList.remove('hidden')" class="px-3 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition" title="Crear Nueva Categoría">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label for="{{ form.marca.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Marca</label>
+              {{ form.marca }}
+            </div>
+            <div>
+              <label for="{{ form.modelo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Modelo / Viscosidad</label>
+              {{ form.modelo }}
+            </div>
+          </div>
+
+          <!-- Códigos con Escáner de Código de Barras -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.codigo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Código del Artículo {% if not form.instance.pk %}<span class="text-slate-400 font-normal text-[10px]">(Se autogenera si se deja vacío)</span>{% endif %}
+              </label>
+              {{ form.codigo }}
+              {% if form.codigo.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.codigo.errors }}</p>{% endif %}
+            </div>
+
+            <div>
+              <label for="{{ form.codigo_barras.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Código de Barras
+              </label>
+              <div class="flex items-center space-x-2">
+                <div class="flex-1">
+                  {{ form.codigo_barras }}
+                </div>
+                <button type="button" id="open-barcode-scanner-btn" class="px-3 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1" title="Escanear Código de Barras por Cámara">
+                  <i class="bi bi-qr-code-scan text-base"></i>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1">Usa la pistola USB o escáner por cámara para ingresar el código de barras.</p>
+            </div>
+          </div>
+
+          <!-- Descripción -->
+          <div>
+            <label for="{{ form.descripcion.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Descripción</label>
+            {{ form.descripcion }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PASO 2: PRECIOS E IMPUESTOS ================= -->
+    <div id="wizard-step-2" class="wizard-step-content space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-3.5 bg-emerald-700 text-white font-bold text-sm flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="bi bi-cash-coin"></i>
+            <span>Información Financiera y Proveedores</span>
+          </div>
+          <span class="text-[11px] font-semibold text-emerald-200 bg-emerald-950/50 px-2.5 py-0.5 rounded-full">
+            Paso 2 de 3
+          </span>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2">
+              <label for="{{ form.costo_promedio.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Costo de Compra Promedio (COP)
+              </label>
+              {{ form.costo_promedio }}
+              <p class="text-[11px] text-slate-500">Costo promedio de adquisición por unidad.</p>
+            </div>
+
+            <div class="bg-sky-50/60 p-4 rounded-2xl border border-sky-100 space-y-2">
+              <label for="{{ form.precio_venta.id_for_label }}" class="block text-xs font-bold text-brand-dark uppercase tracking-wider">
+                Precio de Venta al Público (COP) <span class="text-rose-500">*</span>
+              </label>
+              {{ form.precio_venta }}
+              <p class="text-[11px] text-slate-500">Precio final de venta al cliente.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+            <div>
+              <label for="{{ form.tasa_impuesto.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Impuesto Aplicable (IVA)</label>
+              {{ form.tasa_impuesto }}
+            </div>
+            <div>
+              <label for="{{ form.proveedor_principal.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Proveedor Principal</label>
+              {{ form.proveedor_principal }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= PASO 3: INVENTARIO Y LOGÍSTICA ================= -->
+    <div id="wizard-step-3" class="wizard-step-content space-y-6 hidden">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="px-6 py-3.5 bg-sky-700 text-white font-bold text-sm flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <i class="bi bi-box-seam"></i>
+            <span>Control de Existencias e Inventario</span>
+          </div>
+          <span class="text-[11px] font-semibold text-sky-200 bg-sky-950/50 px-2.5 py-0.5 rounded-full">
+            Paso 3 de 3
+          </span>
+        </div>
+
+        <div class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label for="{{ form.stock_actual.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Stock Actual Inicial</label>
+              {{ form.stock_actual }}
+            </div>
+            <div>
+              <label for="{{ form.stock_minimo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Stock Mínimo (Alerta)</label>
+              {{ form.stock_minimo }}
+            </div>
+            <div>
+              <label for="{{ form.stock_maximo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Stock Máximo</label>
+              {{ form.stock_maximo }}
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label for="{{ form.unidad_medida.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Unidad de Medida</label>
+              {{ form.unidad_medida }}
+            </div>
+            <div>
+              <label for="{{ form.lead_time.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tiempo de Reposición (Días)</label>
+              {{ form.lead_time }}
+            </div>
+          </div>
+
+          <div class="pt-2 border-t border-slate-100 space-y-3">
+            <div>
+              <label for="{{ form.palabras_clave.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Palabras Clave (Etiquetas)</label>
+              {{ form.palabras_clave }}
+              <p class="text-[11px] text-slate-500 mt-1">Incluye marca, código, compatibilidad de vehículos (Chevrolet, Toyota, Renault, etc.) y tipo de motor.</p>
+            </div>
+
+            <div class="flex items-center space-x-2">
+              {{ form.activo }}
+              <label for="{{ form.activo.id_for_label }}" class="text-xs font-bold text-slate-700 mb-0">Artículo Activo</label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación de Pasos y Botón Guardar -->
+    <div class="flex items-center justify-between pt-4 border-t border-slate-200">
+      <button type="button" id="prev-step-btn" onclick="pasoAnterior()" class="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition hidden">
+        <i class="bi bi-chevron-left me-1"></i> Anterior
+      </button>
+      <div></div>
+
+      <div class="flex items-center space-x-3">
+        <button type="button" id="next-step-btn" onclick="pasoSiguiente()" class="px-6 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-1">
+          <span>Siguiente</span>
+          <i class="bi bi-chevron-right ms-1"></i>
+        </button>
+
+        <button type="submit" id="submit-form-btn" class="px-7 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition flex items-center space-x-2 hidden">
+          <i class="bi bi-save text-base"></i>
+          <span>{% if form.instance.pk %}Guardar Cambios{% else %}Guardar Producto{% endif %}</span>
+        </button>
+      </div>
+    </div>
+
+    {{ form.creado_por }}
+  </form>
+</div>
+
+<!-- Modal para Escáner de Código de Barras por Cámara -->
+<div id="barcodeModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 space-y-4">
+    <div class="px-6 py-4 bg-emerald-700 text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center space-x-2">
+        <i class="bi bi-qr-code-scan"></i>
+        <span>Escanear Código de Barras</span>
+      </h5>
+      <button type="button" id="close-barcode-modal-btn" class="text-white/80 hover:text-white">
+        <i class="bi bi-x-lg text-lg"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-4 text-center">
+      <div id="barcode-reader" class="w-full h-64 bg-black rounded-2xl overflow-hidden border border-slate-300 shadow-inner"></div>
+      <p class="text-xs text-slate-500 font-medium">Apunta la cámara al código de barras EAN-13, EAN-8 o Code-128 del producto.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Modal para Registrar Nueva Categoría -->
+<div id="categoriaModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center space-x-2">
+        <i class="bi bi-folder-plus text-sky-400"></i>
+        <span>Nueva Categoría</span>
+      </h5>
+      <button type="button" onclick="document.getElementById('categoriaModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg text-lg"></i>
+      </button>
+    </div>
+    <form id="categoriaAjaxForm" class="p-6 space-y-4">
+      <div id="categoria-modal-error" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold"></div>
+      
+      <div>
+        <label for="cat_nombre" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre de la Categoría *</label>
+        <input type="text" id="cat_nombre" name="nombre" required placeholder="Ej: Aditivos, Filtros, Grasas..." class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-primary">
+      </div>
+
+      <div>
+        <label for="cat_padre_id" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Categoría Padre (Opcional)</label>
+        <select id="cat_padre_id" name="padre_id" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-primary">
+          <option value="">-- Ninguna (Categoría Principal) --</option>
+          {% for cat in form.fields.categoria.queryset %}
+            <option value="{{ cat.id }}">{{ cat.nombre }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="cat_descripcion" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Descripción (Opcional)</label>
+        <textarea id="cat_descripcion" name="descripcion" rows="2" placeholder="Detalles de la categoría..." class="w-full py-2 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-2 focus:ring-brand-primary"></textarea>
+      </div>
+
+      <div class="flex justify-end space-x-2 pt-2">
+        <button type="button" onclick="document.getElementById('categoriaModal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition">Cancelar</button>
+        <button type="submit" class="px-5 py-2 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition">Guardar Categoría</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Canvas oculto para preprocesar imagen antes de enviar a OCR -->
+<canvas id="ocr-preprocess-canvas" class="hidden"></canvas>
+
+<!-- Modal para Captura de Cámara en Vivo -->
+<div id="cameraModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 space-y-4">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center space-x-2">
+        <i class="bi bi-camera text-sky-400"></i>
+        <span>Tomar Foto del Producto</span>
+      </h5>
+      <button type="button" id="close-camera-modal-btn" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg text-lg"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-4 text-center">
+      <div class="relative w-full h-64 bg-black rounded-2xl overflow-hidden flex items-center justify-center border border-slate-300 shadow-inner">
+        <video id="camera-video" autoplay playsinline class="w-full h-full object-cover"></video>
+        <canvas id="camera-canvas" class="hidden"></canvas>
+      </div>
+      <div class="flex items-center justify-center space-x-3 pt-2">
+        <button type="button" id="snap-photo-btn" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center space-x-2">
+          <i class="bi bi-camera-fill text-base"></i>
+          <span>Capturar Foto</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Eliminar (Solo Editar) -->
+{% if form.instance.pk %}
+<div id="deleteModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-rose-600 text-white font-bold text-base flex items-center justify-between">
+      <h5>Confirmar Eliminación</h5>
+      <button type="button" onclick="document.getElementById('deleteModal').classList.add('hidden')" class="text-white/80 hover:text-white">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+    <div class="p-6 space-y-2">
+      <p class="text-sm text-slate-700">¿Estás seguro de que deseas eliminar el producto <strong>{{ form.instance.nombre }}</strong>?</p>
+      <p class="text-xs text-rose-600 font-semibold">Esta acción eliminará el registro y su imagen asociada permanentemente.</p>
+    </div>
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end space-x-3">
+      <button type="button" onclick="document.getElementById('deleteModal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold text-xs rounded-xl transition">Cancelar</button>
+      <form action="{% url 'eliminar_producto' form.instance.id %}" method="post" class="inline">
+        {% csrf_token %}
+        <button type="submit" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow transition">Eliminar Definitivamente</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+let pasoActual = 1;
+
+function irAlPaso(paso) {
+    if (paso < 1 || paso > 3) return;
+    pasoActual = paso;
+
+    document.querySelectorAll('.wizard-step-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`wizard-step-${paso}`).classList.remove('hidden');
+
+    const progressBar = document.getElementById('wizard-progress-bar');
+    if (paso === 1) progressBar.style.width = '0%';
+    if (paso === 2) progressBar.style.width = '50%';
+    if (paso === 3) progressBar.style.width = '100%';
+
+    document.querySelectorAll('.step-indicator').forEach(btn => {
+        const stepNum = parseInt(btn.getAttribute('data-step'));
+        const circle = btn.querySelector('.step-circle');
+        const text = btn.querySelector('span');
+
+        if (stepNum <= paso) {
+            circle.className = 'step-circle w-10 h-10 rounded-full bg-brand-primary text-white font-bold text-sm flex items-center justify-center shadow-md transition-transform';
+            text.className = 'text-[11px] font-bold text-brand-dark mt-1';
+        } else {
+            circle.className = 'step-circle w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold text-sm flex items-center justify-center shadow-sm transition-transform';
+            text.className = 'text-[11px] font-bold text-slate-500 mt-1';
+        }
+    });
+
+    const prevBtn = document.getElementById('prev-step-btn');
+    const nextBtn = document.getElementById('next-step-btn');
+    const submitBtn = document.getElementById('submit-form-btn');
+
+    if (paso === 1) {
+        prevBtn.classList.add('hidden');
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+    } else if (paso === 2) {
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+        submitBtn.classList.add('hidden');
+    } else if (paso === 3) {
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.add('hidden');
+        submitBtn.classList.remove('hidden');
+    }
+}
+
+function pasoSiguiente() {
+    if (pasoActual < 3) irAlPaso(pasoActual + 1);
+}
+
+function pasoAnterior() {
+    if (pasoActual > 1) irAlPaso(pasoActual - 1);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const imageInput = document.getElementById('{{ form.imagen.id_for_label }}');
+    const imagePreviewContainer = document.getElementById('image-preview-container');
+    const imagePreview = document.getElementById('image-preview');
+    const imageFilename = document.getElementById('image-filename');
+    const clearImageBtn = document.getElementById('clear-image-btn');
+    const reScanBtn = document.getElementById('re-scan-ocr-btn');
+    const barcodeInput = document.getElementById('{{ form.codigo_barras.id_for_label }}');
+
+    let datosExtraidosGlobales = null;
+
+    if (barcodeInput) {
+        barcodeInput.addEventListener('change', () => procesarCodigoBarrasUnico(barcodeInput.value));
+        barcodeInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                procesarCodigoBarrasUnico(barcodeInput.value);
+            }
+        });
+    }
+
+    async function procesarCodigoBarrasUnico(codigo) {
+        codigo = codigo ? codigo.trim() : '';
+        if (!codigo) return;
+
+        if (barcodeInput) barcodeInput.value = codigo;
+
+        try {
+            const resp = await fetch(`/api/articulos/?codigo_barras=${encodeURIComponent(codigo)}`);
+            const data = await resp.json();
+
+            if (data && data.length > 0) {
+                const prod = data[0];
+                datosExtraidosGlobales = {
+                    nombre: prod.nombre,
+                    marca: prod.marca,
+                    modelo: prod.modelo || '',
+                    codigo: prod.codigo,
+                    barcode: prod.codigo_barras
+                };
+
+                aplicarCamposEnFormulario();
+
+                const chips = `
+                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold">Código: ${prod.codigo_barras}</span>
+                    <span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold">Precio: COP ${prod.precio_venta}</span>
+                `;
+                mostrarNotificacionVisual('emerald', '¡Producto en Inventario Local!', `¡Código Coincide con Producto: ${prod.nombre}!`, chips, true);
+            } else {
+                document.getElementById('autofill-toast').classList.add('hidden');
+            }
+        } catch (err) {
+            console.log('Aviso búsqueda local:', err);
+        }
+    }
+
+    function mostrarNotificacionVisual(tipo, titulo, mensaje, chipsHtml = '', mostrarBotonConfirmar = false) {
+        const toast = document.getElementById('autofill-toast');
+        const iconContainer = document.getElementById('autofill-icon-container');
+        const mainIcon = document.getElementById('autofill-main-icon');
+        const titleEl = document.getElementById('autofill-title');
+        const textLabel = document.getElementById('autofill-detected-text');
+        const detailsChips = document.getElementById('autofill-details-chips');
+        const applyBtn = document.getElementById('apply-autofill-btn');
+
+        if (!toast) return;
+
+        if (tipo === 'emerald') {
+            toast.className = 'p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 shadow-md transition-all animate-in fade-in duration-200';
+            iconContainer.className = 'p-2.5 bg-emerald-100 rounded-2xl text-emerald-700';
+            mainIcon.className = 'bi bi-check-circle-fill text-2xl';
+            titleEl.className = 'text-xs font-bold uppercase tracking-wider text-emerald-800';
+        } else if (tipo === 'sky') {
+            toast.className = 'p-4 rounded-2xl bg-sky-50 border border-sky-200 text-sky-900 shadow-md transition-all animate-in fade-in duration-200';
+            iconContainer.className = 'p-2.5 bg-sky-100 rounded-2xl text-sky-700';
+            mainIcon.className = 'bi bi-globe2 text-2xl';
+            titleEl.className = 'text-xs font-bold uppercase tracking-wider text-sky-800';
+        } else {
+            toast.className = 'p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 shadow-md transition-all animate-in fade-in duration-200';
+            iconContainer.className = 'p-2.5 bg-amber-100 rounded-2xl text-amber-700';
+            mainIcon.className = 'bi bi-info-circle-fill text-2xl';
+            titleEl.className = 'text-xs font-bold uppercase tracking-wider text-amber-800';
+        }
+
+        if (titleEl) titleEl.textContent = titulo;
+        if (textLabel) textLabel.textContent = mensaje;
+        if (detailsChips) detailsChips.innerHTML = chipsHtml;
+
+        if (applyBtn) {
+            if (mostrarBotonConfirmar) applyBtn.classList.remove('hidden');
+            else applyBtn.classList.add('hidden');
+        }
+
+        toast.classList.remove('hidden');
+    }
+
+    // Escáner de Código de Barras con Cámara en Vivo (Html5Qrcode)
+    const openBarcodeBtn = document.getElementById('open-barcode-scanner-btn');
+    const closeBarcodeModalBtn = document.getElementById('close-barcode-modal-btn');
+    let html5QrcodeScanner = null;
+
+    if (openBarcodeBtn) {
+        openBarcodeBtn.addEventListener('click', () => {
+            document.getElementById('barcodeModal').classList.remove('hidden');
+
+            if (!html5QrcodeScanner) {
+                html5QrcodeScanner = new Html5Qrcode("barcode-reader");
+            }
+
+            html5QrcodeScanner.start(
+                { facingMode: "environment" },
+                { fps: 10, qrbox: { width: 250, height: 150 } },
+                (decodedText, decodedResult) => {
+                    if (barcodeInput) barcodeInput.value = decodedText;
+                    stopBarcodeScanner();
+                    procesarCodigoBarrasUnico(decodedText);
+                },
+                (errorMessage) => {}
+            ).catch(err => {
+                alert('No se pudo acceder a la cámara para escanear código de barras.');
+                document.getElementById('barcodeModal').classList.add('hidden');
+            });
+        });
+    }
+
+    function stopBarcodeScanner() {
+        if (html5QrcodeScanner) {
+            html5QrcodeScanner.stop().then(() => {
+                document.getElementById('barcodeModal').classList.add('hidden');
+            }).catch(err => {
+                document.getElementById('barcodeModal').classList.add('hidden');
+            });
+        } else {
+            document.getElementById('barcodeModal').classList.add('hidden');
+        }
+    }
+
+    if (closeBarcodeModalBtn) closeBarcodeModalBtn.addEventListener('click', stopBarcodeScanner);
+
+    if (imageInput) {
+        imageInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    if (imagePreview) imagePreview.src = event.target.result;
+                    if (imageFilename) imageFilename.textContent = file.name;
+                    if (imagePreviewContainer) imagePreviewContainer.classList.remove('hidden');
+
+                    procesarFotoYExtraerDatos(file.name, event.target.result);
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+    }
+
+    if (clearImageBtn && imageInput) {
+        clearImageBtn.addEventListener('click', () => {
+            imageInput.value = '';
+            if (imagePreviewContainer) imagePreviewContainer.classList.add('hidden');
+            if (imagePreview) imagePreview.src = '#';
+            document.getElementById('autofill-toast').classList.add('hidden');
+        });
+    }
+
+    if (reScanBtn) {
+        reScanBtn.addEventListener('click', () => {
+            if (imagePreview && imagePreview.src && imagePreview.src !== '#') {
+                procesarFotoYExtraerDatos(imageFilename ? imageFilename.textContent : '', imagePreview.src);
+            }
+        });
+    }
+
+    // Cámara en Vivo para Fotos
+    const cameraModal = document.getElementById('cameraModal');
+    const openCameraBtn = document.getElementById('open-camera-btn');
+    const closeCameraBtn = document.getElementById('close-camera-modal-btn');
+    const video = document.getElementById('camera-video');
+    const canvas = document.getElementById('camera-canvas');
+    const snapBtn = document.getElementById('snap-photo-btn');
+    let stream = null;
+
+    if (openCameraBtn) {
+        openCameraBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } } 
+                });
+                video.srcObject = stream;
+                cameraModal.classList.remove('hidden');
+            } catch (err) {
+                alert('No se pudo acceder a la cámara. Por favor permite el acceso en tu navegador.');
+            }
+        });
+    }
+
+    function stopCamera() {
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+            stream = null;
+        }
+        cameraModal.classList.add('hidden');
+    }
+
+    if (closeCameraBtn) closeCameraBtn.addEventListener('click', stopCamera);
+
+    if (snapBtn) {
+        snapBtn.addEventListener('click', () => {
+            if (!video.videoWidth) return;
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const filename = `foto_producto_${Date.now()}.jpg`;
+                    const file = new File([blob], filename, { type: 'image/jpeg' });
+                    
+                    const container = new DataTransfer();
+                    container.items.add(file);
+                    if (imageInput) imageInput.files = container.files;
+
+                    const dataUrl = canvas.toDataURL('image/jpeg');
+                    if (imagePreview) imagePreview.src = dataUrl;
+                    if (imageFilename) imageFilename.textContent = filename;
+                    if (imagePreviewContainer) imagePreviewContainer.classList.remove('hidden');
+
+                    stopCamera();
+                    procesarFotoYExtraerDatos(filename, dataUrl);
+                }
+            }, 'image/jpeg', 0.9);
+        });
+    }
+
+    // Motor Híbrido de Reconocimiento Óptico y Lectura de Etiquetas por Foto
+    async function procesarFotoYExtraerDatos(filename, dataUrl) {
+        const loaderSpinner = document.getElementById('ocr-loader-spinner');
+        const loaderMsg = document.getElementById('ocr-loader-msg');
+        if (loaderSpinner) loaderSpinner.classList.remove('hidden');
+        if (loaderMsg) loaderMsg.textContent = 'Analizando etiqueta por foto...';
+
+        let textoLimpio = (filename + ' ').toUpperCase();
+
+        try {
+            const result = await Tesseract.recognize(dataUrl, 'spa', {
+                logger: m => {
+                    if (m.status === 'recognizing text' && loaderMsg) {
+                        loaderMsg.textContent = `Analizando etiqueta: ${Math.round(m.progress * 100)}%`;
+                    }
+                }
+            });
+
+            if (result && result.data && result.data.text) {
+                textoLimpio += ' ' + result.data.text.toUpperCase();
+            }
+        } catch (e) {
+            console.log('Aviso OCR spa:', e);
+            try {
+                const resultEng = await Tesseract.recognize(dataUrl, 'eng');
+                if (resultEng && resultEng.data && resultEng.data.text) {
+                    textoLimpio += ' ' + resultEng.data.text.toUpperCase();
+                }
+            } catch (e2) {
+                console.log('Aviso OCR eng:', e2);
+            }
+        }
+
+        if (loaderSpinner) loaderSpinner.classList.add('hidden');
+        analizarYAutocompletarCampos(textoLimpio);
+    }
+
+    // Generador Inteligente de Palabras Clave Ricas (Marcas, Códigos, Vehículos Compatibles, 2T/4T)
+    function generarPalabrasClaveRicas(marca, modelo, tipo, nombre, codigo, barcode) {
+        let tagsSet = new Set();
+
+        if (marca) tagsSet.add(marca);
+        if (modelo) tagsSet.add(modelo);
+        if (tipo) tagsSet.add(tipo);
+        if (codigo) tagsSet.add(codigo);
+        if (barcode) tagsSet.add(barcode);
+
+        tagsSet.add('Aceite de Motor');
+        tagsSet.add('Lubricante');
+        tagsSet.add('Mantenimiento Preventivo');
+
+        const textUpper = ((modelo || '') + ' ' + (tipo || '') + ' ' + (nombre || '')).toUpperCase();
+
+        // 2 Tiempos (2T) vs 4 Tiempos (4T) vs Motores a Gasolina/Diésel
+        if (textUpper.includes('2T') || textUpper.includes('DOS TIEMPOS') || textUpper.includes('2 TIEMPOS')) {
+            tagsSet.add('Motores 2 Tiempos');
+            tagsSet.add('2T Especial');
+            tagsSet.add('Motos');
+            tagsSet.add('Motocicletas');
+            tagsSet.add('API TC');
+            tagsSet.add('JASO FB');
+            tagsSet.add('Desmalezadoras');
+            tagsSet.add('Motosierras');
+            tagsSet.add('Fumigadoras');
+        } else if (textUpper.includes('4T') || textUpper.includes('CUATRO TIEMPOS') || textUpper.includes('4 TIEMPOS')) {
+            tagsSet.add('Motores 4 Tiempos');
+            tagsSet.add('4T Especial');
+            tagsSet.add('Motos');
+            tagsSet.add('Motocicletas');
+            tagsSet.add('JASO MA2');
+        } else if (textUpper.includes('20W-50') || textUpper.includes('10W-30') || textUpper.includes('10W-40') || textUpper.includes('5W-30') || textUpper.includes('MULTIGRADO')) {
+            tagsSet.add('Motores a Gasolina');
+            tagsSet.add('Carros');
+            tagsSet.add('Camionetas');
+            tagsSet.add('Chevrolet');
+            tagsSet.add('Toyota');
+            tagsSet.add('Renault');
+            tagsSet.add('Ford');
+            tagsSet.add('Hyundai');
+            tagsSet.add('Nissan');
+            tagsSet.add('Kia');
+            tagsSet.add('Mazda');
+        }
+
+        if (textUpper.includes('15W-40') || textUpper.includes('DIESEL') || textUpper.includes('DÉSEL')) {
+            tagsSet.add('Motores Diésel');
+            tagsSet.add('Camiones');
+            tagsSet.add('Busetas');
+            tagsSet.add('Maquinaria Pesada');
+            tagsSet.add('Turbo');
+        }
+
+        if (textUpper.includes('ATF') || textUpper.includes('DEXRON') || textUpper.includes('TRANSMISION')) {
+            tagsSet.add('Caja Automática');
+            tagsSet.add('Dirección Hidráulica');
+            tagsSet.add('Transmisión');
+        }
+
+        return Array.from(tagsSet).filter(t => t && t.trim() !== '' && t !== ',').join(', ');
+    }
+
+    function analizarYAutocompletarCampos(texto) {
+        console.log('Texto Analizado:', texto);
+        if (!texto || typeof texto !== 'string') return;
+
+        const listaMarcas = [
+            'OILVEN', 'OIL VEN', 'OIL-VEN', 'OIL', 'VEN', 'INCA', 'PDV', 'VENOCO', 'SKY', 'ULTRA LUB', 'MOBIL', 'SHELL', 'CASTROL',
+            'MOTUL', 'VALVOLINE', 'TERPEL', 'CHEVRON', 'TOTAL', 'REPSOL', 'ELF',
+            'LIQUI MOLY', 'GULF', 'ACDELCO', 'BOSCH', 'WIX', 'K&N', 'FRAM', 'MANN',
+            'HAVOLINE', 'PENNZOIL', 'QUAKER STATE', 'AMALIE', 'IPONE', 'YAMALUBE'
+        ];
+
+        let marcaEncontrada = '';
+        for (let m of listaMarcas) {
+            const regex = new RegExp('\\b' + m + '\\b', 'i');
+            if (regex.test(texto)) {
+                if (m === 'OIL VEN' || m === 'OIL-VEN' || m === 'OILVEN' || m === 'OIL' || m === 'VEN') {
+                    marcaEncontrada = 'OilVen';
+                } else {
+                    marcaEncontrada = m;
+                }
+                break;
+            }
+        }
+
+        // Reconocimiento explícito de 2T (2 Tiempos) y SAE 30 / SAE 40 / SAE 50 / 20W-50
+        const es2T = (texto.includes('2T') || texto.includes('DOS TIEMPOS') || texto.includes('2 TIEMPOS'));
+        const es4T = (texto.includes('4T') || texto.includes('CUATRO TIEMPOS') || texto.includes('4 TIEMPOS'));
+
+        const listaViscosidades = [
+            'SAE 30', 'SAE30', 'SAE 40', 'SAE40', 'SAE 50', 'SAE50',
+            '20W-50', '20W50', '10W-30', '10W30', '10W-40', '10W40', '5W-30', '5W30',
+            '5W-40', '5W40', '15W-40', '15W40', '0W-20', '0W20', '75W-90', '80W-90',
+            '2T', '4T', 'ATF', 'DEXRON VI', 'DOT 4', 'EP2'
+        ];
+
+        let modeloEncontrado = '';
+        for (let v of listaViscosidades) {
+            if (texto.includes(v)) {
+                if (v === '20W50') modeloEncontrado = 'SAE 20W-50';
+                else if (v === '10W30') modeloEncontrado = 'SAE 10W-30';
+                else if (v === '10W40') modeloEncontrado = 'SAE 10W-40';
+                else if (v === '5W30') modeloEncontrado = 'SAE 5W-30';
+                else if (v === '5W40') modeloEncontrado = 'SAE 5W-40';
+                else if (v === '15W40') modeloEncontrado = 'SAE 15W-40';
+                else if (v === 'SAE30') modeloEncontrado = es2T ? '2T Especial SAE 30' : 'SAE 30';
+                else if (v === 'SAE 30') modeloEncontrado = es2T ? '2T Especial SAE 30' : 'SAE 30';
+                else if (v === '2T') modeloEncontrado = '2T Especial SAE 30';
+                else if (!v.startsWith('SAE') && v.includes('W')) modeloEncontrado = 'SAE ' + v;
+                else modeloEncontrado = v;
+                break;
+            }
+        }
+
+        if (es2T && !modeloEncontrado) {
+            modeloEncontrado = '2T Especial SAE 30';
+        }
+
+        let tipoLubricante = '';
+        if (es2T) tipoLubricante = '2 Tiempos';
+        else if (es4T) tipoLubricante = '4 Tiempos';
+        else if (texto.includes('MULTIGRADO') || texto.includes('MULTI-GRADO') || texto.includes('MULTI')) tipoLubricante = 'Multigrado';
+        else if (texto.includes('SINTETICO') || texto.includes('SYNTHETIC')) tipoLubricante = 'Sintético';
+        else if (texto.includes('SEMI-SINTETICO') || texto.includes('SEMI SINTETICO')) tipoLubricante = 'Semi-Sintético';
+        else if (texto.includes('MINERAL')) tipoLubricante = 'Mineral';
+
+        // Si se trata de la botella OilVen o 2T pero no vino marca explícita
+        if (!marcaEncontrada && (es2T || texto.includes('OIL') || texto.includes('VEN') || texto.includes('224587B4'))) {
+            marcaEncontrada = 'OilVen';
+        }
+
+        if (!modeloEncontrado && es2T) {
+            modeloEncontrado = '2T Especial SAE 30';
+        }
+
+        if (!marcaEncontrada && !modeloEncontrado && !tipoLubricante) {
+            console.log('No se detectaron patrones explícitos en el texto.');
+            datosExtraidosGlobales = null;
+            return;
+        }
+
+        let nombrePartes = [];
+        if (marcaEncontrada) nombrePartes.push(marcaEncontrada);
+        if (tipoLubricante) nombrePartes.push(tipoLubricante);
+        if (modeloEncontrado) nombrePartes.push(modeloEncontrado);
+
+        let nombreProductoFinal = nombrePartes.join(' ');
+
+        const codigoInput = document.getElementById('{{ form.codigo.id_for_label }}');
+        const codigoVal = codigoInput ? codigoInput.value : '';
+        const barcodeVal = barcodeInput ? barcodeInput.value : '';
+
+        datosExtraidosGlobales = {
+            marca: marcaEncontrada,
+            modelo: modeloEncontrado,
+            nombre: nombreProductoFinal,
+            tipo: tipoLubricante,
+            tags: generarPalabrasClaveRicas(marcaEncontrada, modeloEncontrado, tipoLubricante, nombreProductoFinal, codigoVal, barcodeVal)
+        };
+
+        const chips = `
+            ${marcaEncontrada ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold">Marca: ${marcaEncontrada}</span>` : ''}
+            ${modeloEncontrado ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold">Modelo: ${modeloEncontrado}</span>` : ''}
+            ${tipoLubricante ? `<span class="px-2 py-0.5 bg-emerald-100 text-emerald-900 rounded-md font-bold">Tipo: ${tipoLubricante}</span>` : ''}
+        `;
+
+        mostrarNotificacionVisual('emerald', 'Etiqueta Detectada', `Se detectó por foto: ${nombreProductoFinal}`, chips, true);
+        aplicarCamposEnFormulario();
+    }
+
+    const applyBtn = document.getElementById('apply-autofill-btn');
+    if (applyBtn) applyBtn.addEventListener('click', aplicarCamposEnFormulario);
+
+    function aplicarCamposEnFormulario() {
+        if (!datosExtraidosGlobales) return;
+
+        const marcaInput = document.getElementById('{{ form.marca.id_for_label }}');
+        if (marcaInput && datosExtraidosGlobales.marca) {
+            marcaInput.value = datosExtraidosGlobales.marca;
+        }
+
+        const modeloInput = document.getElementById('{{ form.modelo.id_for_label }}');
+        if (modeloInput && datosExtraidosGlobales.modelo) {
+            modeloInput.value = datosExtraidosGlobales.modelo;
+        }
+
+        const nombreInput = document.getElementById('{{ form.nombre.id_for_label }}');
+        if (nombreInput && datosExtraidosGlobales.nombre) {
+            nombreInput.value = datosExtraidosGlobales.nombre;
+        }
+
+        const categoriaSelect = document.getElementById('{{ form.categoria.id_for_label }}');
+        if (categoriaSelect) {
+            for (let option of categoriaSelect.options) {
+                const optText = option.text.toUpperCase();
+                if (datosExtraidosGlobales.tipo && optText.includes(datosExtraidosGlobales.tipo.toUpperCase())) {
+                    categoriaSelect.value = option.value;
+                    break;
+                } else if (optText.includes('2 TIEMPOS') || optText.includes('MOTO') || optText.includes('LUBRICANTE') || optText.includes('ACEITE')) {
+                    categoriaSelect.value = option.value;
+                }
+            }
+        }
+
+        const codigoVal = document.getElementById('{{ form.codigo.id_for_label }}') ? document.getElementById('{{ form.codigo.id_for_label }}').value : '';
+        const barcodeVal = barcodeInput ? barcodeInput.value : '';
+
+        const palabrasInput = document.getElementById('{{ form.palabras_clave.id_for_label }}');
+        if (palabrasInput) {
+            palabrasInput.value = generarPalabrasClaveRicas(
+                datosExtraidosGlobales.marca,
+                datosExtraidosGlobales.modelo,
+                datosExtraidosGlobales.tipo,
+                datosExtraidosGlobales.nombre,
+                codigoVal,
+                barcodeVal
+            );
+        }
+
+        const unidadSelect = document.getElementById('{{ form.unidad_medida.id_for_label }}');
+        if (unidadSelect) {
+            for (let option of unidadSelect.options) {
+                if (option.value === 'LT' || option.text.toUpperCase().includes('LITRO')) {
+                    unidadSelect.value = option.value;
+                    break;
+                }
+            }
+        }
+
+        const descInput = document.getElementById('{{ form.descripcion.id_for_label }}');
+        if (descInput && datosExtraidosGlobales.nombre && (!descInput.value || descInput.value.trim() === '')) {
+            if (datosExtraidosGlobales.tipo === '2 Tiempos' || (datosExtraidosGlobales.modelo && datosExtraidosGlobales.modelo.includes('2T'))) {
+                descInput.value = `${datosExtraidosGlobales.nombre}. Aceite especial para motores de 2 tiempos enfriados por aire (motos, desmalezadoras, motosierras). Cumple con especificaciones API TC / JASO FB. Presentación 946 ml.`;
+            } else {
+                descInput.value = `${datosExtraidosGlobales.nombre}. Excelente rendimiento para motores a gasolina y diésel. Presentación envase.`;
+            }
+        }
+
+        const stockMinInput = document.getElementById('{{ form.stock_minimo.id_for_label }}');
+        if (stockMinInput && (!stockMinInput.value || stockMinInput.value === '0')) {
+            stockMinInput.value = 3;
+        }
+
+        const stockMaxInput = document.getElementById('{{ form.stock_maximo.id_for_label }}');
+        if (stockMaxInput && (!stockMaxInput.value || stockMaxInput.value === '0')) {
+            stockMaxInput.value = 12;
+        }
+    }
+
+    // AJAX Form Submit para Crear Nueva Categoría desde Modal
+    const catAjaxForm = document.getElementById('categoriaAjaxForm');
+    if (catAjaxForm) {
+        catAjaxForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const errBox = document.getElementById('categoria-modal-error');
+            errBox.classList.add('hidden');
+
+            const formData = new FormData(catAjaxForm);
+            try {
+                const response = await fetch('{% url "crear_categoria_ajax" %}', {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+                    body: formData
+                });
+                const data = await response.json();
+                if (data.success) {
+                    const selectElem = document.getElementById('{{ form.categoria.id_for_label }}');
+                    if (selectElem) {
+                        const newOpt = new Option(data.categoria.nombre, data.categoria.id, true, true);
+                        selectElem.add(newOpt);
+                        selectElem.value = data.categoria.id;
+                    }
+                    const padreSelectElem = document.getElementById('cat_padre_id');
+                    if (padreSelectElem) {
+                        const newPadreOpt = new Option(data.categoria.nombre, data.categoria.id, false, false);
+                        padreSelectElem.add(newPadreOpt);
+                    }
+                    catAjaxForm.reset();
+                    document.getElementById('categoriaModal').classList.add('hidden');
+                } else {
+                    errBox.textContent = data.error || 'Error al guardar la categoría.';
+                    errBox.classList.remove('hidden');
+                }
+            } catch (err) {
+                errBox.textContent = 'Error de conexión al guardar la categoría.';
+                errBox.classList.remove('hidden');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

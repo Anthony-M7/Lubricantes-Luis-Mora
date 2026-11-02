@@ -1,0 +1,430 @@
+{% extends 'paneles/admin.html' %} 
+{% load static humanize mathfilters %}
+
+{% block dashboard %}
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Panel de Administración</h1>
+    <p class="text-sm text-slate-500">Resumen operativo y métricas principales del negocio</p>
+  </div>
+  
+  <div class="flex items-center space-x-3">
+    <a href="{% url 'catalogo_pdf' %}" target="_blank" class="inline-flex items-center space-x-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-sm rounded-xl shadow transition transform active:scale-95">
+      <i class="bi bi-file-earmark-pdf-fill"></i>
+      <span>Catálogo PDF</span>
+    </a>
+    <a href="{% url 'talonario_pagos' %}" class="inline-flex items-center space-x-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm rounded-xl shadow transition transform active:scale-95">
+      <i class="bi bi-file-excel-fill"></i>
+      <span>Talonario Excel</span>
+    </a>
+  </div>
+</div>
+
+<!-- Widgets de Hoy -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+  <!-- Clientes Hoy -->
+  <div class="bg-gradient-to-br from-brand-navy to-brand-dark text-white rounded-2xl p-6 shadow-lg relative overflow-hidden group">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-semibold text-slate-200 uppercase tracking-wider">Clientes Registrados Hoy</span>
+      <span class="p-2 bg-white/10 rounded-xl text-sky-300">
+        <i class="bi bi-person-plus-fill text-xl"></i>
+      </span>
+    </div>
+    <div class="mt-4 flex items-baseline justify-between">
+      <span class="text-4xl font-black">{{ clientes_hoy|intcomma }}</span>
+      <span class="text-xs font-semibold px-2.5 py-1 bg-white/15 text-sky-200 rounded-full">
+        Total: {{ total_clientes|intcomma }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Ventas Hoy -->
+  <div class="bg-gradient-to-br from-emerald-600 to-teal-800 text-white rounded-2xl p-6 shadow-lg relative overflow-hidden group">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-semibold text-emerald-100 uppercase tracking-wider">Ventas Hoy</span>
+      <span class="p-2 bg-white/10 rounded-xl text-emerald-200">
+        <i class="bi bi-cash-stack text-xl"></i>
+      </span>
+    </div>
+    <div class="mt-4 flex items-baseline justify-between">
+      <span class="text-3xl font-black">COP {{ ventas_hoy.total|default:0|floatformat:2|intcomma }}</span>
+      <span class="text-xs font-semibold px-2.5 py-1 bg-white/15 text-emerald-100 rounded-full">
+        {{ ventas_hoy.count|default:0 }} transacciones
+      </span>
+    </div>
+  </div>
+
+  <!-- Artículos Vendidos Hoy -->
+  <div class="bg-gradient-to-br from-sky-600 to-blue-800 text-white rounded-2xl p-6 shadow-lg relative overflow-hidden group">
+    <div class="flex items-center justify-between">
+      <span class="text-sm font-semibold text-sky-100 uppercase tracking-wider">Artículos Vendidos Hoy</span>
+      <span class="p-2 bg-white/10 rounded-xl text-sky-200">
+        <i class="bi bi-box-seam text-xl"></i>
+      </span>
+    </div>
+    <div class="mt-4 flex items-baseline justify-between">
+      <span class="text-4xl font-black">{{ ventas_hoy.articulos_vendidos|default:0|intcomma }}</span>
+      <span class="text-xs font-semibold px-2.5 py-1 bg-white/15 text-sky-100 rounded-full">
+        {{ ventas_hoy.count|default:0 }} pedidos
+      </span>
+    </div>
+  </div>
+</div>
+
+<!-- Estadísticas Generales -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <!-- Total de Artículos -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+    <div class="flex items-center justify-between text-slate-500 mb-2">
+      <span class="text-xs font-semibold uppercase tracking-wider">Artículos Totales</span>
+      <i class="bi bi-boxes text-brand-primary text-xl"></i>
+    </div>
+    <div class="text-2xl font-bold text-slate-900">{{ total_articulos|intcomma }}</div>
+    <p class="text-xs text-slate-500 mt-1"><strong class="text-emerald-600 font-semibold">{{ variacion_articulos }}%</strong> vs mes anterior</p>
+  </div>
+
+  <!-- Valor Total Inventario -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+    <div class="flex items-center justify-between text-slate-500 mb-2">
+      <span class="text-xs font-semibold uppercase tracking-wider">Valor Inventario</span>
+      <i class="bi bi-currency-dollar text-emerald-600 text-xl"></i>
+    </div>
+    <div class="text-2xl font-bold text-slate-900">COP {{ valor_inventario|floatformat:2|intcomma }}</div>
+    <p class="text-xs text-slate-500 mt-1"><strong class="text-emerald-600 font-semibold">{{ variacion_valor }}%</strong> vs mes anterior</p>
+  </div>
+
+  <!-- Stock Bajo -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+    <div class="flex items-center justify-between text-slate-500 mb-2">
+      <span class="text-xs font-semibold uppercase tracking-wider">Stock Bajo</span>
+      <i class="bi bi-exclamation-triangle-fill text-amber-500 text-xl"></i>
+    </div>
+    <div class="text-2xl font-bold text-amber-600">{{ stock_bajo.count|intcomma }}</div>
+    <p class="text-xs text-slate-500 mt-1">Requieren reabastecimiento</p>
+  </div>
+
+  <!-- Artículos Inactivos -->
+  <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200/80 hover:shadow-md transition">
+    <div class="flex items-center justify-between text-slate-500 mb-2">
+      <span class="text-xs font-semibold uppercase tracking-wider">Inactivos</span>
+      <i class="bi bi-archive-fill text-rose-500 text-xl"></i>
+    </div>
+    <div class="text-2xl font-bold text-rose-600">{{ articulos_inactivos|intcomma }}</div>
+    <p class="text-xs text-slate-500 mt-1">Sin movimiento reciente</p>
+  </div>
+</div>
+
+<!-- Métricas Avanzadas: Top Performers & Margen de Ganancia -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+  <!-- Top Performers -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center space-x-2">
+      <i class="bi bi-trophy-fill text-amber-400"></i>
+      <span>Top Performers</span>
+    </div>
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-4 text-center">
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">Mejor Cliente</span>
+        <h4 class="font-bold text-brand-primary text-base truncate">{{ cliente_top.cliente__nombre|default:"N/A"|truncatechars:15 }}</h4>
+        <p class="text-xs font-semibold text-emerald-600 mt-1">COP {{ cliente_top.monto_total|default:0|floatformat:2|intcomma }}</p>
+      </div>
+
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">Artículo Top</span>
+        <h4 class="font-bold text-emerald-600 text-base truncate">{{ articulo_top.articulo__nombre|default:"N/A"|truncatechars:15 }}</h4>
+        <p class="text-xs text-slate-500 mt-1">{{ articulo_top.cantidad_vendida|default:0|intcomma }} unidades</p>
+      </div>
+
+      <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+        <span class="text-xs font-semibold text-slate-500 block mb-1">Vendedor Top</span>
+        <h4 class="font-bold text-sky-600 text-base truncate">{{ usuario_top.creado_por__first_name|default:"N/A"|truncatechars:15 }}</h4>
+        <p class="text-xs text-slate-500 mt-1">{{ usuario_top.total_ventas|default:0|intcomma }} ventas</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Margen de Ganancia -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center space-x-2">
+      <i class="bi bi-graph-up text-emerald-400"></i>
+      <span>Margen de Ganancia</span>
+    </div>
+    <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="p-4 bg-emerald-50/60 rounded-xl border border-emerald-100 space-y-2">
+        <span class="text-xs font-bold text-emerald-800 uppercase tracking-wider block">Mejor Margen</span>
+        <h5 class="font-bold text-slate-900 truncate">{{ articulo_mejor_margen.nombre|truncatechars:20 }}</h5>
+        <div class="flex justify-between text-xs text-slate-600">
+          <span>Costo: COP {{ articulo_mejor_margen.costo_promedio|floatformat:2|intcomma }}</span>
+          <span>Venta: COP {{ articulo_mejor_margen.precio_venta|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="text-xs font-bold text-emerald-700 pt-1">
+          +{{ articulo_mejor_margen.margen_porcentaje|floatformat:2 }}% (COP {{ articulo_mejor_margen.margen|floatformat:2|intcomma }})
+        </div>
+      </div>
+
+      <div class="p-4 bg-rose-50/60 rounded-xl border border-rose-100 space-y-2">
+        <span class="text-xs font-bold text-rose-800 uppercase tracking-wider block">Menor Margen</span>
+        <h5 class="font-bold text-slate-900 truncate">{{ articulo_peor_margen.nombre|truncatechars:20 }}</h5>
+        <div class="flex justify-between text-xs text-slate-600">
+          <span>Costo: COP {{ articulo_peor_margen.costo_promedio|floatformat:2|intcomma }}</span>
+          <span>Venta: COP {{ articulo_peor_margen.precio_venta|floatformat:2|intcomma }}</span>
+        </div>
+        <div class="text-xs font-bold text-rose-700 pt-1">
+          {{ articulo_peor_margen.margen_porcentaje|floatformat:2 }}% (COP {{ articulo_peor_margen.margen|floatformat:2|intcomma }})
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Productos por Categoría & Chart -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+  <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center space-x-2">
+    <i class="bi bi-tags-fill text-amber-400"></i>
+    <span>Productos por Categoría</span>
+  </div>
+  <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+    <div class="relative h-64 sm:h-80 w-full">
+      <canvas id="categoriasChart"></canvas>
+    </div>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm text-left text-slate-600 border border-slate-200 rounded-xl overflow-hidden">
+        <thead class="text-xs text-white uppercase bg-brand-dark">
+          <tr>
+            <th scope="col" class="px-4 py-3">Categoría</th>
+            <th scope="col" class="px-4 py-3 text-right">Cantidad</th>
+            <th scope="col" class="px-4 py-3 text-right">Valor Total</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-200 bg-white">
+          {% for item in productos_por_categoria %}
+          <tr class="hover:bg-slate-50 transition">
+            <td class="px-4 py-3 font-medium text-slate-900">{{ item.categoria__nombre|default:"Sin categoría" }}</td>
+            <td class="px-4 py-3 text-right font-semibold">{{ item.total }}</td>
+            <td class="px-4 py-3 text-right text-emerald-600 font-semibold">COP {{ item.valor_total|floatformat:2|intcomma }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="3" class="px-4 py-6 text-center text-slate-400">No hay datos disponibles</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+        <tfoot class="bg-slate-100 font-bold text-slate-900 border-t-2 border-slate-300">
+          <tr>
+            <td class="px-4 py-3">Total Categorías</td>
+            <td class="px-4 py-3 text-right">{{ productos_por_categoria|length }}</td>
+            <td class="px-4 py-3 text-right text-emerald-700">COP {{ total_general|floatformat:2|intcomma }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Ventas por Período -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+  <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center space-x-2">
+    <i class="bi bi-calendar-range-fill text-sky-400"></i>
+    <span>Ventas por Período</span>
+  </div>
+  <div class="p-6 grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+    <div class="p-5 bg-sky-50/60 rounded-xl border border-sky-100 space-y-2">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Este Mes</span>
+      <h3 class="text-2xl font-black text-brand-primary">COP {{ ventas_mes|floatformat:2|intcomma }}</h3>
+    </div>
+
+    <div class="p-5 bg-emerald-50/60 rounded-xl border border-emerald-100 space-y-2">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Último Trimestre</span>
+      <h3 class="text-2xl font-black text-emerald-600">COP {{ ventas_trimestre|floatformat:2|intcomma }}</h3>
+    </div>
+
+    <div class="p-5 bg-purple-50/60 rounded-xl border border-purple-100 space-y-2">
+      <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider block">Último Semestre</span>
+      <h3 class="text-2xl font-black text-purple-600">COP {{ ventas_semestre|floatformat:2|intcomma }}</h3>
+    </div>
+  </div>
+</div>
+
+<!-- Artículos por Reabastecer -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+  <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+    <div class="flex items-center space-x-2">
+      <i class="bi bi-exclamation-octagon-fill text-amber-400"></i>
+      <span>Artículos por Reabastecer</span>
+    </div>
+    <span class="text-xs bg-amber-500/20 text-amber-300 font-semibold px-2.5 py-1 rounded-full border border-amber-500/30">
+      Alerta de Stock
+    </span>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-slate-600">
+      <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+        <tr>
+          <th scope="col" class="px-6 py-3">Código</th>
+          <th scope="col" class="px-6 py-3">Artículo</th>
+          <th scope="col" class="px-6 py-3">Categoría</th>
+          <th scope="col" class="px-6 py-3">Stock Actual</th>
+          <th scope="col" class="px-6 py-3">Stock Mínimo</th>
+          <th scope="col" class="px-6 py-3">Días Restantes</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200 bg-white">
+        {% for articulo in stock_bajo %}
+        <tr class="bg-amber-50/60 hover:bg-amber-100/50 transition">
+          <td class="px-6 py-4 font-mono font-semibold text-amber-900">{{ articulo.codigo }}</td>
+          <td class="px-6 py-4 font-medium text-slate-900">{{ articulo.nombre|truncatechars:25 }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ articulo.categoria.nombre|default:"-" }}</td>
+          <td class="px-6 py-4 font-bold text-rose-600">{{ articulo.stock_actual|floatformat:"2" }}</td>
+          <td class="px-6 py-4 text-slate-700">{{ articulo.stock_minimo|floatformat:"2" }} {{ articulo.unidad_medida }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ articulo.dias_restantes|default:"-" }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-6 text-center text-slate-400 font-medium">No hay artículos con stock bajo</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Últimas Transacciones -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-12">
+  <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div class="flex items-center space-x-2">
+      <i class="bi bi-arrow-left-right text-sky-400"></i>
+      <span>Últimas Transacciones</span>
+    </div>
+    <div class="flex items-center space-x-2 text-xs" id="filtro-transacciones">
+      <button class="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 hover:bg-brand-navy font-semibold transition" data-filtro="entrada">Entradas</button>
+      <button class="px-3 py-1.5 rounded-lg border border-slate-700 text-slate-200 hover:bg-brand-navy font-semibold transition" data-filtro="salida">Salidas</button>
+      <button class="px-3 py-1.5 rounded-lg bg-brand-primary text-white font-semibold transition shadow" data-filtro="todas">Todas</button>
+    </div>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-slate-600" id="tabla-transacciones">
+      <thead class="text-xs text-slate-700 uppercase bg-slate-100 border-b border-slate-200">
+        <tr>
+          <th scope="col" class="px-6 py-3">Fecha</th>
+          <th scope="col" class="px-6 py-3">Tipo</th>
+          <th scope="col" class="px-6 py-3">Artículo</th>
+          <th scope="col" class="px-6 py-3">Cantidad</th>
+          <th scope="col" class="px-6 py-3">Responsable</th>
+          <th scope="col" class="px-6 py-3">Documento</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-200 bg-white">
+        {% for movimiento in ultimos_movimientos %}
+        <tr class="hover:bg-slate-50 transition" data-tipo="{{ movimiento.tipo|lower }}">
+          <td class="px-6 py-4 text-slate-500 font-mono text-xs">{{ movimiento.fecha|date:"d/m/Y H:i" }}</td>
+          <td class="px-6 py-4">
+            {% if movimiento.tipo == 'ENTRADA' %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+                <i class="bi bi-arrow-down-left me-1"></i> Entrada
+              </span>
+            {% else %}
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-100 text-rose-800">
+                <i class="bi bi-arrow-up-right me-1"></i> Salida
+              </span>
+            {% endif %}
+          </td>
+          <td class="px-6 py-4 font-medium text-slate-900">{{ movimiento.articulo.nombre|truncatechars:25 }}</td>
+          <td class="px-6 py-4 font-semibold text-slate-900">{{ movimiento.cantidad|floatformat:"2" }}</td>
+          <td class="px-6 py-4 text-slate-600">{{ movimiento.usuario.get_full_name|default:movimiento.usuario.username }}</td>
+          <td class="px-6 py-4 font-mono text-xs text-slate-500">{{ movimiento.referencia|default:"-"|truncatechars:15 }}</td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="6" class="px-6 py-6 text-center text-slate-400 font-medium">No hay movimientos recientes</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Floating Action Button Menu -->
+<div class="fixed bottom-6 right-6 z-40 group">
+  <div class="relative">
+    <!-- Action Menu Items -->
+    <div id="quick-action-menu" class="hidden absolute bottom-16 right-0 w-56 bg-white rounded-2xl shadow-2xl border border-slate-200 p-2 space-y-1 transform transition-all duration-200">
+      <a href="{% url 'crear_articulo' %}" class="flex items-center space-x-3 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition">
+        <i class="bi bi-box-seam text-brand-primary text-base"></i>
+        <span>Nuevo Artículo</span>
+      </a>
+      <a href="{% url 'nueva_compra' %}" class="flex items-center space-x-3 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition">
+        <i class="bi bi-arrow-down-circle text-emerald-600 text-base"></i>
+        <span>Entrada Inventario</span>
+      </a>
+      <a href="{% url 'crear_venta' %}" class="flex items-center space-x-3 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 rounded-xl transition">
+        <i class="bi bi-arrow-up-circle text-rose-600 text-base"></i>
+        <span>Salida Inventario</span>
+      </a>
+    </div>
+
+    <!-- Main Floating Trigger Button -->
+    <button 
+      type="button" 
+      id="quick-action-btn"
+      class="w-14 h-14 bg-brand-primary hover:bg-brand-dark text-white rounded-full shadow-2xl flex items-center justify-center focus:outline-none transition transform hover:scale-105 active:scale-95"
+      aria-label="Acciones rápidas"
+    >
+      <i class="bi bi-plus-lg text-2xl"></i>
+    </button>
+  </div>
+</div>
+
+<script src="{% static 'js/dashboard.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Quick Action FAB Menu Toggle
+    const fabBtn = document.getElementById('quick-action-btn');
+    const fabMenu = document.getElementById('quick-action-menu');
+    if (fabBtn && fabMenu) {
+      fabBtn.addEventListener('click', () => fabMenu.classList.toggle('hidden'));
+    }
+
+    // Chart.js initialization
+    const ctx = document.getElementById('categoriasChart');
+    if (ctx) {
+      const categorias = [{% for item in productos_por_categoria %}'{{ item.categoria__nombre|default:"Sin categoría" }}',{% endfor %}];
+      const cantidades = [{% for item in productos_por_categoria %}{{ item.total }},{% endfor %}];
+      
+      const colores = [
+        '#005BBB', '#4682B4', '#10B981', '#F59E0B', '#EF4444', 
+        '#8B5CF6', '#EC4899', '#14B8A6', '#6366F1', '#84CC16'
+      ];
+      
+      new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+              labels: categorias,
+              datasets: [{
+                  data: cantidades,
+                  backgroundColor: colores.slice(0, categorias.length),
+                  borderWidth: 2,
+                  borderColor: '#ffffff'
+              }]
+          },
+          options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                  legend: {
+                      position: 'bottom',
+                      labels: {
+                        font: { family: 'sans-serif', size: 12 },
+                        usePointStyle: true
+                      }
+                  }
+              }
+          }
+      });
+    }
+});
+</script>
+{% endblock %}

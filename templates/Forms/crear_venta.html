@@ -1,0 +1,397 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+
+{% block dashboard %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <!-- Header Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
+        <i class="bi bi-cart-check text-brand-primary"></i>
+        <span>Punto de Venta (POS) - Registrar Nueva Venta</span>
+      </h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Facturación, Control de Existencias & Salida de Inventario en Tiempo Real.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'lista_ventas' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition">
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver a Ventas</span>
+      </a>
+    </div>
+  </div>
+
+  <form id="crearVentaForm" method="post" class="space-y-6" novalidate>
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- COLUMNA IZQUIERDA: Cliente, Escáner y Carrito de Compra (7 columnas) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Tarjeta Cliente y Método de Pago -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-3.5 bg-brand-dark text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-person-badge text-sky-400"></i>
+              <span>1. Cliente & Método de Pago</span>
+            </div>
+            <button type="button" onclick="document.getElementById('modalCliente').classList.remove('hidden')" class="px-3 py-1 bg-brand-primary hover:bg-sky-400 text-white text-xs font-bold rounded-lg transition flex items-center gap-1 shadow-xs">
+              <i class="bi bi-plus-circle"></i>
+              <span>Cliente Nuevo</span>
+            </button>
+          </div>
+
+          <div class="p-6 space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-12 gap-4">
+              <!-- Cliente (Opcional - Consumidor Final) -->
+              <div class="sm:col-span-7">
+                <label for="{{ venta_form.cliente.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Cliente <span class="text-slate-400 font-normal text-[10px]">(Opcional - Consumidor Final)</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <div class="flex-1">
+                    {{ venta_form.cliente }}
+                  </div>
+                  <button type="button" id="buscarClienteBtn" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center justify-center shrink-0" title="Buscar Cliente">
+                    <i class="bi bi-search text-sm"></i>
+                  </button>
+                </div>
+                {% if venta_form.cliente.errors %}<p class="text-xs text-rose-600 mt-1">{{ venta_form.cliente.errors }}</p>{% endif %}
+              </div>
+
+              <!-- Método de Pago -->
+              <div class="sm:col-span-5">
+                <label for="{{ venta_form.metodo_pago.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Método de Pago <span class="text-rose-500">*</span>
+                </label>
+                {{ venta_form.metodo_pago }}
+                {% if venta_form.metodo_pago.errors %}<p class="text-xs text-rose-600 mt-1">{{ venta_form.metodo_pago.errors }}</p>{% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tarjeta Buscar Producto & Escáner Barcode -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
+          <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+            <button type="button" id="buscarArticuloBtn" class="w-full sm:w-auto px-5 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-2">
+              <i class="bi bi-search text-sm"></i>
+              <span>Buscar en Catálogo de Productos</span>
+            </button>
+
+            <!-- Escáner de Código de Barras con Ícono No Superpuesto -->
+            <div class="w-full sm:w-80 flex items-center space-x-2">
+              <div class="flex-1 flex rounded-xl shadow-sm">
+                <span class="inline-flex items-center px-3 rounded-l-xl border border-r-0 border-slate-300 bg-slate-100 text-slate-500 text-sm">
+                  <i class="bi bi-upc-scan"></i>
+                </span>
+                <input type="text" id="codigoBarrasInput" placeholder="Escáner EAN..." class="flex-1 block w-full min-w-0 rounded-none rounded-r-xl bg-slate-50 border border-slate-300 py-2.5 px-3 text-xs font-mono font-medium focus:ring-2 focus:ring-brand-primary focus:bg-white transition" />
+              </div>
+              <button type="button" id="escanearBtn" class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition shrink-0" title="Procesar EAN">
+                <i class="bi bi-arrow-return-left text-sm"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabla Carrito de Artículos a Vender -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-3 bg-slate-100 border-b border-slate-200 font-bold text-xs uppercase tracking-wider text-slate-700 flex justify-between items-center">
+            <span class="flex items-center gap-1.5"><i class="bi bi-list-check text-brand-primary"></i> Detalle de Artículos a Facturar</span>
+            <span class="text-[11px] text-slate-500 font-normal">Verifica cantidades antes de finalizar</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left text-slate-600" id="articulosTable">
+              <thead class="text-[11px] font-bold text-slate-500 uppercase bg-slate-50 border-b border-slate-200 whitespace-nowrap">
+                <tr>
+                  <th scope="col" class="px-4 py-3">Código</th>
+                  <th scope="col" class="px-4 py-3 min-w-[250px]">Descripción</th>
+                  <th scope="col" class="px-4 py-3 text-center">Stock</th>
+                  <th scope="col" class="px-4 py-3 w-28 text-center">Cantidad</th>
+                  <th scope="col" class="px-4 py-3 text-right">Precio Unit.</th>
+                  <th scope="col" class="px-4 py-3 text-right">Desc.</th>
+                  <th scope="col" class="px-4 py-3 text-right">Subtotal</th>
+                  <th scope="col" class="px-4 py-3 text-center"></th>
+                </tr>
+              </thead>
+              <tbody id="detallesBody" class="divide-y divide-slate-100">
+                <tr id="emptyRow">
+                  <td colspan="8" class="py-12 text-center text-slate-400 font-medium">
+                    <i class="bi bi-cart-x text-3xl block text-slate-300 mb-2"></i>
+                    No hay artículos agregados. Usa el buscador o escáner para agregar productos.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- COLUMNA DERECHA: Resumen de Facturación & Cobro (5 columnas) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+          <div class="px-6 py-3.5 bg-brand-navy text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-receipt-cutoff text-amber-400"></i>
+              <span>Resumen de Facturación</span>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-5">
+            
+            <!-- Desglose de Totales -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 space-y-2.5 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>Subtotal Neto:</span>
+                <strong id="subtotal" class="font-bold text-slate-900">COP 0.00</strong>
+              </div>
+              <div class="flex justify-between text-slate-600 pb-2 border-b border-slate-200">
+                <span>Impuestos Estimados (IVA):</span>
+                <strong id="impuestos" class="font-bold text-slate-800">COP 0.00</strong>
+              </div>
+              <div class="flex justify-between text-base font-black text-slate-900 pt-1">
+                <span>Total a Cobrar:</span>
+                <span id="total" class="text-emerald-600 text-xl font-black">COP 0.00</span>
+              </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div>
+              <label for="{{ venta_form.observaciones.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Observaciones / Notas de Venta
+              </label>
+              {{ venta_form.observaciones }}
+            </div>
+
+            <!-- Botones de Acción POS -->
+            <div class="pt-2 space-y-3">
+              <button type="submit" name="finalizar_venta" value="1" id="finalizarBtn" disabled class="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                <i class="bi bi-check-circle text-base"></i>
+                <span>Finalizar Venta e Imprimir</span>
+              </button>
+
+              <div class="grid grid-cols-2 gap-3">
+                <button type="submit" name="guardar_borrador" value="1" class="py-2.5 px-3 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition flex items-center justify-center space-x-1">
+                  <i class="bi bi-save"></i>
+                  <span>Guardar Borrador</span>
+                </button>
+
+                <a href="{% url 'lista_ventas' %}" class="py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition text-center">
+                  Cancelar
+                </a>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- MODAL 1: Registrar Cliente Rápido -->
+<div id="modalCliente" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center gap-2">
+        <i class="bi bi-person-plus text-sky-400"></i>
+        <span>Registrar Cliente Rápido</span>
+      </h5>
+      <button type="button" onclick="document.getElementById('modalCliente').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form id="clienteForm" method="post" action="{% url 'crear_cliente_rapido' %}" class="p-6 space-y-4">
+      {% csrf_token %}
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Tipo de Cliente</label>
+        <select class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary" name="tipo" required>
+          <option value="NATURAL">Persona Natural</option>
+          <option value="JURIDICO">Persona Jurídica</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Identificación / Cédula / NIT</label>
+        <input type="text" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary" name="identificacion" required placeholder="Número de documento..." />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nombre Completo / Razón Social</label>
+        <input type="text" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary" name="nombre" required placeholder="Nombre del cliente..." />
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Teléfono Móvil</label>
+        <input type="text" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary" name="telefono" placeholder="Ej: 300 123 4567" />
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end space-x-3">
+        <button type="button" onclick="document.getElementById('modalCliente').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition">
+          Cancelar
+        </button>
+        <button type="submit" id="guardarCliente" class="px-5 py-2 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition">
+          Guardar Cliente
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 2: Buscar Artículo en Catálogo -->
+<div id="buscarArticuloModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-3xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center gap-2">
+        <i class="bi bi-box-seam text-sky-400"></i>
+        <span>Buscar Producto en Almacén</span>
+      </h5>
+      <button type="button" onclick="document.getElementById('buscarArticuloModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div class="flex items-center space-x-2">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="bi bi-search text-xs"></i>
+          </div>
+          <input type="text" id="busquedaArticulo" placeholder="Escribe el código, nombre o marca..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary focus:bg-white transition" />
+        </div>
+        <button type="button" id="buscarBtn" class="px-4 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition">
+          Buscar
+        </button>
+      </div>
+
+      <div class="overflow-x-auto max-h-80 overflow-y-auto border border-slate-200 rounded-2xl">
+        <table class="w-full text-xs text-left text-slate-600" id="resultadosBusqueda">
+          <thead class="text-[11px] text-slate-700 uppercase bg-slate-100 border-b border-slate-200 sticky top-0">
+            <tr>
+              <th scope="col" class="px-4 py-3">Código</th>
+              <th scope="col" class="px-4 py-3">Nombre</th>
+              <th scope="col" class="px-4 py-3">Precio Venta</th>
+              <th scope="col" class="px-4 py-3 text-center">Stock</th>
+              <th scope="col" class="px-4 py-3 text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="resultadosBody" class="divide-y divide-slate-100 bg-white">
+            <tr>
+              <td colspan="5" class="py-8 text-center text-slate-400 font-medium">Ingresa un término de búsqueda para consultar productos.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-right">
+      <button type="button" onclick="document.getElementById('buscarArticuloModal').classList.add('hidden')" class="px-5 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: Agregar Cantidad y Descuento -->
+<div id="cantidadModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center gap-2">
+        <i class="bi bi-cart-plus text-emerald-400"></i>
+        <span>Agregar Producto al Carrito</span>
+      </h5>
+      <button type="button" onclick="document.getElementById('cantidadModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <form id="cantidadForm" class="p-6 space-y-4">
+      <input type="hidden" id="articuloId" />
+
+      <div>
+        <label for="cantidadInput" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Cantidad a Vender</label>
+        <input type="number" id="cantidadInput" min="0.1" step="0.1" value="1" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-slate-900 focus:ring-2 focus:ring-brand-primary" />
+      </div>
+
+      <div>
+        <label for="descuentoInput" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Descuento (COP)</label>
+        <div class="flex items-center space-x-2">
+          <span class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-600">COP</span>
+          <input type="number" id="descuentoInput" min="0" value="0" step="0.01" class="w-full py-2.5 px-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold text-emerald-700 focus:ring-2 focus:ring-brand-primary" />
+        </div>
+      </div>
+
+      <div class="pt-3 border-t border-slate-100 flex justify-end space-x-3">
+        <button type="button" onclick="document.getElementById('cantidadModal').classList.add('hidden')" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs rounded-xl transition">
+          Cancelar
+        </button>
+        <button type="button" id="agregarArticuloBtn" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition">
+          Agregar al Carrito
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 4: Buscar Cliente en Lista -->
+<div id="buscarClienteModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200">
+    <div class="px-6 py-4 bg-brand-dark text-white font-bold text-base flex items-center justify-between">
+      <h5 class="flex items-center gap-2">
+        <i class="bi bi-search text-sky-400"></i>
+        <span>Buscar Cliente</span>
+      </h5>
+      <button type="button" onclick="document.getElementById('buscarClienteModal').classList.add('hidden')" class="text-slate-400 hover:text-white">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div class="flex items-center space-x-2">
+        <div class="relative flex-1">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+            <i class="bi bi-search text-xs"></i>
+          </div>
+          <input type="text" id="busquedaCliente" placeholder="Nombre, cédula/NIT o teléfono..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary focus:bg-white transition" />
+        </div>
+        <button type="button" id="buscarClienteModalBtn" class="px-4 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-bold text-xs rounded-xl shadow transition">
+          Buscar
+        </button>
+      </div>
+
+      <div class="overflow-x-auto max-h-72 overflow-y-auto border border-slate-200 rounded-2xl">
+        <table class="w-full text-xs text-left text-slate-600" id="resultadosCliente">
+          <thead class="text-[11px] text-slate-700 uppercase bg-slate-100 border-b border-slate-200 sticky top-0">
+            <tr>
+              <th scope="col" class="px-4 py-3">Nombre</th>
+              <th scope="col" class="px-4 py-3">Identificación</th>
+              <th scope="col" class="px-4 py-3">Teléfono</th>
+              <th scope="col" class="px-4 py-3 text-right">Seleccionar</th>
+            </tr>
+          </thead>
+          <tbody id="resultadosClienteBody" class="divide-y divide-slate-100 bg-white">
+            <tr>
+              <td colspan="4" class="py-8 text-center text-slate-400 font-medium">Ingresa un término para buscar clientes registrados.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 text-right">
+      <button type="button" onclick="document.getElementById('buscarClienteModal').classList.add('hidden')" class="px-5 py-2 bg-slate-800 text-white font-bold text-xs rounded-xl transition">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/ventas/crear_venta.js' %}?v=2.1"></script>
+{% endblock %}

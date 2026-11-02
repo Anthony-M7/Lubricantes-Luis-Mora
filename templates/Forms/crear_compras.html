@@ -1,0 +1,271 @@
+{% extends 'paneles/admin.html' %}
+{% load static %}
+
+{% block dashboard %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <!-- Header Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
+        <i class="bi bi-cart-plus text-brand-primary"></i>
+        <span>{{ titulo|default:"Registro de Orden de Compra" }}</span>
+      </h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Módulo de Abastecimiento & Cálculo de Costo Promedio Ponderado (CPP) en Tiempo Real.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'compras' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition">
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver a Compras</span>
+      </a>
+    </div>
+  </div>
+
+  <form method="post" id="compra-form" class="space-y-6" novalidate>
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- COLUMNA IZQUIERDA: Formulario de la Orden (7 columnas) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Tarjeta Datos del Producto y Proveedor -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-3.5 bg-brand-dark text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-box-seam text-sky-400"></i>
+              <span>1. Selección de Producto & Proveedor</span>
+            </div>
+            <span class="text-[11px] font-semibold text-sky-200 bg-sky-950/50 px-2.5 py-0.5 rounded-full">
+              Paso 1 de 2
+            </span>
+          </div>
+
+          <div class="p-6 space-y-4">
+            
+            <!-- Buscador Interactivo de Artículo -->
+            <div>
+              <label for="{{ form.articulo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Seleccionar Producto / Repuesto <span class="text-rose-500">*</span>
+              </label>
+              
+              <!-- Buscador / Filtro Rápido en Vivo -->
+              <div class="relative mb-2">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <i class="bi bi-search text-xs"></i>
+                </div>
+                <input 
+                  type="text" 
+                  id="buscar-articulo-filtro" 
+                  placeholder="Escribe el nombre o código para filtrar..." 
+                  class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-brand-primary focus:bg-white transition"
+                />
+              </div>
+
+              {{ form.articulo }}
+              {% if form.articulo.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.articulo.errors }}</p>{% endif %}
+              <div class="invalid-feedback id_articulo-feedback hidden text-xs text-rose-600 font-semibold mt-1"></div>
+            </div>
+
+            <!-- Proveedor -->
+            <div>
+              <label for="{{ form.proveedor.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Proveedor Principal <span class="text-slate-400 font-normal text-[10px]">(Opcional)</span>
+              </label>
+              {{ form.proveedor }}
+              {% if form.proveedor.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.proveedor.errors }}</p>{% endif %}
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Tarjeta Cantidad, Costo y Referencia -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-3.5 bg-emerald-700 text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-cash-coin"></i>
+              <span>2. Cantidad, Costos & Documento</span>
+            </div>
+            <span class="text-[11px] font-semibold text-emerald-200 bg-emerald-950/50 px-2.5 py-0.5 rounded-full">
+              Paso 2 de 2
+            </span>
+          </div>
+
+          <div class="p-6 space-y-4">
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- Cantidad a Comprar -->
+              <div>
+                <label for="{{ form.cantidad.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Cantidad a Ingresar <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <div class="flex-1">
+                    {{ form.cantidad }}
+                  </div>
+                  <span class="unidad-medida px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700">
+                    {% if form.instance.articulo %}{{ form.instance.articulo.get_unidad_medida_display }}{% else %}UN{% endif %}
+                  </span>
+                </div>
+                <div class="invalid-feedback id_cantidad-feedback hidden text-xs text-rose-600 font-semibold mt-1"></div>
+              </div>
+
+              <!-- Costo Unitario de Compra -->
+              <div>
+                <label for="{{ form.costo_unitario.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Costo Unitario de Compra (COP) <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <span class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-600">
+                    COP
+                  </span>
+                  <div class="flex-1">
+                    {{ form.costo_unitario }}
+                  </div>
+                </div>
+                <div class="invalid-feedback id_costo_unitario-feedback hidden text-xs text-rose-600 font-semibold mt-1"></div>
+              </div>
+            </div>
+
+            <!-- Documento de Referencia -->
+            <div>
+              <label for="{{ form.referencia.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Documento de Referencia / N° Factura <span class="text-rose-500">*</span>
+              </label>
+              <div class="flex items-center space-x-2">
+                <div class="flex-1">
+                  {{ form.referencia }}
+                </div>
+                <button type="button" id="generar-referencia" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center space-x-1 shadow-sm">
+                  <i class="bi bi-arrow-repeat text-base"></i>
+                  <span>Generar Código</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1 referencia-ayuda">Ejemplo: CMP-{% now "ymd" %}-001</p>
+              <div class="invalid-feedback id_referencia-feedback hidden text-xs text-rose-600 font-semibold mt-1"></div>
+            </div>
+
+            <!-- Observaciones -->
+            <div>
+              <label for="{{ form.observaciones.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Observaciones / Notas Adicionales
+              </label>
+              {{ form.observaciones }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: Dashboard Financiero y Contable (5 columnas) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <!-- Resumen Contable y Financiero -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+          <div class="px-6 py-3.5 bg-brand-navy text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-calculator text-amber-400"></i>
+              <span>Simulación de Abastecimiento (CPP)</span>
+            </div>
+            <span id="estado-formulario" class="text-[11px] font-bold text-amber-900 bg-amber-300 px-2.5 py-0.5 rounded-full">
+              Incompleto
+            </span>
+          </div>
+
+          <div class="p-6 space-y-5">
+            
+            <!-- Vista Previa del Producto Seleccionado -->
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center space-x-4">
+              <img id="imagen-articulo" src="#" alt="Vista Previa" class="h-16 w-16 object-contain rounded-xl border border-slate-200 bg-white p-1 hidden" />
+              <div id="imagen-placeholder" class="h-16 w-16 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-400">
+                <i class="bi bi-box-seam text-2xl"></i>
+              </div>
+              <div>
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Artículo Seleccionado</span>
+                <h4 id="resumen-articulo" class="text-sm font-bold text-slate-900 leading-tight">No seleccionado</h4>
+                <span id="categoria-resumen-badge" class="inline-block text-[10px] font-semibold text-brand-dark bg-sky-100 px-2 py-0.5 rounded-md mt-1">
+                  Selecciona un producto
+                </span>
+              </div>
+            </div>
+
+            <!-- Comparativo de Stock -->
+            <div class="grid grid-cols-2 gap-3">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+                <span class="text-[10px] font-bold text-slate-500 uppercase block">Stock Actual</span>
+                <div class="text-lg font-black text-slate-800">
+                  <span id="stock-actual">0.00</span>
+                  <span class="unidad-stock unidad-medida text-xs font-semibold text-slate-500">UN</span>
+                </div>
+              </div>
+
+              <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
+                <span class="text-[10px] font-bold text-emerald-800 uppercase block">Stock Futuro Proyectado</span>
+                <div class="text-lg font-black text-emerald-700">
+                  <span id="stock-futuro">0.00</span>
+                  <span class="unidad-medida text-xs font-semibold text-emerald-600">UN</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Costo Promedio Ponderado (CPP) y Margen -->
+            <div class="p-4 bg-sky-50/70 rounded-2xl border border-sky-100 space-y-3">
+              <h5 class="text-xs font-bold uppercase tracking-wider text-brand-dark flex items-center justify-between">
+                <span>Costo Promedio Ponderado (CPP)</span>
+                <i class="bi bi-info-circle text-sky-600" title="Cálculo contable automático de costo promedio del inventario"></i>
+              </h5>
+
+              <div class="grid grid-cols-2 gap-2 text-xs">
+                <div>
+                  <span class="text-slate-500 block text-[11px]">CPP Actual:</span>
+                  <strong id="precio-referencia" class="text-slate-800 font-bold block">COP 0.00</strong>
+                </div>
+                <div>
+                  <span class="text-slate-500 block text-[11px]">Nuevo CPP Proyectado:</span>
+                  <strong id="nuevo-cpp-proyectado" class="text-brand-primary font-black block">COP 0.00</strong>
+                </div>
+              </div>
+
+              <div id="variacion-precio" class="pt-1 text-xs font-semibold">
+                <!-- Indicador dinámico de variación de costo -->
+              </div>
+
+              <div id="comparacion-precio-venta" class="pt-1 text-xs font-semibold border-t border-sky-200/60">
+                <!-- Indicador dinámico de margen de ganancia -->
+              </div>
+            </div>
+
+            <!-- Total General de la Inversión -->
+            <div class="p-4 bg-gradient-to-br from-brand-navy to-brand-dark text-white rounded-2xl shadow-md flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-300">Total Inversión de Compra</span>
+                <div id="total-compra" class="text-2xl sm:text-3xl font-black text-emerald-400">
+                  COP 0.00
+                </div>
+              </div>
+              <i class="bi bi-wallet2 text-4xl text-sky-400/80 me-1"></i>
+            </div>
+
+            <!-- Botones de Acción -->
+            <div class="pt-2 space-y-2">
+              <button type="submit" id="submit-btn" disabled class="w-full py-3.5 px-6 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                <i class="bi bi-save text-base"></i>
+                <span>{{ boton_submit|default:"Registrar Compra e Incrementar Inventario" }}</span>
+              </button>
+
+              <a href="{% url 'compras' %}" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1">
+                <span>Cancelar</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<script src="{% static 'js/compras/crear_compras.js' %}?v=2.0"></script>
+{% endblock %}

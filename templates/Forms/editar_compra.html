@@ -1,0 +1,179 @@
+{% extends 'paneles/admin.html' %}
+{% load static humanize %}
+
+{% block dashboard %}
+<div class="max-w-6xl mx-auto space-y-6">
+  <!-- Header Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight flex items-center gap-2">
+        <i class="bi bi-pencil-square text-brand-primary"></i>
+        <span>{{ titulo|default:"Editar Registro de Compra" }}</span>
+      </h1>
+      <p class="text-xs text-slate-500 mt-1">
+        Modifica los datos del registro de abastecimiento y recalcula el costo promedio.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'compras' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl border border-slate-300 transition">
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver a Compras</span>
+      </a>
+    </div>
+  </div>
+
+  <form method="post" id="editar-compra-form" class="space-y-6" novalidate>
+    {% csrf_token %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- COLUMNA IZQUIERDA: Formulario de Edición (7 columnas) -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+          <div class="px-6 py-3.5 bg-brand-dark text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-box-seam text-sky-400"></i>
+              <span>Datos del Registro N° {{ compra.id }}</span>
+            </div>
+            <span class="text-[11px] font-mono text-sky-200 bg-sky-950/50 px-2.5 py-0.5 rounded-full">
+              {{ compra.referencia|default:"SIN-REF" }}
+            </span>
+          </div>
+
+          <div class="p-6 space-y-4">
+            
+            <!-- Producto / Repuesto -->
+            <div>
+              <label for="{{ form.articulo.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Producto Asignado <span class="text-rose-500">*</span>
+              </label>
+              {{ form.articulo }}
+              {% if form.articulo.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.articulo.errors }}</p>{% endif %}
+            </div>
+
+            <!-- Proveedor -->
+            <div>
+              <label for="{{ form.proveedor.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Proveedor Principal
+              </label>
+              {{ form.proveedor }}
+              {% if form.proveedor.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.proveedor.errors }}</p>{% endif %}
+            </div>
+
+            <!-- Cantidad y Costo -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
+              <div>
+                <label for="{{ form.cantidad.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Cantidad Comprada <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <div class="flex-1">
+                    {{ form.cantidad }}
+                  </div>
+                  <span class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-700">
+                    {{ compra.articulo.get_unidad_medida_display }}
+                  </span>
+                </div>
+                {% if form.cantidad.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.cantidad.errors }}</p>{% endif %}
+              </div>
+
+              <div>
+                <label for="{{ form.costo_unitario.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                  Costo Unitario (COP) <span class="text-rose-500">*</span>
+                </label>
+                <div class="flex items-center space-x-2">
+                  <span class="px-3 py-2.5 bg-slate-100 border border-slate-300 rounded-xl text-xs font-bold text-slate-600">
+                    COP
+                  </span>
+                  <div class="flex-1">
+                    {{ form.costo_unitario }}
+                  </div>
+                </div>
+                {% if form.costo_unitario.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.costo_unitario.errors }}</p>{% endif %}
+              </div>
+            </div>
+
+            <!-- Referencia -->
+            <div>
+              <label for="{{ form.referencia.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Documento de Referencia / N° Factura
+              </label>
+              {{ form.referencia }}
+              {% if form.referencia.errors %}<p class="text-xs text-rose-600 mt-1">{{ form.referencia.errors }}</p>{% endif %}
+            </div>
+
+            <!-- Observaciones -->
+            <div>
+              <label for="{{ form.observaciones.id_for_label }}" class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">
+                Observaciones / Notas
+              </label>
+              {{ form.observaciones }}
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- COLUMNA DERECHA: Ficha Informativa (5 columnas) -->
+      <div class="lg:col-span-5 space-y-6">
+        
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden sticky top-6">
+          <div class="px-6 py-3.5 bg-brand-navy text-white font-bold text-sm flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <i class="bi bi-info-circle text-amber-400"></i>
+              <span>Ficha Actual del Producto</span>
+            </div>
+          </div>
+
+          <div class="p-6 space-y-4">
+            
+            <div class="p-4 bg-slate-50 border border-slate-200 rounded-2xl flex items-center space-x-4">
+              {% if compra.articulo.imagen %}
+                <img src="{{ compra.articulo.imagen.url }}" alt="{{ compra.articulo.nombre }}" class="h-16 w-16 object-contain rounded-xl border border-slate-200 bg-white p-1" />
+              {% else %}
+                <div class="h-16 w-16 rounded-xl bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-400">
+                  <i class="bi bi-box-seam text-2xl"></i>
+                </div>
+              {% endif %}
+
+              <div>
+                <span class="text-[10px] font-bold uppercase text-slate-400 block">Artículo</span>
+                <h4 class="text-sm font-bold text-slate-900 leading-tight">{{ compra.articulo.nombre }}</h4>
+                <span class="inline-block text-[10px] font-semibold text-brand-primary bg-sky-100 px-2 py-0.5 rounded-md mt-1">
+                  Código: {{ compra.articulo.codigo }}
+                </span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-xs">
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-slate-500 text-[11px] block">Stock Actual:</span>
+                <strong class="text-slate-900 text-sm font-bold">{{ compra.articulo.stock_actual|floatformat:"0" }} {{ compra.articulo.get_unidad_medida_display }}</strong>
+              </div>
+
+              <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+                <span class="text-slate-500 text-[11px] block">Costo Promedio Actual:</span>
+                <strong class="text-emerald-700 text-sm font-black">COP {{ compra.articulo.costo_promedio|floatformat:"0"|intcomma }}</strong>
+              </div>
+            </div>
+
+            <div class="pt-4 space-y-2">
+              <button type="submit" class="w-full py-3.5 px-6 bg-brand-primary hover:bg-brand-dark text-white font-extrabold text-xs uppercase tracking-wider rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+                <i class="bi bi-save text-base"></i>
+                <span>Guardar Cambios de la Compra</span>
+              </button>
+
+              <a href="{% url 'compras' %}" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl border border-slate-300 transition flex items-center justify-center space-x-1">
+                <span>Cancelar</span>
+              </a>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,7 +1,5 @@
 from django.db import models
-from aplicacion.models import *
-
-# Create your models here.
+from aplicacion.models import Articulo, CustomUser
 
 
 class Proveedor(models.Model):
@@ -36,13 +34,13 @@ class MovimientoInventario(models.Model):
         ('AJUSTE', 'Ajuste'),
     )
     
-    articulo = models.ForeignKey("aplicacion.Articulo", on_delete=models.PROTECT, related_name='movimientos')
+    articulo = models.ForeignKey(Articulo, on_delete=models.PROTECT, related_name='movimientos')
     tipo = models.CharField(max_length=10, choices=TIPO_MOVIMIENTO)
     cantidad = models.DecimalField(max_digits=10, decimal_places=3)
     fecha = models.DateTimeField(auto_now_add=True)
-    usuario = models.ForeignKey("aplicacion.CustomUser", on_delete=models.PROTECT)
+    usuario = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
     referencia = models.CharField(max_length=100, blank=True)
-    proveedor = models.ForeignKey("Proveedor", on_delete=models.SET_NULL, null=True, blank=True)
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.SET_NULL, null=True, blank=True)
     observaciones = models.TextField(blank=True)
     costo_unitario = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
@@ -64,32 +62,24 @@ class MovimientoInventario(models.Model):
         articulo = self.articulo
         
         if self.tipo == 'ENTRADA' and self.costo_unitario:
-            # Eliminar primero el registro histórico asociado
             HistorialStock.objects.filter(movimiento=self).delete()
-            
-            # Luego revertir los cambios en el artículo
             articulo.stock_actual -= self.cantidad
             
             if articulo.stock_actual > 0:
                 total_costo_actual = articulo.costo_promedio * (articulo.stock_actual + self.cantidad)
                 total_costo_revertir = self.costo_unitario * self.cantidad
                 nuevo_costo = (total_costo_actual - total_costo_revertir) / articulo.stock_actual
-                articulo.costo_promedio = round(nuevo_costo / 100) * 100
+                articulo.costo_promedio = max(0, nuevo_costo)
             else:
                 articulo.costo_promedio = 0
             
             articulo.save()
         
-        """Eliminación personalizada para revertir efectos"""
         if self.tipo == 'SALIDA':
-            # Revertir stock para movimientos de salida (ventas)
-            self.articulo.stock_actual += self.cantidad
-            self.articulo.save()
-        
-            # Eliminar primero el historial asociado
+            articulo.stock_actual += self.cantidad
+            articulo.save()
             HistorialStock.objects.filter(movimiento=self).delete()
         
-        # Luego eliminar el movimiento
         super().delete(*args, **kwargs)
 
 
@@ -102,12 +92,10 @@ class HistorialStock(models.Model):
     costo_promedio_antes = models.DecimalField(max_digits=12, decimal_places=2)
     costo_promedio_despues = models.DecimalField(max_digits=12, decimal_places=2)
 
-    # Nuevos campos para costos unitarios
-    costo_unitario_compra = models.DecimalField(max_digits=10, decimal_places=2)  # Precio de esta compra
-    costo_unitario_anterior = models.DecimalField(max_digits=10, decimal_places=2, null=True)  # Precio compra anterior
+    costo_unitario_compra = models.DecimalField(max_digits=10, decimal_places=2)
+    costo_unitario_anterior = models.DecimalField(max_digits=10, decimal_places=2, null=True)
 
-    usuario = models.ForeignKey("aplicacion.CustomUser", on_delete=models.PROTECT)
+    usuario = models.ForeignKey(CustomUser, on_delete=models.PROTECT)
 
     class Meta:
         ordering = ['-fecha']
-

@@ -60,6 +60,8 @@ urlpatterns = [
     # APIs
     path('api/productos/<int:pk>/', producto_detalle_api, name='producto-detalle-api'),
     path('api/articulos/', api_articulos, name='api_articulos'),
+    path('api/crear_categoria/', crear_categoria_ajax, name='crear_categoria_ajax'),
+    path('api/notificaciones/', api_notificaciones_pendientes, name='api_notificaciones_pendientes'),
 
     path('articulos/editar/<int:producto_id>/', editar_producto, name='editar_articulo'),
     path('articulos/<int:producto_id>/eliminar/', eliminar_producto, name='eliminar_producto'),

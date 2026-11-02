@@ -7,7 +7,6 @@ from ProductosCompras.models import HistorialStock, MovimientoInventario
 from decimal import Decimal
 from django.core.exceptions import ValidationError
 
-# Create your models here.
 
 class Venta(models.Model):
     ESTADO_CHOICES = (
@@ -25,7 +24,7 @@ class Venta(models.Model):
     )
     
     codigo = models.CharField(max_length=20, unique=True, verbose_name="Código de venta")
-    cliente = models.ForeignKey("aplicacion.Cliente", on_delete=models.SET_NULL, null=True, blank=True, default="0")
+    cliente = models.ForeignKey("aplicacion.Cliente", on_delete=models.SET_NULL, null=True, blank=True, default=None)
     fecha = models.DateTimeField(default=timezone.now)
     subtotal = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     impuesto = models.DecimalField(max_digits=12, decimal_places=2, default=0)
@@ -43,13 +42,18 @@ class Venta(models.Model):
         verbose_name_plural = "Ventas"
 
     def __str__(self):
-        return f"Venta #{self.codigo} - {self.estado} - {self.total}"
+        return f"Venta #{self.codigo} - {self.get_estado_display()} - COP {self.total}"
 
     def save(self, *args, **kwargs):
         if not self.codigo:
-            # Generar código de venta automático (ej: VENT-0001)
             ultima_venta = Venta.objects.order_by('-id').first()
-            ultimo_numero = int(ultima_venta.codigo.split('-')[1]) if ultima_venta else 0
+            if ultima_venta and '-' in ultima_venta.codigo:
+                try:
+                    ultimo_numero = int(ultima_venta.codigo.split('-')[-1])
+                except (ValueError, IndexError):
+                    ultimo_numero = ultima_venta.id
+            else:
+                ultimo_numero = (ultima_venta.id if ultima_venta else 0)
             self.codigo = f"VENT-{ultimo_numero + 1:04d}"
         super().save(*args, **kwargs)
 
@@ -58,7 +62,7 @@ class Venta(models.Model):
         self.subtotal = sum(detalle.subtotal for detalle in detalles)
         self.impuesto = sum(detalle.impuesto for detalle in detalles)
         self.total = self.subtotal + self.impuesto
-        self.save()
+        super().save(update_fields=['subtotal', 'impuesto', 'total'])
 
     def registrar_movimientos_inventario(self):
         """Registra los movimientos de inventario al completar una venta"""
@@ -70,35 +74,28 @@ class Venta(models.Model):
                 usuario=self.creado_por,
                 referencia=f"Venta {self.codigo}",
                 observaciones=f"Venta a {self.cliente.nombre if self.cliente else 'Cliente ocasional'}",
-                costo_unitario=detalle.precio_unitario,  # Precio de venta
+                costo_unitario=detalle.precio_unitario,
             )
             
-            # Registrar en el historial de stock
             HistorialStock.objects.create(
                 movimiento=movimiento,
                 stock_antes=detalle.articulo.stock_actual,
                 stock_despues=detalle.articulo.stock_actual - detalle.cantidad,
                 costo_promedio_antes=detalle.articulo.costo_promedio,
                 costo_promedio_despues=detalle.articulo.costo_promedio,
-                costo_unitario_compra=detalle.precio_unitario,  # No aplica para ventas
-                costo_unitario_anterior=detalle.articulo.precio_venta,  # No aplica para ventas
+                costo_unitario_compra=detalle.precio_unitario,
+                costo_unitario_anterior=detalle.articulo.precio_venta,
                 usuario=self.creado_por
             )
             
-            # Actualizar stock del artículo
             detalle.articulo.stock_actual -= detalle.cantidad
             detalle.articulo.save()
 
     def finalizar_venta(self):
-        self.estado = 'COMPLETADO'
-        self.fecha_finalizacion = timezone.now()
+        self.estado = 'COMPLETADA'
         self.save()
-        
-        # Actualizar stock para cada artículo
-        for detalle in self.detalles.all():
-            detalle.articulo.save()
-            detalle.self.registrar_movimientos_inventario()
-    
+        self.registrar_movimientos_inventario()
+
     def verificar_stock(self):
         """Verifica que haya suficiente stock para todos los artículos"""
         for detalle in self.detalles.all():
@@ -111,30 +108,25 @@ class Venta(models.Model):
         return True
 
     def revertir_movimientos_inventario(self):
-            """Revierte los movimientos de inventario al eliminar una venta completada"""
-            for detalle in self.detalles.all():
-                try:
-                    movimiento = MovimientoInventario.objects.get(
-                        referencia=f"Venta {self.codigo}",
-                        articulo=detalle.articulo
-                    )
-                    
-                    # Revertir el stock
-                    detalle.articulo.stock_actual += detalle.cantidad
-                    detalle.articulo.save()
-                    
-                    # Eliminar el historial asociado
-                    HistorialStock.objects.filter(movimiento=movimiento).delete()
-                    
-                    # Eliminar el movimiento
-                    movimiento.delete()
-                    
-                except MovimientoInventario.DoesNotExist:
-                    continue
+        """Revierte los movimientos de inventario al cancelar/eliminar una venta"""
+        for detalle in self.detalles.all():
+            try:
+                movimiento = MovimientoInventario.objects.get(
+                    referencia=f"Venta {self.codigo}",
+                    articulo=detalle.articulo
+                )
+                
+                detalle.articulo.stock_actual += detalle.cantidad
+                detalle.articulo.save()
+                
+                HistorialStock.objects.filter(movimiento=movimiento).delete()
+                movimiento.delete()
+            except MovimientoInventario.DoesNotExist:
+                continue
 
     @property
     def articulos_vendidos(self):
-        return self.detalleventa_set.aggregate(total=Sum('cantidad'))['total'] or 0
+        return self.detalles.aggregate(total=Sum('cantidad'))['total'] or 0
 
 
 class DetalleVenta(models.Model):
@@ -152,7 +144,7 @@ class DetalleVenta(models.Model):
 
     def save(self, *args, **kwargs):
         self.subtotal = (self.precio_unitario * self.cantidad) - self.descuento
-        self.impuesto = self.subtotal * (self.articulo.tasa_impuesto / 100)
+        # Se elimina el cobro de impuesto adicional por solicitud
+        self.impuesto = Decimal('0.00')
         super().save(*args, **kwargs)
         self.venta.calcular_totales()
-

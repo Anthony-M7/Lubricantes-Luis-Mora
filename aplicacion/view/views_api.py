@@ -119,51 +119,35 @@ def producto_detalle_api(request, pk):
 
 def api_articulos(request):
     if request.method == 'GET':
-        # Obtiene el término de búsqueda de los parámetros de la URL
         search_query = request.GET.get('search', '')
         codigo_barras = request.GET.get('codigo_barras', '')
 
-        # Define el queryset base, seleccionando solo los campos necesarios
-        articulos_queryset = Articulo.objects.all().values(
-            'id', 'nombre', 'precio_venta', 'marca', 'stock_actual', 'imagen', 'unidad_medida', 'codigo_barras'
+        articulos_queryset = Articulo.objects.filter(activo=True).values(
+            'id', 'nombre', 'codigo', 'precio_venta', 'costo_promedio', 'marca', 'modelo', 'stock_actual', 'imagen', 'unidad_medida', 'codigo_barras', 'categoria__nombre'
         ).order_by('nombre')
-        
-        print(articulos_queryset)
 
-        # Si hay un término de búsqueda, filtramos el queryset
         if search_query:
             articulos_queryset = articulos_queryset.filter(
-                Q(nombre__icontains=search_query) | Q(marca__icontains=search_query) | Q(palabras_clave__icontains=search_query)
+                Q(nombre__icontains=search_query) | Q(marca__icontains=search_query) | Q(codigo__icontains=search_query) | Q(codigo_barras__icontains=search_query)
             )
 
         if codigo_barras:
             articulos_queryset = articulos_queryset.filter(codigo_barras=codigo_barras)
+            return JsonResponse(list(articulos_queryset), safe=False)
 
-        # Paginación
-        paginator = Paginator(articulos_queryset, 5) # 5 artículos por página
         page_number = request.GET.get('page')
-        page_obj = paginator.get_page(page_number)
+        if page_number:
+            paginator = Paginator(articulos_queryset, 20)
+            page_obj = paginator.get_page(page_number)
+            response_data = {
+                'total_items': paginator.count,
+                'num_pages': paginator.num_pages,
+                'current_page': page_obj.number,
+                'results': list(page_obj)
+            }
+            return JsonResponse(response_data, safe=False)
 
-        # Prepara la respuesta con los datos de paginación
-        response_data = {
-            'total_items': paginator.count,
-            'num_pages': paginator.num_pages,
-            'current_page': page_obj.number,
-            'next_page_url': None,
-            'previous_page_url': None,
-            'results': list(page_obj)
-        }
-        
-        # Creamos las URL de paginación con el término de búsqueda si existe
-        base_url = f"/api/articulos/?search={search_query}&" if search_query else f"/api/articulos/?"
-
-        if page_obj.has_next():
-            response_data['next_page_url'] = f"{base_url}page={page_obj.next_page_number()}"
-        
-        if page_obj.has_previous():
-            response_data['previous_page_url'] = f"{base_url}page={page_obj.previous_page_number()}"
-
-        return JsonResponse(response_data, safe=False)
+        return JsonResponse(list(articulos_queryset), safe=False)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
 
@@ -202,7 +186,7 @@ def editar_producto(request, producto_id):
         'categorias': categorias,
         'movimientos': movimientos,
     }
-    return render(request, 'Forms/editar_articulos.html', context)
+    return render(request, 'Forms/form_articulo.html', context)
 
 
 def eliminar_producto(request, producto_id):
@@ -290,25 +274,26 @@ class GenerarTalonarioPagoExcel(View):
 
         # Estilos
         header_font = Font(bold=True, color="FFFFFF")
-        header_fill = PatternFill(start_color="3498db", end_color="3498db", fill_type="solid")
-        categoria_font = Font(bold=True, color="FFFFFF")
-        categoria_fill = PatternFill(start_color="2c3e50", end_color="2c3e50", fill_type="solid")
-        thin_border = Border(left=Side(style='thin'),
-                            right=Side(style='thin'),
-                            top=Side(style='thin'),
-                            bottom=Side(style='thin'))
+        header_fill = PatternFill(start_color="0EA5E9", end_color="0EA5E9", fill_type="solid") # Brand primary
+        categoria_font = Font(bold=True, color="FFFFFF", size=12)
+        categoria_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid") # slate-800
+        thin_border = Border(left=Side(style='thin', color="E2E8F0"),
+                            right=Side(style='thin', color="E2E8F0"),
+                            top=Side(style='thin', color="E2E8F0"),
+                            bottom=Side(style='thin', color="E2E8F0"))
         center_alignment = Alignment(horizontal='center', vertical='center')
         right_alignment = Alignment(horizontal='right', vertical='center')
+        row_even_fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
 
         # Encabezado
         ws.merge_cells('A1:H1')
         ws['A1'] = "TALONARIO DE PAGOS - LUBRICANTES LUIS MORA"
-        ws['A1'].font = Font(bold=True, size=14)
+        ws['A1'].font = Font(bold=True, size=16, color="0EA5E9")
         ws['A1'].alignment = center_alignment
 
         ws.merge_cells('A2:H2')
         ws['A2'] = f"Generado el {datetime.now().strftime('%d/%m/%Y %H:%M')}"
-        ws['A2'].font = Font(size=10, italic=True)
+        ws['A2'].font = Font(size=10, italic=True, color="64748B")
         ws['A2'].alignment = center_alignment
 
         # Encabezados de columnas
@@ -349,21 +334,25 @@ class GenerarTalonarioPagoExcel(View):
             row_num += 1
 
             # Artículos de la categoría
-            for articulo in categoria.articulos:
+            for idx, articulo in enumerate(categoria.articulos):
                 precio_con_iva = articulo.precio_venta * (1 + (articulo.tasa_impuesto or 16) / 100)
-
-                ws.cell(row=row_num, column=1, value=articulo.codigo or "SIN-COD").border = thin_border
-                ws.cell(row=row_num, column=2, value=articulo.nombre).border = thin_border
-                ws.cell(row=row_num, column=3, value=articulo.proveedor_principal.nombre if articulo.proveedor_principal else "N/A").border = thin_border
-                ws.cell(row=row_num, column=4, value=articulo.marca or "").border = thin_border
-                ws.cell(row=row_num, column=5, value=articulo.precio_venta).border = thin_border
-                ws.cell(row=row_num, column=5).number_format = '"COP "#,##0.00'
-                ws.cell(row=row_num, column=6, value=articulo.tasa_impuesto*100 or 16).border = thin_border
-                ws.cell(row=row_num, column=6).alignment = center_alignment
-                ws.cell(row=row_num, column=7, value=precio_con_iva).border = thin_border
-                ws.cell(row=row_num, column=7).number_format = '"COP "#,##0.00'
-                ws.cell(row=row_num, column=8).border = thin_border
+                
+                # Apply data
+                ws.cell(row=row_num, column=1, value=articulo.codigo or "SIN-COD")
+                ws.cell(row=row_num, column=2, value=articulo.nombre)
+                ws.cell(row=row_num, column=3, value=articulo.proveedor_principal.nombre if articulo.proveedor_principal else "N/A")
+                ws.cell(row=row_num, column=4, value=articulo.marca or "")
+                ws.cell(row=row_num, column=5, value=articulo.precio_venta).number_format = '"$"#,##0.00'
+                ws.cell(row=row_num, column=6, value=articulo.tasa_impuesto*100 or 16).alignment = center_alignment
+                ws.cell(row=row_num, column=7, value=precio_con_iva).number_format = '"$"#,##0.00'
                 ws.cell(row=row_num, column=8).alignment = center_alignment
+                
+                # Apply styles
+                for col in range(1, 9):
+                    cell = ws.cell(row=row_num, column=col)
+                    cell.border = thin_border
+                    if idx % 2 != 0:
+                        cell.fill = row_even_fill
 
                 row_num += 1
 

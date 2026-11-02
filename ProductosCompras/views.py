@@ -117,23 +117,19 @@ def eliminar_compra(request, pk):
 
 
 def detalle_compra(request, pk):
-    # Obtener datos principales
     compra = get_object_or_404(
         MovimientoInventario.objects.select_related('articulo', 'proveedor', 'usuario'),
         pk=pk,
         tipo='ENTRADA'
     )
-    historico = get_object_or_404(HistorialStock, movimiento=compra)
+    historico = HistorialStock.objects.filter(movimiento=compra).first()
     
-    # Calcular valores necesarios
     total = compra.cantidad * compra.costo_unitario
     
-    # Variación de cantidad (% aumento stock)
-    aumento_stock_pct = (compra.cantidad / historico.stock_antes * 100) if historico.stock_antes > 0 else 0
-    aumento_stock_text = f"+{compra.cantidad:.0f} ({aumento_stock_pct:.1f}%)"
+    aumento_stock_pct = (compra.cantidad / historico.stock_antes * 100) if (historico and historico.stock_antes > 0) else 0
+    aumento_stock_text = f"+{compra.cantidad:.0f} ({aumento_stock_pct:.1f}%)" if historico else f"+{compra.cantidad:.0f}"
     
-    # Variación de precio (vs compra anterior)
-    if historico.costo_unitario_anterior:
+    if historico and historico.costo_unitario_anterior:
         variacion_precio = (
             (compra.costo_unitario - historico.costo_unitario_anterior) / 
             historico.costo_unitario_anterior * 100
@@ -141,8 +137,7 @@ def detalle_compra(request, pk):
     else:
         variacion_precio = 0
     
-    # Variación de costo promedio
-    if historico.costo_promedio_antes > 0:
+    if historico and historico.costo_promedio_antes > 0:
         variacion_promedio = (
             (historico.costo_promedio_despues - historico.costo_promedio_antes) / 
             historico.costo_promedio_antes * 100

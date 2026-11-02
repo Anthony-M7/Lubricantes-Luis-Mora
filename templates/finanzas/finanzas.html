@@ -1,0 +1,781 @@
+{% extends 'paneles/admin.html' %}
+{% load static humanize %}
+{% load mathfilters %}
+
+{% block dashboard %}
+<style>
+    /* Modern Dashboard Styling */
+    :root {
+        --primary-color: #4361ee;
+        --secondary-color: #3f37c9;
+        --success-color: #4cc9f0;
+        --profit-color: #2b9348;
+        --bg-color: #f8f9fa;
+        --card-bg: #ffffff;
+        --text-main: #2b2d42;
+        --text-muted: #6c757d;
+        --border-radius: 16px;
+        --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        --transition: all 0.3s ease;
+    }
+
+    .finance-dashboard {
+        padding: 2rem;
+        background-color: var(--bg-color);
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2rem;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .dashboard-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .dashboard-title i {
+        color: var(--primary-color);
+    }
+
+    /* Export Actions */
+    .export-actions {
+        display: flex;
+        gap: 10px;
+    }
+
+    .export-actions .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: var(--transition);
+        border: 1px solid transparent;
+    }
+
+    .btn-export-pdf { background-color: rgba(239, 35, 60, 0.1); color: #ef233c; border-color: rgba(239, 35, 60, 0.2); }
+    .btn-export-pdf:hover { background-color: #ef233c; transform: translateY(-2px); color: white;}
+    
+    .btn-export-excel { background-color: rgba(43, 147, 72, 0.1); color: #2b9348; border-color: rgba(43, 147, 72, 0.2); }
+    .btn-export-excel:hover { background-color: #2b9348; transform: translateY(-2px); color: white;}
+
+    .btn-print { background-color: rgba(67, 97, 238, 0.1); color: var(--primary-color); border-color: rgba(67, 97, 238, 0.2); }
+    .btn-print:hover { background-color: var(--primary-color); transform: translateY(-2px); color: white;}
+
+    /* Filter Card */
+    .filter-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        margin-bottom: 2rem;
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .filter-card .filter-header {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-muted);
+        margin-bottom: 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .filter-form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 1.5rem;
+        align-items: end;
+    }
+
+    .form-group label {
+        font-weight: 600;
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+        font-size: 0.85rem;
+        display: block;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control, .form-select {
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
+        padding: 0.55rem 0.8rem;
+        font-size: 0.9rem;
+        transition: var(--transition);
+        background-color: #f8f9fa;
+        width: 100%;
+        color: var(--text-main);
+    }
+
+    .form-control:focus, .form-select:focus {
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.15);
+        background-color: #fff;
+        outline: none;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 10px;
+        height: 40px;
+    }
+    
+    .filter-buttons .btn {
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        flex: 1;
+        transition: var(--transition);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        border: none;
+    }
+
+    .btn-filter-primary {
+        background-color: var(--primary-color);
+        color: white;
+    }
+    .btn-filter-primary:hover {
+        background-color: var(--secondary-color);
+        color: white;
+    }
+
+    .btn-filter-light {
+        background-color: #f8f9fa;
+        color: var(--text-main);
+        border: 1px solid #dee2e6 !important;
+    }
+    .btn-filter-light:hover {
+        background-color: #e9ecef;
+    }
+
+    /* Summary Cards */
+    .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .summary-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        display: flex;
+        align-items: center;
+        gap: 1.2rem;
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0,0,0,0.02);
+    }
+
+    .summary-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    }
+
+    .summary-card::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 4px; height: 100%;
+        background: var(--primary-color);
+        border-radius: 4px 0 0 4px;
+    }
+
+    .summary-card.profit::before { background: var(--profit-color); }
+    .summary-card.sales::before { background: var(--success-color); }
+
+    .summary-icon {
+        width: 54px;
+        height: 54px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        flex-shrink: 0;
+    }
+
+    .icon-primary { background: rgba(67, 97, 238, 0.1); color: var(--primary-color); }
+    .icon-success { background: rgba(76, 201, 240, 0.1); color: var(--success-color); }
+    .icon-profit { background: rgba(43, 147, 72, 0.1); color: var(--profit-color); }
+
+    .summary-info {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .summary-info h3 {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        margin: 0 0 0.4rem 0;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .summary-info .amount {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin: 0;
+        line-height: 1;
+    }
+
+    /* Charts and Tables Content */
+    .content-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    @media (min-width: 1200px) {
+        .content-grid.has-chart {
+            grid-template-columns: 3fr 2fr;
+        }
+    }
+
+    .report-card {
+        background: var(--card-bg);
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--card-shadow);
+        border: 1px solid rgba(0,0,0,0.02);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .report-card-title {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--text-main);
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    /* Table Styling */
+    .modern-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .modern-table thead th {
+        background-color: #f1f3f5;
+        color: var(--text-muted);
+        font-weight: 700;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 1rem;
+        border-bottom: 2px solid #e9ecef;
+        text-align: left;
+    }
+    
+    .modern-table thead th.text-center {
+        text-align: center;
+    }
+
+    .modern-table tbody td {
+        padding: 1rem;
+        vertical-align: middle;
+        border-bottom: 1px solid #f8f9fa;
+        color: var(--text-main);
+        font-size: 0.95rem;
+    }
+
+    .modern-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .modern-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .badge-profit {
+        background: rgba(43, 147, 72, 0.1);
+        color: var(--profit-color);
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        display: inline-block;
+    }
+    
+    .article-info-banner {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        margin-bottom: 2rem;
+        display: flex;
+        justify-content: space-around;
+        flex-wrap: wrap;
+        box-shadow: 0 10px 20px rgba(67, 97, 238, 0.2);
+        gap: 1rem;
+    }
+
+    .info-stat {
+        text-align: center;
+        padding: 1rem;
+    }
+
+    .info-stat .label {
+        display: block;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        opacity: 0.8;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-stat .value {
+        font-size: 1.5rem;
+        font-weight: 700;
+    }
+
+    .chart-container {
+        position: relative;
+        flex-grow: 1;
+        min-height: 350px;
+        width: 100%;
+    }
+    
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .finance-dashboard {
+            padding: 1rem;
+        }
+        .dashboard-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .filter-buttons {
+            grid-column: 1 / -1;
+        }
+    }
+</style>
+
+<div class="finance-dashboard">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <h1 class="dashboard-title"><i class="bi bi-wallet2"></i> Dashboard Financiero</h1>
+        
+        {% if ventas_report or articulos_report or articulo_detalle %}
+        <div class="export-actions">
+            <a href="?{{ request.GET.urlencode }}&export=pdf" class="btn btn-export-pdf">
+                <i class="bi bi-file-pdf"></i> PDF
+            </a>
+            <a href="?{{ request.GET.urlencode }}&export=excel" class="btn btn-export-excel">
+                <i class="bi bi-file-earmark-excel"></i> Excel
+            </a>
+            <button class="btn btn-print" onclick="window.print()">
+                <i class="bi bi-printer"></i> Imprimir
+            </button>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Filtros -->
+    <div class="filter-card">
+        <div class="filter-header">
+            <i class="bi bi-funnel"></i> Filtros de Búsqueda 
+            <span class="badge bg-light text-dark ms-2 border">{{ fecha_inicio|default:'-' }} - {{ fecha_fin|default:'-' }}</span>
+        </div>
+        <form method="get">
+            <div class="filter-form-grid">
+                <div class="form-group">
+                    <label for="fecha_inicio">Fecha Inicio</label>
+                    <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-control" value="{{ fecha_inicio|date:'Y-m-d'|default:fecha_inicio }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="fecha_fin">Fecha Fin</label>
+                    <input type="date" name="fecha_fin" id="fecha_fin" class="form-control" value="{{ fecha_fin|date:'Y-m-d'|default:fecha_fin }}">
+                </div>
+                
+                <div class="form-group">
+                    <label for="tipo_reporte">Tipo de Reporte</label>
+                    <select name="tipo_reporte" id="tipo_reporte" class="form-select" onchange="this.form.submit()">
+                        <option value="ventas" {% if tipo_reporte == 'ventas' %}selected{% endif %}>Resumen de Ventas</option>
+                        <option value="articulos" {% if tipo_reporte == 'articulos' %}selected{% endif %}>Top Artículos Vendidos</option>
+                        <option value="articulo_detalle" {% if tipo_reporte == 'articulo_detalle' %}selected{% endif %}>Detalle por Artículo</option>
+                    </select>
+                </div>
+                
+                {% if tipo_reporte == 'articulo_detalle' %}
+                <div class="form-group">
+                    <label for="articulo">Seleccionar Artículo</label>
+                    <select name="articulo" id="articulo" class="form-select">
+                        {% for art in articulos %}
+                        <option value="{{ art.id }}" {% if art.id|stringformat:"s" == articulo_id %}selected{% endif %}>{{ art.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endif %}
+                
+                {% if tipo_reporte == 'ventas' %}
+                <div class="form-group">
+                    <label for="agrupacion">Agrupación</label>
+                    <select name="agrupacion" id="agrupacion" class="form-select">
+                        <option value="mes" {% if request.GET.agrupacion == 'mes' %}selected{% endif %}>Por Mes</option>
+                        <option value="dia" {% if request.GET.agrupacion == 'dia' %}selected{% endif %}>Por Día</option>
+                    </select>
+                </div>
+                {% endif %}
+                
+                <div class="filter-buttons">
+                    <button type="submit" class="btn btn-filter-primary">
+                        <i class="bi bi-search"></i> Filtrar
+                    </button>
+                    <a href="?tipo_reporte=ventas" class="btn btn-filter-light">
+                        Limpiar
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Reporte de Ventas -->
+    {% if tipo_reporte == 'ventas' and ventas_report %}
+    
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-icon icon-primary">
+                <i class="bi bi-receipt"></i>
+            </div>
+            <div class="summary-info">
+                <h3>Total Transacciones</h3>
+                <p class="amount">{{ total_ventas|default:0 }}</p>
+            </div>
+        </div>
+        <div class="summary-card sales">
+            <div class="summary-icon icon-success">
+                <i class="bi bi-cash-stack"></i>
+            </div>
+            <div class="summary-info">
+                <h3>Monto Total Ingresos</h3>
+                <p class="amount">COP {{ monto_total|default:0|floatformat:0|intcomma }}</p>
+            </div>
+        </div>
+        <div class="summary-card profit">
+            <div class="summary-icon icon-profit">
+                <i class="bi bi-graph-up-arrow"></i>
+            </div>
+            <div class="summary-info">
+                <h3>Ganancia Neta</h3>
+                <p class="amount">COP {{ ganancia_total|default:0|floatformat:0|intcomma }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="content-grid has-chart">
+        <div class="report-card">
+            <h2 class="report-card-title"><i class="bi bi-table"></i> Desglose de Ventas</h2>
+            <div class="table-responsive">
+                <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Periodo</th>
+                        <th class="text-center">Ventas</th>
+                        <th>Monto Total</th>
+                        <th>Costo Total</th>
+                        <th>Ganancia</th>
+                        <th>Margen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for venta in ventas_report %}
+                    <tr>
+                        <td>
+                            <strong>
+                            {% if request.GET.agrupacion == 'mes' %}
+                                {{ venta.periodo|date:"F Y"|capfirst }}
+                            {% else %}
+                                {{ venta.periodo|date:"d/m/Y" }}
+                            {% endif %}
+                            </strong>
+                        </td>
+                        <td class="text-center fw-bold text-primary fs-5">{{ venta.total_ventas|default:0 }}</td>
+                        <td class="fw-bold">COP {{ venta.monto_total|default:0|floatformat:0|intcomma }}</td>
+                        <td class="text-muted">COP {{ venta.costo_total|default:0|floatformat:0|intcomma }}</td>
+                        <td class="text-success fw-bold">COP {{ venta.ganancia_total|default:0|floatformat:0|intcomma }}</td>
+                        <td>
+                            <span class="badge-profit">
+                            {% if venta.monto_total|default:0 > 0 %}
+                                {{ venta.ganancia_total|default:0|div:venta.monto_total|mul:100|floatformat:1 }}%
+                            {% else %}
+                                0.0%
+                            {% endif %}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No se encontraron ventas en este período.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="report-card">
+            <h2 class="report-card-title"><i class="bi bi-bar-chart-fill"></i> Tendencia de Ventas</h2>
+            <div class="chart-container">
+                <canvas id="ventasChart"></canvas>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Reporte de Artículos más Vendidos -->
+    {% if tipo_reporte == 'articulos' and articulos_report %}
+    <div class="report-card">
+        <h2 class="report-card-title"><i class="bi bi-trophy text-warning"></i> Top 20 Artículos Más Vendidos</h2>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Categoría</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Monto Generado</th>
+                        <th>Ganancia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for art in articulos_report %}
+                    <tr>
+                        <td><code>{{ art.articulo__codigo|default:"N/A" }}</code></td>
+                        <td><strong>{{ art.articulo__nombre|default:"N/A" }}</strong></td>
+                        <td><span class="badge bg-light text-dark border">{{ art.articulo__categoria__nombre|default:"N/A" }}</span></td>
+                        <td class="text-center"><span class="badge bg-primary rounded-pill px-3">{{ art.cantidad_vendida|default:0 }}</span></td>
+                        <td class="fw-bold">COP {{ art.monto_total|default:0|floatformat:0|intcomma }}</td>
+                        <td class="text-success fw-bold">COP {{ art.ganancia_total|default:0|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            No hay datos de artículos para el período seleccionado.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+    
+    <!-- Detalle por Artículo -->
+    {% if tipo_reporte == 'articulo_detalle' and articulo_detalle %}
+    
+    <div class="article-info-banner">
+        <div class="info-stat">
+            <span class="label">Artículo</span>
+            <span class="value">{{ articulo.nombre }}</span>
+        </div>
+        <div class="info-stat">
+            <span class="label">Código</span>
+            <span class="value">{{ articulo.codigo }}</span>
+        </div>
+        <div class="info-stat">
+            <span class="label">Categoría</span>
+            <span class="value">{{ articulo.categoria.nombre }}</span>
+        </div>
+        <div class="info-stat">
+            <span class="label">Precio Unit.</span>
+            <span class="value">COP {{ articulo.precio_venta|intcomma }}</span>
+        </div>
+    </div>
+    
+    <div class="summary-grid">
+        <div class="summary-card">
+            <div class="summary-icon icon-primary"><i class="bi bi-box-seam"></i></div>
+            <div class="summary-info">
+                <h3>Unidades Vendidas</h3>
+                <p class="amount">{{ total_cantidad|default:0 }}</p>
+            </div>
+        </div>
+        <div class="summary-card sales">
+            <div class="summary-icon icon-success"><i class="bi bi-cash-stack"></i></div>
+            <div class="summary-info">
+                <h3>Ingresos Totales</h3>
+                <p class="amount">COP {{ total_monto|default:0|intcomma }}</p>
+            </div>
+        </div>
+        <div class="summary-card profit">
+            <div class="summary-icon icon-profit"><i class="bi bi-graph-up"></i></div>
+            <div class="summary-info">
+                <h3>Ganancia Neta</h3>
+                <p class="amount">COP {{ total_ganancia|default:0|intcomma }}</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="report-card">
+        <h2 class="report-card-title"><i class="bi bi-list-check text-primary"></i> Historial de Ventas del Artículo</h2>
+        <div class="table-responsive">
+            <table class="modern-table">
+                <thead>
+                    <tr>
+                        <th>Fecha</th>
+                        <th>Comprobante</th>
+                        <th class="text-center">Cantidad</th>
+                        <th>Precio Unitario Prom.</th>
+                        <th>Monto Total</th>
+                        <th>Ganancia</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for detalle in articulo_detalle %}
+                    <tr>
+                        <td><strong>{{ detalle.dia|date:"d/m/Y" }}</strong></td>
+                        <td><span class="text-primary">{{ detalle.venta__codigo|default:"N/A" }}</span></td>
+                        <td class="text-center"><span class="badge bg-light text-dark border rounded-pill px-3">{{ detalle.cantidad|default:0 }}</span></td>
+                        <td class="text-muted">COP {{ detalle.monto|default:0|div:detalle.cantidad|default:1|floatformat:0|intcomma }}</td>
+                        <td class="fw-bold">COP {{ detalle.monto|default:0|floatformat:0|intcomma }}</td>
+                        <td class="text-success fw-bold">COP {{ detalle.ganancia|default:0|floatformat:0|intcomma }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                            Sin registro de ventas en las fechas indicadas.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+{% if tipo_reporte == 'ventas' %}
+<script src="{% static 'js/chart.min.js' %}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('ventasChart');
+        if(!canvas) return;
+        const ctx = canvas.getContext('2d');
+        
+        const meses = {{ grafica_meses|safe|default:"[]" }};
+        const ventas = {{ grafica_ventas|safe|default:"[]" }};
+        
+        // Gradient fill for the chart
+        let gradient = ctx.createLinearGradient(0, 0, 0, 400);
+        gradient.addColorStop(0, 'rgba(67, 97, 238, 0.4)');
+        gradient.addColorStop(1, 'rgba(67, 97, 238, 0.0)');
+
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: meses.length ? meses : ['Sin datos'],
+                datasets: [{
+                    label: 'Transacciones',
+                    data: ventas.length ? ventas : [0],
+                    backgroundColor: gradient,
+                    borderColor: '#4361ee',
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: '#4361ee',
+                    pointBorderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: true,
+                    tension: 0.4 // Smooth curves
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                        titleColor: '#2b2d42',
+                        bodyColor: '#6c757d',
+                        borderColor: '#e9ecef',
+                        borderWidth: 1,
+                        padding: 12,
+                        boxPadding: 6,
+                        usePointStyle: true,
+                        callbacks: {
+                            label: function(context) {
+                                return ` Ventas: ${context.raw}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f1f3f5',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#adb5bd',
+                            font: {
+                                size: 11
+                            },
+                            stepSize: 1
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false,
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: '#adb5bd',
+                            font: {
+                                size: 11
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index',
+                },
+            }
+        });
+    });
+</script>
+{% endif %}
+
+{% endblock %}

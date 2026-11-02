@@ -1,0 +1,187 @@
+{% extends 'base_ventas.html' %}
+{% load static custom_tags %}
+
+{% block venta_title %}Detalle de Venta #{{ venta.codigo }}{% endblock %}
+
+{% block venta_buttons %}
+<div class="flex items-center space-x-3">
+  <a href="{% url 'lista_ventas' %}" class="inline-flex items-center px-4 py-2.5 bg-white border border-slate-300 text-slate-700 font-semibold text-sm rounded-xl shadow-sm hover:bg-slate-50 transition">
+    <i class="bi bi-arrow-left me-2 text-lg"></i> Volver
+  </a>
+  {% if venta.estado == 'BORRADOR' %}
+  <a href="{% url 'editar_venta' venta.id %}" class="inline-flex items-center px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm rounded-xl shadow-sm transition">
+    <i class="bi bi-pencil me-2 text-lg"></i> Continuar Edición
+  </a>
+  {% endif %}
+  <a href="{% url 'descargar_recibo' venta.id %}" target="_blank" class="inline-flex items-center px-4 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-semibold text-sm rounded-xl shadow-md transition transform active:scale-95">
+    <i class="bi bi-file-earmark-pdf me-2 text-lg"></i> Ver Recibo
+  </a>
+</div>
+{% endblock %}
+
+{% block venta_content %}
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  
+  <!-- Columna Principal -->
+  <div class="lg:col-span-2 space-y-6">
+    
+    <!-- Tarjeta de Información -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center">
+          <i class="bi bi-info-circle text-brand-primary me-2"></i> Información General
+        </h2>
+        
+        <span class="px-3 py-1 text-xs font-bold rounded-full shadow-sm 
+          {% if venta.estado == 'COMPLETADA' %}bg-emerald-100 text-emerald-800
+          {% elif venta.estado == 'CANCELADA' %}bg-rose-100 text-rose-800
+          {% elif venta.estado == 'PENDIENTE' %}bg-amber-100 text-amber-800
+          {% else %}bg-slate-100 text-slate-800{% endif %}">
+          {{ venta.get_estado_display }}
+        </span>
+      </div>
+      
+      <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Cliente</p>
+            <p class="text-base font-bold text-slate-900">{{ venta.cliente.nombre|default:"Cliente Ocasional" }}</p>
+            {% if venta.cliente %}
+            <p class="text-sm text-slate-500 font-mono mt-1"><i class="bi bi-person-badge me-1"></i> {{ venta.cliente.identificacion }}</p>
+            {% endif %}
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Fecha de Emisión</p>
+            <p class="text-sm font-medium text-slate-700"><i class="bi bi-calendar3 me-2"></i> {{ venta.fecha|date:"d/m/Y H:i" }}</p>
+          </div>
+        </div>
+        
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Método de Pago</p>
+            <p class="text-sm font-medium text-slate-700 flex items-center">
+              {% if venta.metodo_pago == 'EFECTIVO' %}<i class="bi bi-cash-stack text-emerald-500 me-2 text-lg"></i>
+              {% elif venta.metodo_pago == 'TARJETA' %}<i class="bi bi-credit-card-2-front text-sky-500 me-2 text-lg"></i>
+              {% elif venta.metodo_pago == 'TRANSFERENCIA' %}<i class="bi bi-bank text-indigo-500 me-2 text-lg"></i>
+              {% else %}<i class="bi bi-wallet2 text-slate-400 me-2 text-lg"></i>{% endif %}
+              {{ venta.get_metodo_pago_display|default:"No especificado" }}
+            </p>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Vendedor</p>
+            <p class="text-sm font-medium text-slate-700"><i class="bi bi-person-circle me-2"></i> {{ venta.creado_por.get_full_name }}</p>
+          </div>
+        </div>
+      </div>
+      
+      {% if venta.observaciones %}
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-100">
+        <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Observaciones</p>
+        <p class="text-sm text-slate-600 italic">{{ venta.observaciones }}</p>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Tabla de Artículos -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="text-lg font-bold text-slate-800 flex items-center">
+          <i class="bi bi-box-seam text-brand-primary me-2"></i> Artículos Vendidos
+        </h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm text-left text-slate-600">
+          <thead class="text-xs text-slate-500 uppercase bg-slate-50/50 border-b border-slate-200">
+            <tr>
+              <th scope="col" class="px-6 py-3 font-semibold whitespace-nowrap w-24">Código</th>
+              <th scope="col" class="px-6 py-3 font-semibold">Descripción</th>
+              <th scope="col" class="px-6 py-3 font-semibold text-center whitespace-nowrap w-20">Cant.</th>
+              <th scope="col" class="px-6 py-3 font-semibold text-right whitespace-nowrap w-32">Precio Unit.</th>
+              <th scope="col" class="px-6 py-3 font-semibold text-right whitespace-nowrap w-32">Descuento</th>
+              <th scope="col" class="px-6 py-3 font-semibold text-right whitespace-nowrap w-32">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            {% for detalle in detalles %}
+            <tr class="hover:bg-slate-50/50 transition">
+              <td class="px-6 py-4 font-mono font-medium text-slate-500 whitespace-nowrap">{{ detalle.articulo.codigo }}</td>
+              <td class="px-6 py-4 font-bold text-slate-800">{{ detalle.articulo.nombre }}</td>
+              <td class="px-6 py-4 font-semibold text-center whitespace-nowrap">{{ detalle.cantidad|normalize_decimal }}</td>
+              <td class="px-6 py-4 font-medium text-right text-slate-600 whitespace-nowrap">COP {{ detalle.precio_unitario|floatformat:2 }}</td>
+              <td class="px-6 py-4 font-medium text-right text-rose-500 whitespace-nowrap">COP {{ detalle.descuento|floatformat:2 }}</td>
+              <td class="px-6 py-4 font-black text-right text-emerald-600 whitespace-nowrap">COP {{ detalle.subtotal|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna Lateral -->
+  <div class="space-y-6">
+    
+    <!-- Resumen de Totales -->
+    <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-md border border-slate-700 text-white overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-700/50">
+        <h2 class="text-lg font-bold text-white flex items-center">
+          <i class="bi bi-receipt me-2 text-brand-primary"></i> Resumen
+        </h2>
+      </div>
+      <div class="p-6 space-y-4">
+        <div class="flex justify-between items-center text-slate-300 text-sm">
+          <span>Subtotal</span>
+          <span class="font-medium">COP {{ venta.subtotal|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between items-center text-slate-300 text-sm pb-4 border-b border-slate-700/50">
+          <span>Impuestos</span>
+          <span class="font-medium">COP {{ venta.impuesto|floatformat:2 }}</span>
+        </div>
+        <div class="flex justify-between items-center pt-2">
+          <span class="text-lg font-bold text-white">Total</span>
+          <span class="text-2xl font-black text-emerald-400">COP {{ venta.total|floatformat:2 }}</span>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Movimientos de Inventario -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 bg-slate-50">
+        <h2 class="text-sm font-bold text-slate-800 flex items-center">
+          <i class="bi bi-arrow-left-right text-brand-primary me-2"></i> Historial de Inventario
+        </h2>
+      </div>
+      <div class="p-0">
+        {% if movimientos %}
+        <ul class="divide-y divide-slate-100">
+          {% for movimiento in movimientos %}
+          <li class="p-4 hover:bg-slate-50 transition">
+            <div class="flex justify-between items-start mb-1">
+              <h6 class="text-sm font-bold text-slate-800 line-clamp-1 flex-1 me-2">{{ movimiento.articulo.nombre }}</h6>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-rose-100 text-rose-700">
+                -{{ movimiento.cantidad|normalize_decimal }}
+              </span>
+            </div>
+            <div class="flex justify-between items-center mt-2">
+              <span class="text-xs text-slate-400"><i class="bi bi-clock me-1"></i>{{ movimiento.fecha|date:"H:i" }}</span>
+              <span class="text-xs font-medium text-slate-500">
+                Stock: {{ movimiento.historial.first.stock_antes|normalize_decimal }} &rarr; <span class="text-slate-800 font-bold">{{ movimiento.historial.first.stock_despues|normalize_decimal }}</span>
+              </span>
+            </div>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="p-6 text-center text-slate-400">
+          <i class="bi bi-box text-3xl mb-2 block opacity-50"></i>
+          <p class="text-sm font-medium">Sin movimientos registrados</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    
+  </div>
+</div>
+
+<script src="{% static 'js/ventas/detalles_venta.js' %}"></script>
+{% endblock %}

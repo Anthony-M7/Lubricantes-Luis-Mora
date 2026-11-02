@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  web_lubricantes:
+    build: .
+    container_name: lubricantes_luis_mora_app
+    restart: always
+    ports:
+      - "8001:8000"
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=*
+    volumes:
+      # Persistencia de la base de datos SQLite y archivos multimedia cargados
+      - ./db.sqlite3:/app/db.sqlite3
+      - ./media:/app/media
+    networks:
+      - lubricantes_net
+
+networks:
+  lubricantes_net:
+    driver: bridge
+

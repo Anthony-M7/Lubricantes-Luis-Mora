@@ -1,0 +1,117 @@
+{% extends 'paneles/admin.html' %}
+
+{% block dashboard %}
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+        {% if object %}Editar Cliente{% else %}Crear Cliente{% endif %}
+      </h1>
+      <p class="text-sm text-slate-500">
+        {% if object %}Modifica los datos del cliente seleccionado.{% else %}Ingresa la información para registrar un nuevo cliente en el sistema.{% endif %}
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'clientes' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl shadow-sm transition">
+        <i class="bi bi-arrow-left"></i>
+        <span>Volver a Directorio</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center">
+      <i class="bi bi-person-lines-fill text-brand-primary text-xl mr-3"></i>
+      <h4 class="font-bold text-slate-800 m-0">Información del Cliente</h4>
+    </div>
+    
+    <div class="p-6 md:p-8">
+      <form method="post" class="space-y-6">
+        {% csrf_token %}
+        
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+          
+          <div class="md:col-span-3">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Tipo</label>
+            {{ form.tipo }}
+            {% if form.tipo.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.tipo.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-4">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Identificación <span class="text-rose-500">*</span></label>
+            {{ form.identificacion }}
+            {% if form.identificacion.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.identificacion.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-5">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Nombre <span class="text-rose-500">*</span></label>
+            {{ form.nombre }}
+            {% if form.nombre.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.nombre.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-12">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Dirección</label>
+            <!-- Ajuste si es un textarea -->
+            <div class="[&>textarea]:h-20">
+              {{ form.direccion }}
+            </div>
+            {% if form.direccion.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.direccion.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-6">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Teléfono</label>
+            {{ form.telefono }}
+            {% if form.telefono.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.telefono.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-6">
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}
+            <div class="mt-1 text-xs text-rose-500 font-semibold">{{ form.email.errors.0 }}</div>
+            {% endif %}
+          </div>
+          
+          <div class="md:col-span-12">
+            <label class="relative flex items-center cursor-pointer group mt-2 bg-slate-50 p-4 rounded-xl border border-slate-100 hover:border-brand-primary/50 transition">
+              <div class="flex items-center h-5">
+                <div class="[&>input]:w-5 [&>input]:h-5 [&>input]:text-brand-primary [&>input]:bg-white [&>input]:border-slate-300 [&>input]:rounded [&>input]:focus:ring-brand-primary [&>input]:focus:ring-2 [&>input]:cursor-pointer">
+                  {{ form.activo }}
+                </div>
+              </div>
+              <div class="ml-3">
+                <span class="block text-sm font-bold text-slate-700 uppercase tracking-wider group-hover:text-brand-primary transition">Cliente Activo</span>
+                <span class="block text-xs text-slate-500 font-medium mt-0.5">Si está inactivo, no aparecerá en las búsquedas ni podrás asignarle nuevas ventas.</span>
+              </div>
+            </label>
+          </div>
+          
+        </div>
+        
+        <div class="pt-6 border-t border-slate-100 flex flex-col-reverse sm:flex-row justify-end gap-3">
+          <a href="{% url 'clientes' %}" class="inline-flex justify-center items-center px-6 py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition">
+            Cancelar
+          </a>
+          <button type="submit" class="inline-flex justify-center items-center space-x-2 px-6 py-3 bg-brand-primary hover:bg-brand-dark text-white font-bold rounded-xl shadow-md transition transform active:scale-95">
+            <i class="bi bi-floppy-fill text-lg"></i>
+            <span>Guardar Cliente</span>
+          </button>
+        </div>
+        
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

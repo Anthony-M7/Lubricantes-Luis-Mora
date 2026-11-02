@@ -1,15 +1,12 @@
 from django.contrib.auth.models import AbstractUser, Permission
-
 from django.db import models
-from ProductosCompras.models import models
 from django.core.exceptions import ValidationError
 from decimal import Decimal
-
-
-from storages.backends.s3boto3 import S3Boto3Storage
 from django.utils.text import slugify
+from django.db.models.signals import post_delete, pre_save, post_save
+from django.dispatch import receiver
 
-    
+
 class CustomUser(AbstractUser):
     ROLES = (
         ('admin', 'Administrador'),
@@ -18,10 +15,10 @@ class CustomUser(AbstractUser):
     )
 
     # Campos adicionales
-    rol = models.CharField(max_length=20, choices=ROLES, default='cliente')
+    rol = models.CharField(max_length=20, choices=ROLES, default='personal')
     telefono = models.CharField(max_length=20, blank=True, verbose_name="Teléfono")
     direccion = models.TextField(blank=True, verbose_name="Dirección")
-    foto_perfil = models.ImageField(upload_to='perfiles/', blank=True, null=True, verbose_name="Foto de perfil", storage=S3Boto3Storage(location='media/'))
+    foto_perfil = models.ImageField(upload_to='perfiles/', blank=True, null=True, verbose_name="Foto de perfil")
     admin = models.BooleanField(default=False, verbose_name="¿Administrador?")
     
     class Meta:
@@ -40,23 +37,22 @@ class CustomUser(AbstractUser):
             basic_perms = Permission.objects.filter(
                 codename__in=[
                     'view_articulo', 'view_categoria', 'view_cliente',
-                    'view_user', 'change_user',  # Para su perfil
-                    'view_group', 'view_permission'  # Autenticación básica
+                    'view_user', 'change_user',
+                    'view_group', 'view_permission'
                 ]
             )
             self.user_permissions.add(*basic_perms)
             
-            # Opcional: acceso al admin (sin permisos peligrosos)
             self.is_staff = True
             super().save(*args, **kwargs)
- 
+
 
 class Categoria(models.Model):
     """
     Modelo para categorizar los artículos
     """
     nombre = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=100, unique=True, blank=True)  # Nuevo campo
+    slug = models.SlugField(max_length=100, unique=True, blank=True)
     padre = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, 
                             related_name='subcategorias')
     descripcion = models.TextField(blank=True)
@@ -78,28 +74,27 @@ class Categoria(models.Model):
 
     def clean(self):
         if self.padre and self.padre.id == self.id:
-            raise ValidationError(('Una categoría no puede ser padre de sí misma'))
+            raise ValidationError('Una categoría no puede ser padre de sí misma')
         
-        # Validar que el slug sea único considerando también las subcategorías
         if Categoria.objects.filter(slug=self.slug).exclude(id=self.id).exists():
-            raise ValidationError(('Ya existe una categoría con este slug'))
+            raise ValidationError('Ya existe una categoría con este slug')
 
 
 class Articulo(models.Model):
     # 1. Información básica
-    codigo = models.CharField(max_length=50, unique=True, verbose_name="Código")
+    codigo = models.CharField(max_length=50, unique=True, blank=True, verbose_name="Código")
     codigo_barras = models.CharField(max_length=100, blank=True, unique=True, null=True)
     nombre = models.CharField(max_length=200)
     descripcion = models.TextField(blank=True, verbose_name="Descripción")
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True)
     marca = models.CharField(max_length=100, blank=True)
     modelo = models.CharField(max_length=100, blank=True)
-    imagen = models.ImageField(upload_to='articulos/', null=True, blank=True, storage=S3Boto3Storage(location='media/'))
+    imagen = models.ImageField(upload_to='articulos/', null=True, blank=True)
     
     # 2. Gestión de inventario
     stock_actual = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    stock_minimo = models.DecimalField(max_digits=12, decimal_places=2, default=0)
-    stock_maximo = models.DecimalField(max_digits=12, decimal_places=2, null=True, blank=True)
+    stock_minimo = models.DecimalField(max_digits=12, decimal_places=2, default=3)
+    stock_maximo = models.DecimalField(max_digits=12, decimal_places=2, default=12, null=True, blank=True)
     
     UNIDADES_MEDIDA = (
         ('UN', 'Unidad'),
@@ -125,7 +120,6 @@ class Articulo(models.Model):
     tasa_impuesto = models.DecimalField(max_digits=4, decimal_places=2, choices=TIPO_IMPUESTO, default=Decimal('0.16'))
     
     # 4. Ubicación y logística
-    # ubicacion = models.CharField(max_length=100, blank=True, verbose_name="Ubicación en almacén")
     proveedor_principal = models.ForeignKey("ProductosCompras.Proveedor", on_delete=models.SET_NULL, null=True, blank=True)
     lead_time = models.PositiveIntegerField(default=0, help_text="Tiempo de reposición en días")
     
@@ -157,17 +151,24 @@ class Articulo(models.Model):
     def __str__(self):
         return f"{self.codigo} - {self.nombre}"
 
+    def save(self, *args, **kwargs):
+        if not self.codigo:
+            ultimo = Articulo.objects.order_by('-id').first()
+            siguiente_id = (ultimo.id + 1) if ultimo else 1
+            self.codigo = f"ART-{siguiente_id:04d}"
+        super().save(*args, **kwargs)
+
     def clean(self):
         errors = {}
         
         if self.stock_minimo < 0:
-            errors['stock_minimo'] = ('El stock mínimo no puede ser negativo')
+            errors['stock_minimo'] = 'El stock mínimo no puede ser negativo'
         
         if self.stock_maximo and self.stock_minimo > self.stock_maximo:
-            errors['stock_minimo'] = ('No puede ser mayor al stock máximo')
+            errors['stock_minimo'] = 'No puede ser mayor al stock máximo'
         
         if self.precio_venta < self.costo_promedio:
-            errors['precio_venta'] = ('El precio de venta no puede ser menor al costo promedio')
+            errors['precio_venta'] = 'El precio de venta no puede ser menor al costo promedio'
         
         if errors:
             raise ValidationError(errors)
@@ -211,3 +212,51 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f"{self.nombre} ({self.identificacion})"
+
+
+# Señales para limpieza de archivos de imagen obsoletos
+@receiver(post_delete, sender=Articulo)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """Elimina el archivo de imagen del almacenamiento local al borrar el artículo."""
+    if instance.imagen and instance.imagen.storage.exists(instance.imagen.name):
+        instance.imagen.delete(save=False)
+
+
+@receiver(pre_save, sender=Articulo)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """Elimina la imagen antigua del almacenamiento cuando se actualiza la foto del artículo."""
+    if not instance.pk:
+        return False
+    try:
+        old_file = Articulo.objects.get(pk=instance.pk).imagen
+    except Articulo.DoesNotExist:
+        return False
+
+    new_file = instance.imagen
+    if old_file and old_file != new_file:
+        if old_file.storage.exists(old_file.name):
+            old_file.delete(save=False)
+
+
+@receiver(post_save, sender=Articulo)
+def auto_enhance_image_in_background(sender, instance, created, **kwargs):
+    """
+    Tarea en segundo plano: embellece la fotografía del producto 
+    (ajuste de contraste, color, nitidez y fondo) sin ralentizar al usuario.
+    """
+    if instance.imagen:
+        from aplicacion.services.image_processor import procesar_imagen_en_segundo_plano
+        procesar_imagen_en_segundo_plano(instance.id)
+
+class NotificacionAsincrona(models.Model):
+    usuario = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='notificaciones_asincronas')
+    titulo = models.CharField(max_length=200)
+    mensaje = models.TextField()
+    leida = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-fecha_creacion']
+        
+    def __str__(self):
+        return f"Notificación para {self.usuario.username}: {self.titulo}"

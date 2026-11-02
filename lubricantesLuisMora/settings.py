@@ -12,9 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
-from dotenv import load_dotenv  # <-- Nueva importación
-
+from dotenv import load_dotenv
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,25 +21,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv()
 
 # Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-4a%m1#zx1y@d9d7rsj8g2n9w)!iq2$k*_035kvyl3c8#+0e@kl'
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-4a%m1#zx1y@d9d7rsj8g2n9w)!iq2$k*_035kvyl3c8#+0e@kl')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+# Modo desarrollo local
+DEBUG = True
 
-ALLOWED_HOSTS = ["192.168.0.107", "localhost", ".onrender.com", "127.0.0.1"]
-
-# CSRF_USE_SESSIONS = False  # Para usar cookies en lugar de sesiones
-# CSRF_COOKIE_HTTPONLY = True  # Para que JavaScript pueda acceder al token
+ALLOWED_HOSTS = ["*"]
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 SECURE_SSL_REDIRECT = False
-# SESSION_COOKIE_SECURE = True
-# CSRF_COOKIE_SECURE = True
-
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -58,35 +47,14 @@ INSTALLED_APPS = [
     "barcode",
     "mathfilters",
     'sslserver',
-    "storages"
 ]
 
-# --- Configuración AWS S3 (debe ir después de INSTALLED_APPS) ---
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'bucket-lubricantes-luis-mora'
-AWS_S3_REGION_NAME = 'us-east-2'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {
-    'CacheControl': 'max-age=86400',
-    'ACL': 'private'
-}
-AWS_S3_FILE_OVERWRITE = False
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
-
-# --- Almacenamiento ---# Para media
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-AWS_LOCATION = 'media'  # Opcional: organiza en subcarpetas
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'  # Para static files
-
-# Agrega esta línea justo después de INSTALLED_APPS
+# Modelo de Usuario Personalizado
 AUTH_USER_MODEL = 'aplicacion.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware', # Agrega esta línea
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -94,7 +62,6 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
-    # 'aplicacion.middleware.RestrictAdminMiddleware',
 ]
 
 ROOT_URLCONF = 'lubricantesLuisMora.urls'
@@ -103,7 +70,6 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [
-            # Aquí agregas la ruta a la carpeta templates
             os.path.join(BASE_DIR, 'templates'),
         ],
         'APP_DIRS': True,
@@ -120,39 +86,17 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'lubricantesLuisMora.wsgi.application'
 
-# settings.py de Django
-# CORS_ALLOWED_ORIGINS = [
-#     "https://lubricantes-luis-mora.onrender.com",  # si tu backend se hace requests a sí mismo
-#     "capacitor://localhost",                        # necesario para apps móviles con WebView
-# ]
-
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Database
-# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
+# Base de Datos Local (SQLite3)
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DB_NAME'),
-        'USER': os.getenv('DB_USER'),
-        'PASSWORD': os.getenv('DB_PASSWORD'),
-        'HOST': os.getenv('DB_HOST'),
-        'PORT': os.getenv('DB_PORT'),
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
-
-# Password validation
-# https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
-
+# Validadores de contraseñas
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -168,45 +112,33 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# Internationalization
-# https://docs.djangoproject.com/en/5.1/topics/i18n/
+# Internacionalización
+LANGUAGE_CODE = 'es-es'
 
-LANGUAGE_CODE = 'en-us'
-
-TIME_ZONE = 'America/Caracas'  # o la zona que se aplique a ti
+TIME_ZONE = 'America/Caracas'
 
 USE_I18N = True
 
 USE_TZ = False
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.1/howto/static-files/
-
+# Archivos estáticos (CSS, JavaScript, imágenes del tema)
 STATIC_URL = '/static/'
-
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'aplicacion/static'),
+    os.path.join(BASE_DIR, 'static'),
 ]
 
+# Almacenamiento Local para Archivos Media (Imágenes subidas de productos/perfiles)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-WATERMARK_IMAGE_PATH = os.path.join(BASE_DIR, "aplicacion", 'static', 'img', 'Logo sin Fondo.png')
+WATERMARK_IMAGE_PATH = os.path.join(BASE_DIR, 'static', 'img', 'Logo sin Fondo.png')
 
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
-
+# Tipo de campo clave primaria por defecto
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'inicio'
 LOGOUT_REDIRECT_URL = 'inicio'
-
-# # Para manejo de archivos media
-# settings.py
-
-# MEDIA_URL = '/media/'
-
-

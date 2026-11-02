@@ -1,0 +1,268 @@
+{% extends 'paneles/admin.html' %} 
+{% load static %} 
+{% block title %}Gestión de Personal{% endblock %} 
+
+{% block dashboard %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Gestión de Personal</h1>
+    <p class="text-sm text-slate-500">Administra los roles, permisos y accesos de tu equipo de trabajo.</p>
+  </div>
+  <div>
+    <button onclick="openPersonalModal('add')" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-brand-primary hover:bg-brand-dark text-white font-semibold text-sm rounded-xl shadow-md transition transform active:scale-95">
+      <i class="bi bi-person-plus-fill text-lg"></i>
+      <span>Agregar Personal</span>
+    </button>
+  </div>
+</div>
+
+<!-- Filtros y Buscador -->
+<div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 mb-6">
+  <form method="get" class="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+    <div class="md:col-span-3">
+      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Rol del Empleado</label>
+      <select name="rol" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5">
+        <option value="">Todos los roles</option>
+        {% for value, label in roles.items %}
+            <option value="{{ value }}" {% if value == selected_rol %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    
+    <div class="md:col-span-7">
+      <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Buscar</label>
+      <div class="relative">
+        <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+          <i class="bi bi-search text-slate-400"></i>
+        </div>
+        <input type="text" name="search" value="{{ search_query }}" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block pl-10 p-2.5" placeholder="Buscar por nombre, usuario o email...">
+      </div>
+    </div>
+    
+    <div class="md:col-span-2">
+      <button type="submit" class="w-full inline-flex justify-center items-center space-x-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-xl shadow-sm transition">
+        <i class="bi bi-funnel"></i>
+        <span>Filtrar</span>
+      </button>
+    </div>
+  </form>
+</div>
+
+<!-- Tabla de Personal -->
+<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left text-slate-600" id="personalTable">
+      <thead class="text-xs text-slate-500 uppercase bg-slate-50/80 border-b border-slate-200">
+        <tr>
+          <th scope="col" class="px-6 py-4 font-bold tracking-wider">#</th>
+          <th scope="col" class="px-6 py-4 font-bold tracking-wider">Usuario</th>
+          <th scope="col" class="px-6 py-4 font-bold tracking-wider">Rol</th>
+          <th scope="col" class="px-6 py-4 font-bold tracking-wider">Contacto</th>
+          <th scope="col" class="px-6 py-4 font-bold tracking-wider text-right">Acciones</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {% for empleado in empleados %}
+        <tr class="hover:bg-slate-50/60 transition group" data-id="{{ empleado.id }}">
+          <td class="px-6 py-4 font-medium text-slate-500">{{ forloop.counter }}</td>
+          <td class="px-6 py-4">
+            <div class="flex items-center space-x-3">
+              {% if empleado.foto_perfil %}
+              <img src="{{ empleado.foto_perfil.url }}" alt="{{ empleado.get_full_name }}" class="w-10 h-10 rounded-full object-cover border-2 border-white shadow-sm" />
+              {% else %}
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-brand-primary to-brand-dark flex items-center justify-center text-white font-bold text-sm shadow-sm border-2 border-white">
+                {{ empleado.get_full_name|first|upper }}
+              </div>
+              {% endif %}
+              <div>
+                <div class="font-bold text-slate-900">{{ empleado.get_full_name }}</div>
+                <div class="text-xs text-slate-500 font-medium">@{{ empleado.username }}</div>
+              </div>
+            </div>
+          </td>
+          <td class="px-6 py-4">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold {% if empleado.rol == 'admin' %}bg-purple-100 text-purple-700{% elif empleado.rol == 'gerente' %}bg-sky-100 text-sky-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+              <i class="bi {% if empleado.rol == 'admin' %}bi-shield-lock{% elif empleado.rol == 'gerente' %}bi-briefcase{% else %}bi-person-badge{% endif %} mr-1"></i>
+              {{ empleado.get_rol_display }}
+            </span>
+          </td>
+          <td class="px-6 py-4 space-y-1">
+            <div class="flex items-center text-xs text-slate-600"><i class="bi bi-envelope text-slate-400 mr-2"></i> {{ empleado.email }}</div>
+            <div class="flex items-center text-xs text-slate-600"><i class="bi bi-telephone text-slate-400 mr-2"></i> {{ empleado.telefono|default:"No registrado" }}</div>
+          </td>
+          <td class="px-6 py-4 text-right">
+            <div class="flex items-center justify-end space-x-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+              <a href="{% url 'gestion_permisos_user' empleado.id %}" class="p-2 text-amber-600 hover:bg-amber-50 rounded-lg transition" title="Permisos">
+                <i class="bi bi-key-fill text-lg"></i>
+              </a>
+              <button class="btn-editar p-2 text-brand-primary hover:bg-brand-50 rounded-lg transition" onclick="openPersonalModal('edit', '{{ empleado.id }}')" title="Editar">
+                <i class="bi bi-pencil-square text-lg"></i>
+              </button>
+              {% if empleado != request.user %}
+              <button class="btn-eliminar p-2 text-rose-600 hover:bg-rose-50 rounded-lg transition" onclick="openConfirmModal('{{ empleado.id }}')" title="Eliminar">
+                <i class="bi bi-trash-fill text-lg"></i>
+              </button>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+            <div class="flex flex-col items-center justify-center">
+              <i class="bi bi-people text-5xl mb-3 text-slate-300"></i>
+              <p class="text-sm font-medium text-slate-600">No se encontraron empleados con los filtros actuales.</p>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  
+  <!-- Paginación -->
+  <div class="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-4 bg-slate-50/50">
+    <div class="text-sm text-slate-500 font-medium">
+      Mostrando <span class="font-bold text-slate-800">{{ empleados.start_index }}</span> a <span class="font-bold text-slate-800">{{ empleados.end_index }}</span> de <span class="font-bold text-slate-800">{{ empleados.paginator.count }}</span> registros
+    </div>
+    {% if empleados.has_other_pages %}
+    <nav aria-label="Page navigation">
+      <ul class="inline-flex -space-x-px text-sm">
+        {% if empleados.has_previous %}
+        <li>
+          <a href="?page={{ empleados.previous_page_number }}{% if selected_rol %}&rol={{ selected_rol }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="flex items-center justify-center px-3 h-8 ml-0 leading-tight text-slate-500 bg-white border border-slate-300 rounded-l-lg hover:bg-slate-100 hover:text-slate-700 transition">Anterior</a>
+        </li>
+        {% endif %}
+        
+        {% for num in empleados.paginator.page_range %}
+          {% if empleados.number == num %}
+          <li>
+            <a href="#" aria-current="page" class="flex items-center justify-center px-3 h-8 text-white border border-brand-primary bg-brand-primary hover:bg-brand-dark transition font-bold">{{ num }}</a>
+          </li>
+          {% elif num > empleados.number|add:'-3' and num < empleados.number|add:'3' %}
+          <li>
+            <a href="?page={{ num }}{% if selected_rol %}&rol={{ selected_rol }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300 hover:bg-slate-100 hover:text-slate-700 transition">{{ num }}</a>
+          </li>
+          {% endif %}
+        {% endfor %}
+        
+        {% if empleados.has_next %}
+        <li>
+          <a href="?page={{ empleados.next_page_number }}{% if selected_rol %}&rol={{ selected_rol }}{% endif %}{% if search_query %}&search={{ search_query }}{% endif %}" class="flex items-center justify-center px-3 h-8 leading-tight text-slate-500 bg-white border border-slate-300 rounded-r-lg hover:bg-slate-100 hover:text-slate-700 transition">Siguiente</a>
+        </li>
+        {% endif %}
+      </ul>
+    </nav>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Modal para agregar/editar personal -->
+<div id="personalModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+  <div class="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+    <div class="bg-slate-50 border-b border-slate-100 px-6 py-4 flex justify-between items-center">
+      <h5 class="font-extrabold text-slate-800 text-lg flex items-center">
+        <i class="bi bi-person-circle text-brand-primary mr-2"></i> <span id="modalTitleText">Agregar Nuevo Personal</span>
+      </h5>
+      <button type="button" class="text-slate-400 hover:text-slate-600 focus:outline-none" onclick="closeModal('personalModal')">
+        <i class="bi bi-x-lg text-xl"></i>
+      </button>
+    </div>
+      <form id="personalForm" enctype="multipart/form-data">
+        <div class="modal-body px-6 py-5">
+            <input type="hidden" id="personal_id" name="id">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            
+            <div class="space-y-1">
+              <label for="username" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Usuario *</label>
+              <input type="text" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5 disabled:opacity-60 disabled:bg-slate-200" id="username" name="username" required {% if personal_id %}disabled{% endif %} />
+            </div>
+            
+            <div class="space-y-1">
+              <label for="rol" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Rol *</label>
+              <select class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="rol" name="rol" required>
+                {% for value, label in roles.items %}
+                <option value="{{ value }}">{{ label }}</option>
+                {% endfor %}
+              </select>
+            </div>
+            
+            <div class="space-y-1">
+              <label for="first_name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Nombres *</label>
+              <input type="text" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="first_name" name="first_name" required />
+            </div>
+            
+            <div class="space-y-1">
+              <label for="last_name" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Apellidos *</label>
+              <input type="text" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="last_name" name="last_name" required />
+            </div>
+            
+            <div class="space-y-1">
+              <label for="email" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Email *</label>
+              <input type="email" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="email" name="email" required />
+            </div>
+            
+            <div class="space-y-1">
+              <label for="telefono" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Teléfono</label>
+              <input type="text" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="telefono" name="telefono" />
+            </div>
+            
+            <div class="md:col-span-2 space-y-1">
+              <label for="direccion" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Dirección</label>
+              <textarea class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="direccion" name="direccion" rows="2"></textarea>
+            </div>
+            
+            <div class="space-y-1">
+              <label for="password1" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Contraseña</label>
+              <input type="password" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="password1" name="password1" placeholder="Solo si desea cambiarla..." />
+            </div>
+            
+            <div class="space-y-1">
+              <label for="password2" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Confirmar Contraseña</label>
+              <input type="password" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-xl focus:ring-brand-primary focus:border-brand-primary block p-2.5" id="password2" name="password2" />
+            </div>
+            
+            <div class="md:col-span-2 space-y-1">
+              <label for="foto_perfil" class="block text-xs font-bold text-slate-700 uppercase tracking-wider">Foto de Perfil</label>
+              <input type="file" class="block w-full text-sm text-slate-900 bg-slate-50 rounded-xl border border-slate-300 cursor-pointer focus:outline-none p-2" id="foto_perfil" name="foto_perfil" accept="image/*" />
+            </div>
+          </div>
+        </div>
+        <div class="bg-slate-50 border-t border-slate-100 px-6 py-4 flex justify-end space-x-3">
+          <button type="button" class="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 transition" onclick="closeModal('personalModal')">
+            Cancelar
+          </button>
+          <button type="submit" class="px-5 py-2.5 text-sm font-semibold text-white bg-brand-primary rounded-xl hover:bg-brand-dark shadow-sm transition">
+            Guardar Personal
+          </button>
+        </div>
+      </form>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div id="confirmModal" class="hidden fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 transition-opacity">
+  <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+      <div class="p-6 text-center">
+        <div class="w-16 h-16 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center mx-auto mb-4">
+          <i class="bi bi-exclamation-triangle text-3xl"></i>
+        </div>
+        <h5 class="text-xl font-bold text-slate-800 mb-2">¿Eliminar Personal?</h5>
+        <p class="text-slate-500 mb-6">
+          ¿Estás seguro que deseas eliminar este registro? Toda la información relacionada se perderá y esta acción <strong>no se puede deshacer</strong>.
+        </p>
+        <div class="flex justify-center space-x-3">
+          <button type="button" class="px-5 py-2.5 text-sm font-semibold text-slate-600 bg-slate-100 rounded-xl hover:bg-slate-200 transition" onclick="closeModal('confirmModal')">
+            Cancelar
+          </button>
+          <button type="button" class="px-5 py-2.5 text-sm font-semibold text-white bg-rose-600 rounded-xl hover:bg-rose-700 shadow-sm transition" id="confirmDelete">
+            Sí, eliminar
+          </button>
+        </div>
+      </div>
+  </div>
+</div>
+
+<script src="{% static 'js/gestion_personal.js' %}?v={{ request.resolver_match.view_name|default:'0' }}{% now 'U' %}"></script>
+{% endblock %}

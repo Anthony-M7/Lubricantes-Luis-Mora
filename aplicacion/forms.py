@@ -17,6 +17,10 @@ class ArticuloForm(forms.ModelForm):
         self.fields['creado_por'].initial = user
         self.fields['creado_por'].widget = forms.HiddenInput()
         
+        if not self.instance.pk:
+            self.fields['stock_minimo'].initial = 3
+            self.fields['stock_maximo'].initial = 12
+        
         # Campos que deben ser de solo lectura al editar
         if self.editing:
             readonly_fields = ['codigo', 'codigo_barras', 'creado_por', 'fecha_creacion']

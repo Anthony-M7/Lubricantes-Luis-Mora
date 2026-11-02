@@ -1,0 +1,378 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Luis Mora - Lubricantes{% endblock %}</title>
+
+    <link rel="shortcut icon" href="{% static 'img/Logo sin Fondo.png'%}" type="image/x-icon">
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                dark: '#00203F',
+                navy: '#004080',
+                primary: '#005BBB',
+                steel: '#4682B4',
+                slate: '#708090',
+                light: '#F5F5F5'
+              }
+            }
+          }
+        }
+      }
+    </script>
+
+    <!-- Bootstrap Icons local -->
+    <link href="{% static 'bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+
+    <!-- Estilos personalizados -->
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}" />
+    {% block extra_css %} {% endblock %} 
+    {% block extra_css_admin %} {% endblock %}
+  </head>
+  <body class="h-full font-sans antialiased text-slate-800 bg-slate-50 flex flex-col min-h-screen">
+    <!-- Header -->
+    <header class="bg-brand-dark text-white shadow-md sticky top-0 z-40">
+      <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+          
+          <!-- Logo & Brand Name -->
+          <div class="flex items-center space-x-3">
+            <!-- Botón Menú Móvil -->
+            <button 
+              id="mobile-menu-btn" 
+              type="button" 
+              class="md:hidden p-2 rounded-md text-slate-300 hover:text-white hover:bg-brand-navy focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white"
+              aria-label="Abrir menú"
+            >
+              <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            <a href="{% url 'inicio' %}" class="flex items-center space-x-3 group">
+              <img
+                src="{% static 'img/Logo sin Fondo.png' %}"
+                alt="Logo"
+                class="h-10 w-auto transition-transform group-hover:scale-105"
+              />
+              <span class="font-bold text-lg tracking-wide text-white group-hover:text-sky-300 transition-colors">
+                Lubricantes Luis Mora
+              </span>
+            </a>
+          </div>
+
+          <!-- User Info & Navigation Right -->
+          <div class="hidden md:flex items-center space-x-4">
+            {% if user.is_authenticated %}
+              <span class="text-sm font-medium text-slate-200 bg-brand-navy/60 px-3 py-1.5 rounded-full border border-slate-700">
+                Bienvenido, <strong class="text-white">{{ user.get_full_name|default:user.username }}</strong>
+              </span>
+
+              {% if user.admin or user.rol == 'admin' %}
+                <a href="/admin/" target="_blank" class="text-xs font-semibold uppercase tracking-wider text-amber-300 hover:text-amber-200 bg-amber-950/40 hover:bg-amber-900/50 px-3 py-1.5 rounded-lg border border-amber-500/30 transition">
+                  Panel Admin
+                </a>
+              {% endif %}
+
+              <a href="{% url 'dashboard' %}" class="text-sm font-medium text-slate-100 hover:text-white hover:bg-brand-navy px-3 py-2 rounded-lg transition">
+                Sistema
+              </a>
+
+              <a href="{% url 'logout' %}" class="text-sm font-medium text-rose-300 hover:text-rose-100 hover:bg-rose-950/40 px-3 py-2 rounded-lg transition">
+                Cerrar Sesión
+              </a>
+            {% else %}
+              {% if request.resolver_match.url_name != 'login' %}
+                <a href="{% url 'login' %}" class="inline-flex items-center px-4 py-2 text-sm font-semibold text-white bg-brand-steel hover:bg-sky-600 rounded-lg shadow transition duration-150">
+                  Iniciar Sesión
+                </a>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <!-- Global Loader -->
+    <div id="global-loader" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+      <div class="flex flex-col items-center bg-white p-6 rounded-2xl shadow-2xl space-y-4">
+        <div class="w-10 h-10 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
+        <span class="text-sm font-medium text-slate-700">Cargando...</span>
+      </div>
+    </div>
+
+    <!-- Main Content Layout -->
+    <div class="flex-1 flex overflow-hidden">
+      {% if user.is_authenticated %}
+        <!-- Sidebar Desktop -->
+        <aside class="hidden md:flex flex-col w-64 bg-brand-dark text-slate-200 border-r border-slate-800 min-h-screen">
+          <div class="p-4 space-y-6">
+            <nav class="space-y-1">
+              <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-speedometer2 text-xl text-sky-400 group-hover:scale-110 transition-transform"></i>
+                <span>Dashboard</span>
+              </a>
+
+              <a href="{% url 'compras' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-cart-check text-xl text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                <span>Compras</span>
+              </a>
+
+              <a href="{% url 'inventario' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-box-seam text-xl text-amber-400 group-hover:scale-110 transition-transform"></i>
+                <span>Almacén</span>
+              </a>
+
+              <a href="{% url 'lista_ventas' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-receipt text-xl text-purple-400 group-hover:scale-110 transition-transform"></i>
+                <span>Ventas</span>
+              </a>
+
+              <a href="{% url 'reportes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-graph-up-arrow text-xl text-cyan-400 group-hover:scale-110 transition-transform"></i>
+                <span>Finanzas</span>
+              </a>
+
+              <a href="{% url 'nomina_personal' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-people text-xl text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                <span>Nómina</span>
+              </a>
+
+              <a href="{% url 'clientes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-person-lines-fill text-xl text-rose-400 group-hover:scale-110 transition-transform"></i>
+                <span>Clientes</span>
+              </a>
+
+              <a href="{% url 'perfil' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy hover:text-white transition group">
+                <i class="bi bi-person-circle text-xl text-teal-400 group-hover:scale-110 transition-transform"></i>
+                <span>Perfil</span>
+              </a>
+            </nav>
+          </div>
+        </aside>
+
+        <!-- Mobile Drawer Overlay -->
+        <div id="mobile-drawer" class="fixed inset-0 z-50 hidden md:hidden bg-slate-900/60 backdrop-blur-sm transition-opacity">
+          <div class="fixed inset-y-0 left-0 w-64 bg-brand-dark text-slate-200 p-4 shadow-xl flex flex-col justify-between">
+            <div class="space-y-6">
+              <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+                <span class="font-bold text-white text-lg">Menú Principal</span>
+                <button id="close-drawer-btn" class="p-1 text-slate-400 hover:text-white">
+                  <i class="bi bi-x-lg text-xl"></i>
+                </button>
+              </div>
+
+              <nav class="space-y-1">
+                <a href="{% url 'dashboard' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-speedometer2 text-xl text-sky-400"></i>
+                  <span>Dashboard</span>
+                </a>
+                <a href="{% url 'compras' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-cart-check text-xl text-emerald-400"></i>
+                  <span>Compras</span>
+                </a>
+                <a href="{% url 'inventario' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-box-seam text-xl text-amber-400"></i>
+                  <span>Almacén</span>
+                </a>
+                <a href="{% url 'lista_ventas' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-receipt text-xl text-purple-400"></i>
+                  <span>Ventas</span>
+                </a>
+                <a href="{% url 'reportes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-graph-up-arrow text-xl text-cyan-400"></i>
+                  <span>Finanzas</span>
+                </a>
+                <a href="{% url 'nomina_personal' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-people text-xl text-indigo-400"></i>
+                  <span>Nómina</span>
+                </a>
+                <a href="{% url 'clientes' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-person-lines-fill text-xl text-rose-400"></i>
+                  <span>Clientes</span>
+                </a>
+                <a href="{% url 'perfil' %}" class="flex items-center space-x-3 px-3 py-2.5 rounded-lg font-medium text-slate-200 hover:bg-brand-navy">
+                  <i class="bi bi-person-circle text-xl text-teal-400"></i>
+                  <span>Perfil</span>
+                </a>
+              </nav>
+            </div>
+
+            <div class="pt-4 border-t border-slate-800">
+              <a href="{% url 'logout' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg font-medium text-rose-400 hover:bg-rose-950/40">
+                <i class="bi bi-box-arrow-right text-xl"></i>
+                <span>Cerrar Sesión</span>
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endif %}
+
+      <!-- Main Body Container -->
+      <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <!-- Flash Messages Modal -->
+        {% if messages %}
+          <div id="system-messages-modal" class="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="relative w-full max-w-sm bg-white rounded-3xl shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in duration-200">
+              {% for message in messages %}
+                <div class="p-6 text-center space-y-4">
+                  <!-- Icon Circle -->
+                  <div class="mx-auto w-16 h-16 rounded-2xl flex items-center justify-center shadow-sm
+                    {% if message.tags == 'error' or message.tags == 'danger' %}
+                      bg-rose-100 text-rose-600 border border-rose-200
+                    {% elif message.tags == 'success' %}
+                      bg-emerald-100 text-emerald-600 border border-emerald-200
+                    {% elif message.tags == 'warning' %}
+                      bg-amber-100 text-amber-600 border border-amber-200
+                    {% else %}
+                      bg-sky-100 text-sky-600 border border-sky-200
+                    {% endif %}">
+                    <i class="bi 
+                      {% if message.tags == 'error' or message.tags == 'danger' %}bi-exclamation-triangle-fill
+                      {% elif message.tags == 'success' %}bi-check-circle-fill
+                      {% elif message.tags == 'warning' %}bi-exclamation-circle-fill
+                      {% else %}bi-info-circle-fill{% endif %} text-3xl"></i>
+                  </div>
+
+                  <!-- Title & Message -->
+                  <div class="space-y-1">
+                    <h3 class="text-base font-black text-slate-900">
+                      {% if message.tags == 'error' or message.tags == 'danger' %}
+                        Notificación
+                      {% elif message.tags == 'success' %}
+                        ¡Éxito!
+                      {% elif message.tags == 'warning' %}
+                        Advertencia
+                      {% else %}
+                        Información
+                      {% endif %}
+                    </h3>
+                    <p class="text-xs font-semibold text-slate-600 leading-relaxed">{{ message }}</p>
+                  </div>
+
+                  <!-- Action Button -->
+                  <div class="pt-2">
+                    <button type="button" 
+                            onclick="document.getElementById('system-messages-modal').remove()" 
+                            class="w-full py-2.5 px-4 rounded-xl text-xs font-extrabold text-white shadow-md transition transform active:scale-95
+                            {% if message.tags == 'error' or message.tags == 'danger' %}
+                              bg-rose-600 hover:bg-rose-700
+                            {% elif message.tags == 'success' %}
+                              bg-emerald-600 hover:bg-emerald-700
+                            {% elif message.tags == 'warning' %}
+                              bg-amber-600 hover:bg-amber-700
+                            {% else %}
+                              bg-brand-primary hover:bg-brand-dark
+                            {% endif %}">
+                      Aceptar
+                    </button>
+                  </div>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-brand-dark text-white py-4 text-center text-xs text-slate-500">
+      <div class="max-w-7xl mx-auto px-4">
+        <p>Luis Mora Lubricantes y Repuestos &copy; {% now "Y" %}. Todos los derechos reservados.</p>
+      </div>
+    </footer>
+
+    <!-- Contenedor para Notificaciones Asíncronas (Toast) -->
+    <div id="async-toast-container" class="fixed top-20 right-4 z-50 flex flex-col gap-2"></div>
+
+    <!-- Global Loader Script -->
+    <script src="{% static 'js/global_loader.js' %}"></script>
+    
+    <!-- Mobile Drawer Toggle Script -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const btn = document.getElementById('mobile-menu-btn');
+        const drawer = document.getElementById('mobile-drawer');
+        const closeBtn = document.getElementById('close-drawer-btn');
+
+        if (btn && drawer) {
+          btn.addEventListener('click', () => drawer.classList.remove('hidden'));
+        }
+        if (closeBtn && drawer) {
+          closeBtn.addEventListener('click', () => drawer.classList.add('hidden'));
+        }
+        if (drawer) {
+          drawer.addEventListener('click', (e) => {
+            if (e.target === drawer) drawer.classList.add('hidden');
+          });
+        }
+      });
+    </script>
+    
+    {% if user.is_authenticated %}
+    <!-- Script de Notificaciones en Segundo Plano -->
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        const container = document.getElementById('async-toast-container');
+        
+        function showAsyncToast(titulo, mensaje) {
+          const toast = document.createElement('div');
+          toast.className = 'bg-white border border-emerald-200 shadow-lg rounded-xl p-4 flex items-start space-x-3 w-80 transform transition-all duration-500 translate-x-full opacity-0';
+          toast.innerHTML = `
+            <div class="flex-shrink-0 text-emerald-500">
+              <i class="bi bi-check-circle-fill text-2xl"></i>
+            </div>
+            <div class="flex-1 pt-0.5">
+              <p class="text-sm font-bold text-slate-800">${titulo}</p>
+              <p class="text-xs text-slate-500 mt-1">${mensaje}</p>
+            </div>
+            <button class="text-slate-400 hover:text-slate-600 focus:outline-none" onclick="this.parentElement.remove()">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          `;
+          container.appendChild(toast);
+          
+          // Animate in
+          requestAnimationFrame(() => {
+            toast.classList.remove('translate-x-full', 'opacity-0');
+          });
+          
+          // Auto remove after 8 seconds
+          setTimeout(() => {
+            toast.classList.add('opacity-0', 'translate-x-full');
+            setTimeout(() => toast.remove(), 500);
+          }, 8000);
+        }
+
+        function fetchNotifications() {
+          fetch('/api/notificaciones/')
+            .then(res => res.json())
+            .then(data => {
+              if(data.success && data.notificaciones && data.notificaciones.length > 0) {
+                data.notificaciones.forEach(notif => {
+                  showAsyncToast(notif.titulo, notif.mensaje);
+                });
+              }
+            })
+            .catch(err => console.error("Error fetching notifications", err));
+        }
+
+        // Poll every 5 seconds
+        setInterval(fetchNotifications, 5000);
+      });
+    </script>
+    {% endif %}
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

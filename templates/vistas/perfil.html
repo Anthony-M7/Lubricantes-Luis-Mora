@@ -1,0 +1,147 @@
+{% extends 'paneles/admin.html' %}
+{% load static i18n %}
+
+{% block dashboard %}
+<div class="max-w-4xl mx-auto">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+    <div>
+      <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Perfil de Usuario</h1>
+      <p class="text-sm text-slate-500">Visualiza y actualiza tu información personal y credenciales de acceso.</p>
+    </div>
+  </div>
+
+  <!-- Tarjeta Principal -->
+  <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+    <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center">
+      <i class="bi bi-person-badge-fill text-brand-primary text-xl mr-3"></i>
+      <h4 class="font-bold text-slate-800 m-0">Información del Perfil</h4>
+    </div>
+    
+    <div class="p-6 md:p-8">
+      <form id="profile-form" method="POST" action="{% url 'actualizar_perfil' %}" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- Foto de Perfil -->
+        <div class="flex flex-col items-center justify-center mb-10 pb-8 border-b border-slate-100">
+          <div class="relative group">
+            <img src="{% if user.foto_perfil %}{{ user.foto_perfil.url }}{% else %}{% static 'img/default-profile.png' %}{% endif %}" 
+                 class="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md transition-transform duration-300 group-hover:scale-105" 
+                 alt="Foto de perfil" 
+                 id="profile-picture">
+                 
+            <input type="file" id="id_foto_perfil" name="foto_perfil" accept="image/*" class="hidden" style="display: none;">
+            
+            <button type="button" id="change-photo-btn" class="hidden absolute bottom-0 right-0 bg-brand-primary text-white w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-brand-dark transition transform hover:scale-110 focus:outline-none z-10" style="display: none;" title="Cambiar foto">
+              <i class="bi bi-camera-fill"></i>
+            </button>
+          </div>
+          <div class="mt-4 text-center">
+            <h2 class="text-xl font-bold text-slate-900">{{ form.instance.get_full_name|default:form.instance.username }}</h2>
+            <span class="inline-flex mt-1 items-center px-2.5 py-1 rounded-full text-xs font-bold {% if user.admin %}bg-purple-100 text-purple-700{% elif user.is_staff %}bg-sky-100 text-sky-700{% else %}bg-emerald-100 text-emerald-700{% endif %}">
+              {{ form.instance.get_rol_display }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Modo Visualización (.view-mode) -->
+        <div class="view-mode space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre de usuario</label>
+              <p class="font-semibold text-slate-800" id="username-view">@{{ form.instance.username }}</p>
+            </div>
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Correo electrónico</label>
+              <p class="font-semibold text-slate-800" id="email-view">{{ form.instance.email }}</p>
+            </div>
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Nombre</label>
+              <p class="font-semibold text-slate-800" id="first-name-view">{{ form.instance.first_name|default:"-" }}</p>
+            </div>
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Apellido</label>
+              <p class="font-semibold text-slate-800" id="last-name-view">{{ form.instance.last_name|default:"-" }}</p>
+            </div>
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Teléfono</label>
+              <p class="font-semibold text-slate-800" id="telefono-view">{{ form.instance.telefono|default:"-" }}</p>
+            </div>
+            <div class="bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+              <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Dirección</label>
+              <p class="font-semibold text-slate-800 truncate" id="direccion-view">{{ form.instance.direccion|default:"-" }}</p>
+            </div>
+            
+            <!-- Bloque de Permisos -->
+            <div class="md:col-span-2 mt-4">
+              <h5 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-3 pb-2 border-b border-slate-100">Seguridad y Permisos del Sistema</h5>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="flex flex-col">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Estado Admin</span>
+                  <span class="font-semibold {% if user.admin %}text-emerald-600{% else %}text-slate-500{% endif %}" id="admin-view">{% if user.admin %}Sí{% else %}No{% endif %}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Superusuario</span>
+                  <span class="font-semibold {% if user.is_superuser %}text-purple-600{% else %}text-slate-500{% endif %}" id="is-superuser-view">{% if user.is_superuser %}Sí{% else %}No{% endif %}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Staff Técnico</span>
+                  <span class="font-semibold {% if user.is_staff %}text-sky-600{% else %}text-slate-500{% endif %}" id="is-staff-view">{% if user.is_staff %}Sí{% else %}No{% endif %}</span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-[10px] font-bold text-slate-400 uppercase">Cuenta Activa</span>
+                  <span class="font-semibold {% if user.is_active %}text-emerald-600{% else %}text-rose-600{% endif %}" id="is-active-view">{% if user.is_active %}Activa{% else %}Inactiva{% endif %}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="md:col-span-2 flex flex-col sm:flex-row sm:justify-between text-xs text-slate-400 mt-2">
+              <div>Último acceso: <span class="font-medium text-slate-600" id="last-login-view">{{ user.last_login|default:"Nunca" }}</span></div>
+              <div>Miembro desde: <span class="font-medium text-slate-600" id="date-joined-view">{{ user.date_joined }}</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modo Edición (.edit-mode) -->
+        <div class="edit-mode hidden flex-wrap -mx-3 gap-y-6" style="display: none;">
+          {% for field in form %}
+            {% if field.name != 'foto_perfil' %}
+            <div class="w-full md:w-1/2 px-3 flex flex-col">
+              <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              <!-- Aseguramos que los inputs se vean como Tailwind -->
+              <div class="[&>input]:w-full [&>input]:bg-slate-50 [&>input]:border [&>input]:border-slate-300 [&>input]:text-slate-900 [&>input]:text-sm [&>input]:rounded-xl [&>input]:focus:ring-brand-primary [&>input]:focus:border-brand-primary [&>input]:block [&>input]:p-2.5">
+                {{ field }}
+              </div>
+              {% if field.errors %}
+                <div class="mt-1 text-xs text-rose-500 font-semibold">{{ field.errors.0 }}</div>
+              {% endif %}
+            </div>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        <!-- Botones de Acción -->
+        <div class="mt-8 pt-6 border-t border-slate-100 flex flex-col sm:flex-row justify-end gap-3">
+          <button type="button" class="w-full sm:w-auto inline-flex justify-center items-center space-x-2 px-6 py-3 bg-brand-primary hover:bg-brand-dark text-white font-bold rounded-xl shadow-md transition transform active:scale-95" id="edit-btn">
+            <i class="bi bi-pencil-square text-lg"></i>
+            <span>Editar Perfil</span>
+          </button>
+          
+          <div id="edit-buttons" class="hidden w-full sm:w-auto flex-col sm:flex-row gap-3" style="display: none;">
+            <button type="button" class="w-full sm:w-auto inline-flex justify-center items-center px-6 py-3 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition" id="cancel-btn">
+              Cancelar
+            </button>
+            <button type="submit" class="w-full sm:w-auto inline-flex justify-center items-center space-x-2 px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition transform active:scale-95" id="save-btn">
+              <i class="bi bi-floppy-fill text-lg"></i>
+              <span>Guardar Cambios</span>
+            </button>
+          </div>
+        </div>
+        
+      </form>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'js/perfil/perfil.js' %}?v={% now 'U' %}"></script>
+{% endblock %}

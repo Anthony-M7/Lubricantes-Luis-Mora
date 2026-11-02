@@ -1,5 +1,5 @@
 import io
-from django.http import HttpResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.decorators import login_required
@@ -15,9 +15,12 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 
 from reportlab.lib.pagesizes import letter
-from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib import colors
 from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+from openpyxl.utils import get_column_letter
 
 from django.core.paginator import Paginator
 from django.core import serializers
@@ -457,7 +460,37 @@ def crear_articulo(request):
     else:
         form = ArticuloForm(user=request.user)
     
-    return render(request, 'Forms/crear_articulos.html', {'form': form})
+    return render(request, 'Forms/form_articulo.html', {'form': form})
+
+@login_required
+def crear_categoria_ajax(request):
+    if request.method == 'POST':
+        nombre = request.POST.get('nombre', '').strip()
+        descripcion = request.POST.get('descripcion', '').strip()
+        padre_id = request.POST.get('padre_id', '').strip()
+
+        if not nombre:
+            return JsonResponse({'success': False, 'error': 'El nombre de la categoría es obligatorio.'}, status=400)
+
+        if Categoria.objects.filter(nombre__iexact=nombre).exists():
+            return JsonResponse({'success': False, 'error': 'Ya existe una categoría con este nombre.'}, status=400)
+
+        padre = Categoria.objects.filter(id=padre_id).first() if padre_id else None
+
+        nueva_cat = Categoria.objects.create(
+            nombre=nombre,
+            descripcion=descripcion,
+            padre=padre
+        )
+
+        return JsonResponse({
+            'success': True,
+            'categoria': {
+                'id': nueva_cat.id,
+                'nombre': nueva_cat.nombre
+            }
+        })
+    return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
 
 # ==========================================================================
 
@@ -1114,7 +1147,20 @@ class ReportesFinancierosView(TemplateView):
         elements = []
         
         # Título del reporte
-        title = f"Reporte Financiero - {context.get('tipo_reporte', 'general').title()}"
+        title_text = f"Reporte Financiero - {context.get('tipo_reporte', 'general').title()}"
+        styles = getSampleStyleSheet()
+        
+        # Estilo para el título
+        title_style = ParagraphStyle(
+            'CustomTitle',
+            parent=styles['Heading1'],
+            fontSize=16,
+            textColor=colors.HexColor("#0EA5E9"),
+            spaceAfter=15,
+            alignment=1 # Center
+        )
+        elements.append(Paragraph(title_text, title_style))
+        elements.append(Spacer(1, 10))
         
         # Datos según el tipo de reporte
         if context['tipo_reporte'] == 'ventas':
@@ -1154,20 +1200,34 @@ class ReportesFinancierosView(TemplateView):
                     f"${detalle['monto']:,.2f}",
                     f"${detalle['ganancia']:,.2f}"
                 ])
+        else:
+            data = [["No hay datos para este reporte"]]
         
         # Crear tabla
-        if len(data) > 1:
-            table = Table(data)
-            style = TableStyle([
-                ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+        if len(data) > 0:
+            table = Table(data, repeatRows=1)
+            
+            style_cmds = [
+                ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor("#0EA5E9")),
                 ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
                 ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                 ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
-                ('FONTSIZE', (0, 0), (-1, 0), 12),
-                ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
-                ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
-                ('GRID', (0, 0), (-1, -1), 1, colors.black),
-            ])
+                ('FONTSIZE', (0, 0), (-1, 0), 10),
+                ('BOTTOMPADDING', (0, 0), (-1, 0), 10),
+                ('TOPPADDING', (0, 0), (-1, 0), 10),
+                ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor("#E2E8F0")),
+                ('FONTNAME', (0, 1), (-1, -1), 'Helvetica'),
+                ('FONTSIZE', (0, 1), (-1, -1), 9),
+            ]
+            
+            # Zebra striping
+            for row in range(1, len(data)):
+                if row % 2 == 0:
+                    style_cmds.append(('BACKGROUND', (0, row), (-1, row), colors.HexColor("#F8FAFC")))
+                else:
+                    style_cmds.append(('BACKGROUND', (0, row), (-1, row), colors.white))
+            
+            style = TableStyle(style_cmds)
             table.setStyle(style)
             elements.append(table)
         
@@ -1185,10 +1245,42 @@ class ReportesFinancierosView(TemplateView):
         ws = wb.active
         ws.title = "Reporte"
         
+        # Definir Estilos
+        header_fill = PatternFill(start_color="0EA5E9", end_color="0EA5E9", fill_type="solid") # Brand primary
+        header_font = Font(color="FFFFFF", bold=True)
+        center_alignment = Alignment(horizontal="center", vertical="center")
+        thin_border = Border(left=Side(style='thin', color="E2E8F0"), 
+                             right=Side(style='thin', color="E2E8F0"), 
+                             top=Side(style='thin', color="E2E8F0"), 
+                             bottom=Side(style='thin', color="E2E8F0"))
+        
+        # Título en Excel
+        ws.merge_cells('A1:F1')
+        title_cell = ws['A1']
+        title_cell.value = f"REPORTE FINANCIERO - {context.get('tipo_reporte', 'GENERAL').upper()}"
+        title_cell.font = Font(size=14, bold=True, color="0EA5E9")
+        title_cell.alignment = center_alignment
+        
+        row_num = 3 # Start data on row 3
+        
+        def format_headers(headers, start_row):
+            ws.append(headers)
+            for col_num, cell in enumerate(ws[start_row], 1):
+                cell.fill = header_fill
+                cell.font = header_font
+                cell.alignment = center_alignment
+                cell.border = thin_border
+        
+        def apply_row_styles(row_index):
+            for cell in ws[row_index]:
+                cell.border = thin_border
+                if row_index % 2 == 0:
+                    cell.fill = PatternFill(start_color="F8FAFC", end_color="F8FAFC", fill_type="solid")
+        
         # Datos según el tipo de reporte
         if context['tipo_reporte'] == 'ventas':
-            ws.append(['Periodo', 'Ventas', 'Monto', 'Costo', 'Ganancia', 'Margen'])
-            for venta in context['ventas_report']:
+            format_headers(['Periodo', 'Ventas', 'Monto', 'Costo', 'Ganancia', 'Margen (%)'], row_num)
+            for i, venta in enumerate(context['ventas_report'], start=row_num+1):
                 margen = (venta['ganancia_total'] / venta['monto_total'] * 100) if venta['monto_total'] else 0
                 ws.append([
                     venta['periodo'].strftime('%B %Y') if 'month' in str(venta['periodo']) else venta['periodo'].strftime('%d/%m/%Y'),
@@ -1198,10 +1290,15 @@ class ReportesFinancierosView(TemplateView):
                     venta['ganancia_total'],
                     margen
                 ])
-        
+                ws.cell(row=i, column=3).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=4).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=5).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=6).number_format = '0.00"%"'
+                apply_row_styles(i)
+                
         elif context['tipo_reporte'] == 'articulos':
-            ws.append(['Código', 'Artículo', 'Categoría', 'Cantidad', 'Monto', 'Ganancia'])
-            for art in context['articulos_report']:
+            format_headers(['Código', 'Artículo', 'Categoría', 'Cantidad', 'Monto', 'Ganancia'], row_num)
+            for i, art in enumerate(context['articulos_report'], start=row_num+1):
                 ws.append([
                     art['articulo__codigo'],
                     art['articulo__nombre'],
@@ -1210,10 +1307,13 @@ class ReportesFinancierosView(TemplateView):
                     art['monto_total'],
                     art['ganancia_total']
                 ])
-        
+                ws.cell(row=i, column=5).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=6).number_format = '"$"#,##0.00'
+                apply_row_styles(i)
+                
         elif context['tipo_reporte'] == 'articulo_detalle' and 'articulo_detalle' in context:
-            ws.append(['Fecha', 'Venta', 'Cantidad', 'P. Unitario', 'Monto', 'Ganancia'])
-            for detalle in context['articulo_detalle']:
+            format_headers(['Fecha', 'Venta', 'Cantidad', 'P. Unitario', 'Monto', 'Ganancia'], row_num)
+            for i, detalle in enumerate(context['articulo_detalle'], start=row_num+1):
                 precio_unitario = detalle['monto'] / detalle['cantidad'] if detalle['cantidad'] else 0
                 ws.append([
                     detalle['dia'].strftime('%d/%m/%Y'),
@@ -1223,7 +1323,24 @@ class ReportesFinancierosView(TemplateView):
                     detalle['monto'],
                     detalle['ganancia']
                 ])
-        
+                ws.cell(row=i, column=4).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=5).number_format = '"$"#,##0.00'
+                ws.cell(row=i, column=6).number_format = '"$"#,##0.00'
+                apply_row_styles(i)
+                
+        # Auto-adjust column widths
+        for col in ws.columns:
+            max_length = 0
+            column = col[0].column_letter
+            for cell in col:
+                try:
+                    if len(str(cell.value)) > max_length:
+                        max_length = len(str(cell.value))
+                except:
+                    pass
+            adjusted_width = (max_length + 2)
+            ws.column_dimensions[column].width = adjusted_width if adjusted_width > 12 else 12
+            
         wb.save(response)
         return response
 
@@ -1245,7 +1362,25 @@ def vista_personal_y_admin(request):
     # Accesible para personal y admins
     pass
 
-@nivel_requerido('personal', 'admin')
-def vista_personal_y_admin(request):
-    # Accesible para personal y admins
-    pass
+@login_required
+def api_notificaciones_pendientes(request):
+    """
+    Endpoint AJAX para obtener las notificaciones asíncronas pendientes del usuario.
+    Las marca como leídas al devolverlas.
+    """
+    from .models import NotificacionAsincrona
+    
+    pendientes = NotificacionAsincrona.objects.filter(usuario=request.user, leida=False)
+    data = []
+    
+    for notif in pendientes:
+        data.append({
+            'id': notif.id,
+            'titulo': notif.titulo,
+            'mensaje': notif.mensaje,
+            'fecha': notif.fecha_creacion.strftime('%d/%m/%Y %H:%M')
+        })
+        notif.leida = True
+        notif.save()
+        
+    return JsonResponse({'success': True, 'notificaciones': data})

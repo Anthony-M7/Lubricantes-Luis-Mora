@@ -1,0 +1,172 @@
+{% extends 'paneles/admin.html' %}
+{% load static humanize %}
+
+{% block dashboard %}
+<div class="max-w-5xl mx-auto space-y-6">
+  <!-- Header Principal -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">
+          {{ titulo|default:"Ficha Técnica de Orden de Compra" }}
+        </h1>
+        <span class="px-3 py-1 bg-slate-100 text-slate-700 text-xs font-mono font-bold rounded-lg border border-slate-200">
+          {{ compra.referencia|default:"SIN-REF" }}
+        </span>
+      </div>
+      <p class="text-xs text-slate-500 mt-1">
+        Detalle técnico e historial de impacto en costo promedio del inventario.
+      </p>
+    </div>
+    <div class="flex items-center space-x-2">
+      <a href="{% url 'editar_compra' compra.id %}" class="inline-flex items-center space-x-1 px-4 py-2.5 bg-brand-primary hover:bg-brand-dark text-white text-xs font-bold rounded-xl transition shadow">
+        <i class="bi bi-pencil me-1"></i>
+        <span>Editar Compra</span>
+      </a>
+      <a href="{% url 'compras' %}" class="inline-flex items-center space-x-1 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl border border-slate-300 transition">
+        <i class="bi bi-arrow-left me-1"></i>
+        <span>Volver al Listado</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- Ficha General en Grid -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+    
+    <!-- Columna Izquierda: Información del Producto e Inversión -->
+    <div class="md:col-span-7 space-y-6">
+      
+      <!-- Producto e Imagen -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <h3 class="text-xs font-bold uppercase text-brand-dark tracking-wider flex items-center gap-2">
+            <i class="bi bi-box-seam text-brand-primary text-base"></i>
+            <span>Producto Adquirido</span>
+          </h3>
+          <span class="px-2.5 py-0.5 bg-sky-50 text-sky-700 text-xs font-bold rounded-md border border-sky-200">
+            Código: {{ compra.articulo.codigo }}
+          </span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-4">
+          {% if compra.articulo.imagen %}
+            <img src="{{ compra.articulo.imagen.url }}" alt="{{ compra.articulo.nombre }}" class="h-28 w-28 object-contain rounded-xl border border-slate-200 bg-slate-50 p-2 shadow-2xs" />
+          {% else %}
+            <div class="h-28 w-28 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+              <i class="bi bi-image text-4xl"></i>
+            </div>
+          {% endif %}
+
+          <div class="space-y-2 text-center sm:text-left flex-1">
+            <h2 class="text-xl font-extrabold text-slate-900 leading-snug">
+              {{ compra.articulo.nombre }}
+            </h2>
+            <div class="flex flex-wrap gap-2 text-xs font-medium text-slate-500">
+              {% if compra.articulo.marca %}<span>Marca: <strong class="text-slate-800">{{ compra.articulo.marca }}</strong></span>{% endif %}
+              {% if compra.articulo.categoria %}<span>• Categoría: <strong class="text-brand-primary">{{ compra.articulo.categoria.nombre }}</strong></span>{% endif %}
+            </div>
+            <div class="pt-2">
+              <span class="px-3 py-1 bg-emerald-50 text-emerald-800 text-xs font-bold rounded-lg border border-emerald-200">
+                Cantidad Ingresada: {{ compra.cantidad|floatformat:"0" }} {{ compra.articulo.get_unidad_medida_display }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desglose Financiero de la Orden -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h3 class="text-xs font-bold uppercase text-brand-dark tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
+          <i class="bi bi-receipt text-emerald-600 text-base"></i>
+          <span>Desglose de Costos de la Orden</span>
+        </h3>
+
+        <div class="grid grid-cols-2 gap-4 text-xs">
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
+            <span class="text-slate-500 block text-[11px]">Costo Unitario de Compra</span>
+            <strong class="text-base font-bold text-slate-900 block">COP {{ compra.costo_unitario|floatformat:"0"|intcomma }}</strong>
+          </div>
+
+          <div class="p-3.5 bg-emerald-50 rounded-xl border border-emerald-200 space-y-1">
+            <span class="text-emerald-800 block text-[11px] font-bold">Total Inversión de Compra</span>
+            <strong class="text-lg font-black text-emerald-700 block">COP {{ total|floatformat:"0"|intcomma }}</strong>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Columna Derecha: Auditoría e Impacto en Inventario -->
+    <div class="md:col-span-5 space-y-6">
+      
+      <!-- Auditoría de Registro -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold uppercase text-brand-dark tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
+          <i class="bi bi-clock-history text-sky-600 text-base"></i>
+          <span>Auditoría de Registro</span>
+        </h3>
+
+        <div class="space-y-2 text-xs">
+          <div class="flex justify-between py-1 border-b border-slate-100">
+            <span class="text-slate-500">Documento Referencia:</span>
+            <span class="font-mono font-bold text-slate-800">{{ compra.referencia|default:"Sin referencia" }}</span>
+          </div>
+
+          <div class="flex justify-between py-1 border-b border-slate-100">
+            <span class="text-slate-500">Fecha de Registro:</span>
+            <span class="font-bold text-slate-800">{{ compra.fecha|date:"d/m/Y H:i" }}</span>
+          </div>
+
+          <div class="flex justify-between py-1 border-b border-slate-100">
+            <span class="text-slate-500">Registrado Por:</span>
+            <span class="font-bold text-slate-800">{{ compra.usuario.get_full_name|default:compra.usuario.username|default:"Sistema" }}</span>
+          </div>
+
+          <div class="flex justify-between py-1">
+            <span class="text-slate-500">Proveedor Asignado:</span>
+            <span class="font-bold text-slate-800">{{ compra.proveedor.nombre|default:"No especificado" }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Impacto en Costo Promedio Ponderado (CPP) -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+        <h3 class="text-xs font-bold uppercase text-brand-dark tracking-wider flex items-center gap-2 pb-3 border-b border-slate-100">
+          <i class="bi bi-calculator text-amber-500 text-base"></i>
+          <span>Impacto en CPP de Almacén</span>
+        </h3>
+
+        {% if historico %}
+        <div class="space-y-3 text-xs">
+          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+            <div>
+              <span class="text-slate-500 block text-[11px]">Stock Anterior</span>
+              <strong class="text-slate-800 text-sm font-bold">{{ historico.stock_antes|floatformat:"0" }}</strong>
+            </div>
+            <div class="text-right">
+              <span class="text-slate-500 block text-[11px]">Aumento de Stock</span>
+              <strong class="text-emerald-600 text-sm font-black">{{ aumento_stock_text }}</strong>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 text-center">
+            <div class="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <span class="text-[10px] font-bold text-slate-400 uppercase block">CPP Anterior</span>
+              <strong class="text-slate-700 text-xs font-bold">COP {{ historico.costo_promedio_antes|floatformat:"0"|intcomma }}</strong>
+            </div>
+            <div class="p-3 bg-sky-50 rounded-xl border border-sky-200">
+              <span class="text-[10px] font-bold text-sky-800 uppercase block">CPP Posterior</span>
+              <strong class="text-sky-700 text-xs font-black">COP {{ historico.costo_promedio_despues|floatformat:"0"|intcomma }}</strong>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <p class="text-xs text-slate-500 italic">No hay histórico comparativo para este movimiento.</p>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+</div>
+{% endblock %}

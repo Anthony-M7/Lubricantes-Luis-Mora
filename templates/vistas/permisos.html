@@ -1,0 +1,213 @@
+{% extends "paneles/admin.html" %}
+{% load static %}
+
+{% block dashboard %}
+<!-- Header -->
+<div class="flex flex-col md:flex-row md:items-center justify-between pb-4 border-b border-slate-200 mb-6 gap-4">
+  <div>
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-brand-dark tracking-tight">Gestión de Permisos</h1>
+    <p class="text-sm text-slate-500">
+      {% if is_user %}Usuario: <strong class="text-slate-700">{{ target.username }}</strong>{% else %}Grupo: <strong class="text-slate-700">{{ target.name }}</strong>{% endif %}
+    </p>
+  </div>
+  <div>
+    <a href="{% url 'nomina_personal' %}" class="inline-flex items-center space-x-2 px-4 py-2.5 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-semibold text-sm rounded-xl shadow-sm transition">
+      <i class="bi bi-arrow-left"></i>
+      <span>Volver a Nómina</span>
+    </a>
+  </div>
+</div>
+
+<form id="permisosForm" method="post">
+  {% csrf_token %}
+  
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Panel Izquierdo: Selección de Permisos -->
+    <div class="lg:col-span-2">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center">
+          <i class="bi bi-shield-lock-fill text-brand-primary text-xl mr-3"></i>
+          <h4 class="font-bold text-slate-800 m-0">Selección de Permisos</h4>
+        </div>
+        
+        <div class="p-6 space-y-8 max-h-[70vh] overflow-y-auto custom-scrollbar">
+          {% for grupo in permisos_organizados %}
+          <div>
+            <h5 class="flex items-center text-sm font-bold text-slate-800 uppercase tracking-wider mb-4 pb-2 border-b border-slate-100">
+              <i class="bi bi-folder2-open text-slate-400 mr-2 text-lg"></i>
+              {{ grupo.app|title }} › <span class="text-brand-primary ml-1">{{ grupo.verbose_name|title }}</span>
+            </h5>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {% for permiso in grupo.permisos %}
+              <label class="relative flex flex-col p-4 cursor-pointer rounded-xl border border-slate-200 hover:border-brand-primary hover:bg-sky-50/50 transition-colors group {% if permiso.obj.id in current_perms %}bg-sky-50 border-brand-primary/50{% endif %}" for="perm_{{ permiso.obj.id }}">
+                <div class="flex items-start">
+                  <div class="flex items-center h-5 mt-0.5">
+                    <input type="checkbox" name="permisos" value="{{ permiso.obj.id }}" id="perm_{{ permiso.obj.id }}" class="w-4 h-4 text-brand-primary bg-slate-100 border-slate-300 rounded focus:ring-brand-primary focus:ring-2" {% if permiso.obj.id in current_perms %}checked{% endif %}>
+                  </div>
+                  <div class="ml-3 flex-1">
+                    <div class="font-bold text-slate-800 text-sm group-hover:text-brand-primary transition-colors">{{ permiso.obj.name }}</div>
+                    <div class="text-[10px] uppercase font-bold text-slate-400 mt-1 mb-2">{{ permiso.obj.codename }}</div>
+                    <div class="text-xs text-slate-600 bg-white border border-slate-100 p-2 rounded-lg leading-relaxed shadow-sm">
+                      {{ permiso.descripcion }}
+                    </div>
+                  </div>
+                </div>
+              </label>
+              {% endfor %}
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Panel Derecho: Información -->
+    <div class="lg:col-span-1 space-y-6">
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-50 px-6 py-4 border-b border-slate-100 flex items-center">
+          <i class="bi bi-info-circle-fill text-sky-500 text-xl mr-3"></i>
+          <h4 class="font-bold text-slate-800 m-0">Tipos de Permisos</h4>
+        </div>
+        <div class="p-0">
+          <ul class="divide-y divide-slate-100">
+            <li class="p-4 hover:bg-slate-50 transition-colors">
+              <span class="inline-block px-2.5 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full mb-2">Add (Crear)</span>
+              <p class="text-xs text-slate-600">{{ descripciones.add }}</p>
+            </li>
+            <li class="p-4 hover:bg-slate-50 transition-colors">
+              <span class="inline-block px-2.5 py-1 bg-amber-100 text-amber-700 text-xs font-bold rounded-full mb-2">Change (Editar)</span>
+              <p class="text-xs text-slate-600">{{ descripciones.change }}</p>
+            </li>
+            <li class="p-4 hover:bg-slate-50 transition-colors">
+              <span class="inline-block px-2.5 py-1 bg-rose-100 text-rose-700 text-xs font-bold rounded-full mb-2">Delete (Eliminar)</span>
+              <p class="text-xs text-slate-600">{{ descripciones.delete }}</p>
+            </li>
+            <li class="p-4 hover:bg-slate-50 transition-colors">
+              <span class="inline-block px-2.5 py-1 bg-sky-100 text-sky-700 text-xs font-bold rounded-full mb-2">View (Ver)</span>
+              <p class="text-xs text-slate-600">{{ descripciones.view }}</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+      
+      <button type="submit" id="btnGuardarPermisos" class="w-full flex justify-center items-center space-x-2 px-6 py-3.5 bg-brand-primary hover:bg-brand-dark text-white font-bold rounded-xl shadow-md transition transform active:scale-95">
+        <i class="bi bi-save2 text-lg"></i>
+        <span>Guardar Permisos</span>
+      </button>
+    </div>
+  </div>
+</form>
+
+<!-- Alerta Flotante Personalizada -->
+<div id="alertContainer" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-3"></div>
+
+<style>
+  /* Custom scrollbar para la caja de permisos */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: #94a3b8;
+  }
+  
+  .fade-out {
+      opacity: 0;
+      transition: opacity 0.3s ease;
+  }
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+  const form = document.getElementById('permisosForm');
+  const btnGuardar = document.getElementById('btnGuardarPermisos');
+  
+  form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      
+      const originalBtnText = btnGuardar.innerHTML;
+      btnGuardar.disabled = true;
+      btnGuardar.innerHTML = '<i class="bi bi-arrow-repeat animate-spin text-lg mr-2"></i> <span>Guardando...</span>';
+      
+      const formData = new FormData(this);
+      
+      fetch(window.location.href, {
+          method: 'POST',
+          body: formData,
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}'
+          }
+      })
+      .then(response => response.json())
+      .then(data => {
+          if(data.success) {
+              showAlert('success', '¡Permisos actualizados correctamente!');
+              actualizarEstilosTarjetas();
+          } else {
+              showAlert('error', 'Ocurrió un problema al guardar.');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
+          showAlert('error', 'Error de conexión al servidor.');
+      })
+      .finally(() => {
+          btnGuardar.disabled = false;
+          btnGuardar.innerHTML = originalBtnText;
+      });
+  });
+
+  const checkboxes = document.querySelectorAll('input[type="checkbox"][name="permisos"]');
+  checkboxes.forEach(chk => {
+      chk.addEventListener('change', actualizarEstilosTarjetas);
+  });
+
+  function actualizarEstilosTarjetas() {
+      checkboxes.forEach(chk => {
+          const label = chk.closest('label');
+          if (chk.checked) {
+              label.classList.add('bg-sky-50', 'border-brand-primary/50');
+              label.classList.remove('border-slate-200');
+          } else {
+              label.classList.remove('bg-sky-50', 'border-brand-primary/50');
+              label.classList.add('border-slate-200');
+          }
+      });
+  }
+
+  function showAlert(type, message) {
+    const alertDiv = document.createElement("div");
+    alertDiv.className = \`p-4 rounded-xl shadow-lg border animate-in slide-in-from-right-8 duration-300 flex items-center space-x-3 w-80 text-sm font-semibold
+        \${type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}\`;
+    
+    const icon = type === 'success' ? 'bi-check-circle-fill text-emerald-500' : 'bi-exclamation-triangle-fill text-rose-500';
+    
+    alertDiv.innerHTML = \`
+        <i class="bi \${icon} text-xl"></i>
+        <div class="flex-1">\${message}</div>
+        <button onclick="this.parentElement.remove()" class="text-slate-400 hover:text-slate-600 focus:outline-none">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    \`;
+    
+    const container = document.getElementById("alertContainer");
+    container.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        if(document.body.contains(alertDiv)) {
+            alertDiv.classList.add('fade-out');
+            setTimeout(() => alertDiv.remove(), 300);
+        }
+    }, 4000);
+  }
+});
+</script>
+{% endblock %}

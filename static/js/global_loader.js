@@ -61,9 +61,11 @@ document.addEventListener('DOMContentLoaded', function () {
     window.fetch = function (...args) {
         const [resource, config] = args;
         
-        // No mostrar loader para solicitudes silenciosas o de precarga
+        // No mostrar loader para solicitudes silenciosas, de precarga o notificaciones en segundo plano
+        const url = typeof resource === 'string' ? resource : resource?.url || '';
         if (config?.headers?.['X-Silent'] || 
-            resource.includes('preload') || 
+            url.includes('preload') || 
+            url.includes('notificaciones') ||
             config?.headers?.['Preload']) {
             return originalFetch.apply(this, args);
         }

@@ -383,7 +383,11 @@
         }
 
         function fetchNotifications() {
-          fetch('/api/notificaciones/')
+          fetch('/api/notificaciones/', {
+            headers: {
+              'X-Silent': 'true'
+            }
+          })
             .then(res => res.json())
             .then(data => {
               if(data.success && data.notificaciones && data.notificaciones.length > 0) {
